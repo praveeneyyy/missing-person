@@ -1,142 +1,307 @@
-/* Custom Design Tokens & Utilities matching design.md */
+/* ==========================================================================
+   AI-BASED MISSING PERSON IDENTIFICATION & TRACKING PLATFORM
+   INSTITUTIONAL DESIGN SYSTEM & FORENSIC INVESTIGATION STYLESHEET
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 :root {
+  /* Color Tokens - Command Navy & Institutional Palette */
+  --bg-app: #0B1120;
+  --bg-surface: #0F172A;
+  --bg-card: #FFFFFF;
+  --bg-canvas: #F8FAFC;
+  --bg-sidebar: #090E1A;
+  
   --primary: #2563EB;
   --primary-hover: #1D4ED8;
-  --dark-canvas: #0B1220;
-  --light-canvas: #F8FAFC;
-  --surface: #FFFFFF;
-  --text-primary: #0F172A;
-  --text-muted: #475569;
-  --warning: #B45309;
-  --danger: #B91C1C;
-  --success: #15803D;
-  --border-light: #E2E8F0;
+  --primary-light: #EFF6FF;
+  
+  --accent-cyan: #06B6D4;
+  --accent-indigo: #4F46E5;
+  
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --text-light: #94A3B8;
+  --text-white: #F8FAFC;
+  
+  --border-subtle: #E2E8F0;
   --border-dark: #1E293B;
+  --border-focus: #3B82F6;
+  
+  /* Status Colors */
+  --status-open: #2563EB;
+  --status-pending: #F59E0B;
+  --status-verified: #10B981;
+  --status-escalated: #EF4444;
+  --status-resolved: #059669;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  color: var(--text-primary);
-  background-color: var(--light-canvas);
+  font-family: var(--font-sans);
+  background-color: var(--bg-canvas);
+  color: var(--text-main);
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-/* Custom scrollbars */
+.font-mono-data {
+  font-family: var(--font-mono);
+  letter-spacing: -0.02em;
+}
+
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #94A3B8;
 }
 
-/* Map container styling */
-.map-container {
-  height: 480px;
+/* Tactical Status Badges */
+.badge-tactical {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+}
+
+.badge-open {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.badge-under_review {
+  background-color: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+}
+
+.badge-verified {
+  background-color: #ECFDF5;
+  color: #047857;
+  border: 1px solid #A7F3D0;
+}
+
+.badge-escalated {
+  background-color: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+
+.badge-resolved {
+  background-color: #F0FDF4;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+}
+
+.badge-archived {
+  background-color: #F8FAFC;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+}
+
+/* Pulsing radar point for live leads */
+.pulse-indicator {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.pulse-indicator::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: radar-pulse 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+.pulse-amber { background-color: #F59E0B; }
+.pulse-amber::after { background-color: #F59E0B; }
+.pulse-emerald { background-color: #10B981; }
+.pulse-emerald::after { background-color: #10B981; }
+.pulse-rose { background-color: #EF4444; }
+.pulse-rose::after { background-color: #EF4444; }
+
+@keyframes radar-pulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+/* Forensic Biometric Canvas & HUD Overlay */
+.forensic-viewport {
+  position: relative;
+  background: #020617;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  border: 1px solid var(--border-light);
+  border: 1px solid #1E293B;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+.forensic-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.hud-grid {
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgba(6, 182, 212, 0.8);
+  pointer-events: none;
+}
+.hud-corner-tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
+.hud-corner-tr { top: 8px; right: 8px; border-top: 2px solid; border-right: 2px solid; }
+.hud-corner-bl { bottom: 8px; left: 8px; border-bottom: 2px solid; border-left: 2px solid; }
+.hud-corner-br { bottom: 8px; right: 8px; border-bottom: 2px solid; border-right: 2px solid; }
+
+/* Circular Similarity Meter */
+.circular-meter {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+.circular-meter svg {
+  transform: rotate(-90deg);
+}
+.circular-meter circle {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+.circular-meter-bg {
+  stroke: #E2E8F0;
+}
+.circular-meter-fill {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
+
+/* Map Containers */
+.map-container {
+  height: 520px;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
   z-index: 1;
 }
 
 .picker-map {
-  height: 220px;
-  border-radius: 0.5rem;
+  height: 240px;
+  border-radius: 0.75rem;
   overflow: hidden;
-  border: 1px solid var(--border-light);
-  margin-top: 0.5rem;
+  border: 1px solid #CBD5E1;
   z-index: 1;
 }
 
-/* Modal animation */
+/* Stepper Component */
+.stepper-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.stepper-item.active {
+  color: var(--primary);
+}
+.stepper-item.completed {
+  color: var(--status-verified);
+}
+.stepper-bullet {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  background-color: #E2E8F0;
+  color: #64748B;
+}
+.stepper-item.active .stepper-bullet {
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+.stepper-item.completed .stepper-bullet {
+  background-color: var(--status-verified);
+  color: #FFFFFF;
+}
+
+/* Quick rationale chip buttons */
+.rationale-chip {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: #F1F5F9;
+  color: #334155;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+.rationale-chip:hover {
+  background-color: #E2E8F0;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+
+/* Modal styling */
 .modal-overlay {
-  background-color: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(4px);
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
   transition: opacity 0.2s ease-in-out;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.15rem 0.6rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
+/* Card hover and micro-elevations */
+.dossier-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.dossier-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+  border-color: #CBD5E1;
 }
 
-.badge-open {
-  background-color: #DBEAFE;
-  color: #1E40AF;
+/* Smooth transitions */
+button, a, input, select, textarea {
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.badge-under_review {
-  background-color: #FEF3C7;
-  color: #92400E;
-}
-
-.badge-resolved {
-  background-color: #DCFCE7;
-  color: #166534;
-}
-
-.badge-archived {
-  background-color: #F1F5F9;
-  color: #475569;
-}
-
-.badge-verified {
-  background-color: #DCFCE7;
-  color: #166534;
-}
-
-.badge-escalated {
-  background-color: #FEE2E2;
-  color: #991B1B;
-}
-
-.badge-pending {
-  background-color: #FEF3C7;
-  color: #92400E;
-}
-
-/* Confidence bars */
-.confidence-bar {
-  height: 8px;
-  border-radius: 4px;
-  background-color: #E2E8F0;
-  overflow: hidden;
-}
-
-.confidence-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-
-.confidence-high {
-  background-color: #15803D;
-}
-
-.confidence-moderate {
-  background-color: #D97706;
-}
-
-.confidence-low {
-  background-color: #64748B;
-}
-
-/* Focus and accessibility */
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;

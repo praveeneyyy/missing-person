@@ -29,10 +29,13 @@ def list_pending_review_candidates(
                    s.latitude AS sighting_lat, s.longitude AS sighting_lng,
                    s.description AS sighting_notes,
                    sm.file_path AS sighting_photo_path,
+                   sm.faces_metadata_json AS sighting_faces_json,
                    c.id AS case_id, c.reference_no, c.full_name AS person_name,
                    c.age, c.gender, c.last_seen_date, c.last_seen_location,
                    c.latitude AS case_lat, c.longitude AS case_lng, c.status AS case_status,
-                   ri.file_path AS reference_photo_path
+                   ri.file_path AS reference_photo_path,
+                   ri.bbox_json AS ref_bbox_json,
+                   ri.landmarks_json AS ref_landmarks_json
             FROM candidate_matches cm
             JOIN sightings s ON cm.sighting_id = s.id
             LEFT JOIN sighting_media sm ON s.id = sm.sighting_id
