@@ -1,0 +1,60 @@
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr, Field
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: Dict[str, Any]
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str
+    badge_number: Optional[str] = None
+    role: str
+
+class CaseCreate(BaseModel):
+    full_name: str
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    last_seen_date: str
+    last_seen_time: Optional[str] = None
+    last_seen_location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    identifying_features: Optional[str] = None
+    clothing_description: Optional[str] = None
+    notes: Optional[str] = None
+
+class CaseUpdate(BaseModel):
+    full_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    last_seen_date: Optional[str] = None
+    last_seen_time: Optional[str] = None
+    last_seen_location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    status: Optional[str] = None
+    identifying_features: Optional[str] = None
+    clothing_description: Optional[str] = None
+    notes: Optional[str] = None
+
+class ReviewCreate(BaseModel):
+    disposition: str = Field(..., description="verified | escalated | request_more_info | rejected")
+    rationale: str = Field(..., min_length=5, description="Mandatory investigator explanation")
+    next_steps: Optional[str] = None
+
+class SightingLookupResponse(BaseModel):
+    receipt_no: str
+    sighting_date: str
+    sighting_time: Optional[str] = None
+    location_name: str
+    status: str
+    submitted_at: str
+    notice: str = "For confidentiality, sensitive matching results and identity data are restricted to authorized investigators."

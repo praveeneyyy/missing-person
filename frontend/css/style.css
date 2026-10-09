@@ -1,0 +1,143 @@
+/* Custom Design Tokens & Utilities matching design.md */
+:root {
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --dark-canvas: #0B1220;
+  --light-canvas: #F8FAFC;
+  --surface: #FFFFFF;
+  --text-primary: #0F172A;
+  --text-muted: #475569;
+  --warning: #B45309;
+  --danger: #B91C1C;
+  --success: #15803D;
+  --border-light: #E2E8F0;
+  --border-dark: #1E293B;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text-primary);
+  background-color: var(--light-canvas);
+  min-height: 100vh;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Map container styling */
+.map-container {
+  height: 480px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  border: 1px solid var(--border-light);
+  z-index: 1;
+}
+
+.picker-map {
+  height: 220px;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  margin-top: 0.5rem;
+  z-index: 1;
+}
+
+/* Modal animation */
+.modal-overlay {
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.2s ease-in-out;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-open {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge-under_review {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-resolved {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.badge-archived {
+  background-color: #F1F5F9;
+  color: #475569;
+}
+
+.badge-verified {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.badge-escalated {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.badge-pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+/* Confidence bars */
+.confidence-bar {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #E2E8F0;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.confidence-high {
+  background-color: #15803D;
+}
+
+.confidence-moderate {
+  background-color: #D97706;
+}
+
+.confidence-low {
+  background-color: #64748B;
+}
+
+/* Focus and accessibility */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

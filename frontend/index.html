@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Missing Person Identification & Tracking System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased flex flex-col min-h-screen">
+
+  <!-- Top Global Header -->
+  <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Brand & Project Title -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="App.switchTab('public-home')">
+        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-lg text-white shadow-sm">
+          MP
+        </div>
+        <div>
+          <h1 class="text-base font-bold tracking-tight text-white leading-tight">Missing Person Identification System</h1>
+          <p class="text-xs text-slate-400 font-medium">Facial Recognition & Computer Vision Platform • Professional Training I</p>
+        </div>
+      </div>
+
+      <!-- Navigation & Role Switcher -->
+      <div class="flex items-center gap-4">
+        <!-- Quick Role Switcher for Demo / Presentation -->
+        <div class="hidden sm:flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+          <label for="quick-role-select" class="text-xs text-slate-400 font-medium">Role:</label>
+          <select id="quick-role-select" class="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer">
+            <option value="investigator" class="bg-slate-800 text-white">Investigator (Praveen)</option>
+            <option value="admin" class="bg-slate-800 text-white">Admin (Dr. S. Gayathri)</option>
+            <option value="public" class="bg-slate-800 text-white">Public Reporter</option>
+          </select>
+        </div>
+
+        <!-- Active User Badge -->
+        <div id="user-profile-badge" class="bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 text-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary Navigation Bar -->
+    <nav class="bg-white border-b border-slate-200 text-sm font-medium">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto">
+        <div class="flex space-x-1 py-2">
+          <!-- Public Nav Items -->
+          <button data-tab="public-home" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Overview</button>
+          <button data-tab="public-submit" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Submit Sighting</button>
+          <button data-tab="public-track" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Track Receipt</button>
+
+          <!-- Staff Nav Items (Investigator / Admin) -->
+          <span class="border-l border-slate-200 mx-2 my-1"></span>
+          <div id="staff-navigation" class="flex space-x-1">
+            <button data-tab="dashboard" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Dashboard</button>
+            <button data-tab="cases" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Cases</button>
+            <button data-tab="review-queue" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition flex items-center gap-1.5">
+              <span>Review Queue</span>
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            </button>
+            <button data-tab="map" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Investigation Map</button>
+            <button data-tab="audit" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Audit Logs</button>
+            <button data-tab="benchmark" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">AI Benchmark</button>
+          </div>
+        </div>
+
+        <div class="py-2 hidden md:block">
+          <button onclick="App.openModal('create-case-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1">
+            <span>+</span>
+            <span>Register New Case</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Body Content -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- TAB 1: PUBLIC HOME / OVERVIEW -->
+    <div id="tab-public-home" class="tab-pane space-y-8">
+      <!-- Hero Section -->
+      <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-8 sm:p-12 shadow-md relative overflow-hidden">
+        <div class="max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 bg-blue-500/20 text-blue-300 text-xs font-semibold px-3 py-1 rounded-full border border-blue-400/30">
+            <span>Official Investigation-Support Platform</span>
+          </div>
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">AI-Based Missing Person Identification & Tracking System</h2>
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            A centralized investigation portal combining automated computer vision, deep facial representations (YuNet & SFace), and human-in-the-loop candidate matching to assist law enforcement officers in locating missing individuals.
+          </p>
+          <div class="pt-4 flex flex-wrap gap-3">
+            <button onclick="App.switchTab('public-submit')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md transition">
+              Report a Sighting
+            </button>
+            <button onclick="App.switchTab('dashboard')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-sm px-6 py-3 rounded-xl border border-slate-700 transition">
+              Investigator Portal
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency & Privacy Guidance Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+          <div class="text-blue-600 font-bold text-sm flex items-center gap-2">
+            <span>🛡️</span>
+            <span>Privacy By Default</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-base">Protected Records</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Public users cannot browse face embeddings, confidential case records, or precise sighting locations. Permissions are strictly enforced server-side.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+          <div class="text-amber-600 font-bold text-sm flex items-center gap-2">
+            <span>⚖️</span>
+            <span>Human-In-The-Loop</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-base">No Autonomous Decisions</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            AI similarity scores are mathematical ranking signals, not confirmation of identity. Every match must be investigated and recorded by an authorized officer.
+          </p>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+          <div class="text-emerald-600 font-bold text-sm flex items-center gap-2">
+            <span>🔬</span>
+            <span>Biometric AI Pipeline</span>
+          </div>
+          <h3 class="font-bold text-slate-900 text-base">Deep Feature Representation</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            Uses OpenCV YuNet DNN for face detection and MobileFaceNet SFace for 128-dimensional normalized facial embeddings and cosine similarity ranking.
+          </p>
+        </div>
+      </div>
+
+      <!-- Core Modules Breakdown from Presentation -->
+      <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div class="border-b border-slate-100 pb-4">
+          <h3 class="text-lg font-bold text-slate-900">Six Core System Modules (Professional Training I)</h3>
+          <p class="text-xs text-slate-500">Implemented according to the presentation architecture and PRD requirements.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 1</div>
+            <div class="font-bold text-sm text-slate-800">Authentication & RBAC</div>
+            <p class="text-xs text-slate-600">Secure staff login, JWT token issuance, role-based endpoint protection (Investigator, Admin, Public).</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 2</div>
+            <div class="font-bold text-sm text-slate-800">Case Registration</div>
+            <p class="text-xs text-slate-600">Case profile enrollment with authorized reference photos and automated single-face validation checks.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 3</div>
+            <div class="font-bold text-sm text-slate-800">Face Processing</div>
+            <p class="text-xs text-slate-600">YuNet DNN face detection, landmark alignment, and 128-D vector extraction via SFace.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 4</div>
+            <div class="font-bold text-sm text-slate-800">Sighting Portal</div>
+            <p class="text-xs text-slate-600">Public sighting submission with photo upload, location coordinates, timestamp, and anonymous receipt.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 5</div>
+            <div class="font-bold text-sm text-slate-800">AI Matching Engine</div>
+            <p class="text-xs text-slate-600">Vector similarity search, Top-K ranked candidate retrieval, and calibrated threshold scoring.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+            <div class="text-xs font-mono font-bold text-blue-700">MODULE 6</div>
+            <div class="font-bold text-sm text-slate-800">Review & Case Tracking</div>
+            <p class="text-xs text-slate-600">Side-by-side evidence inspection, mandatory rationale adjudication, case timeline, and geographic map.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: PUBLIC SIGHTING SUBMISSION -->
+    <div id="tab-public-submit" class="tab-pane hidden max-w-3xl mx-auto space-y-6">
+      <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Submit Sighting Report</h2>
+          <p class="text-xs text-slate-500 mt-1">If you believe you have seen a missing person, upload a photograph and provide approximate location details below.</p>
+        </div>
+
+        <form id="sighting-form" class="space-y-6">
+          <!-- Image Upload Box -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Sighting Photograph *</label>
+            <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer transition bg-slate-50 relative">
+              <input type="file" id="sighting-file" name="file" accept="image/jpeg,image/png,image/webp" required class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+              <div class="space-y-1 text-slate-600">
+                <div class="text-2xl">📷</div>
+                <div class="text-xs font-semibold text-blue-600">Click to upload photo or drag and drop</div>
+                <div class="text-xs text-slate-400">JPEG, PNG, or WebP up to 15 MB</div>
+              </div>
+            </div>
+            <!-- Preview Box -->
+            <div id="sighting-preview-box" class="mt-4 hidden p-3 bg-slate-100 rounded-xl flex items-center gap-4">
+              <img id="sighting-preview-img" class="w-20 h-20 object-cover rounded-lg border border-slate-200" alt="Preview"/>
+              <div class="text-xs text-slate-600">
+                <div class="font-bold text-slate-800">Photo Loaded</div>
+                <div class="text-slate-500">Faces will be detected and processed upon submission.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date & Time -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Date of Sighting *</label>
+              <input type="date" name="sighting_date" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Approximate Time</label>
+              <input type="time" name="sighting_time" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500">
+            </div>
+          </div>
+
+          <!-- Location Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Location Name / Landmark *</label>
+            <input type="text" id="sighting-location" name="location_name" placeholder="e.g. Near Central Railway Station, Platform 2" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500">
+          </div>
+
+          <!-- Interactive Location Pin Picker -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Click on Map to Pin Exact Location</label>
+            <div id="sighting-picker-map" class="picker-map"></div>
+            <div class="grid grid-cols-2 gap-4 mt-2">
+              <input type="number" step="any" id="sighting-lat" name="latitude" placeholder="Latitude" class="text-xs px-3 py-1.5 rounded border border-slate-200 bg-slate-50" readonly>
+              <input type="number" step="any" id="sighting-lng" name="longitude" placeholder="Longitude" class="text-xs px-3 py-1.5 rounded border border-slate-200 bg-slate-50" readonly>
+            </div>
+          </div>
+
+          <!-- Sighting Description -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Observations / Description</label>
+            <textarea name="description" rows="3" placeholder="Describe clothing, condition, companion, or any recognizable details..." class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500"></textarea>
+          </div>
+
+          <!-- Reporter Contact (Optional) -->
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h4 class="text-xs font-bold text-slate-800">Reporter Contact (Optional)</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input type="text" name="reporter_name" placeholder="Your Name" class="text-xs px-3 py-2 rounded-lg border border-slate-300">
+              <input type="text" name="reporter_phone" placeholder="Phone Number" class="text-xs px-3 py-2 rounded-lg border border-slate-300">
+            </div>
+          </div>
+
+          <!-- Privacy Consent -->
+          <div class="flex items-start gap-2.5">
+            <input type="checkbox" id="consent-check" name="consent_given" value="true" checked required class="mt-1">
+            <label for="consent-check" class="text-xs text-slate-600 leading-normal">
+              I acknowledge that this sighting information will be processed using computer vision and submitted to authorized investigators. False reporting is subject to statutory penalties.
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="sighting-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-3 rounded-xl shadow-md transition">
+            Submit Sighting to Law Enforcement
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 3: PUBLIC RECEIPT LOOKUP -->
+    <div id="tab-public-track" class="tab-pane hidden max-w-lg mx-auto space-y-6">
+      <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">Track Sighting Receipt</h2>
+          <p class="text-xs text-slate-500 mt-1">Enter your submission reference code to inspect general verification progress.</p>
+        </div>
+
+        <form id="receipt-lookup-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Receipt Number</label>
+            <input type="text" id="lookup-receipt-input" placeholder="e.g. STG-2026-0001" required class="w-full font-mono text-sm uppercase px-3.5 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500">
+          </div>
+          <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold text-xs py-3 rounded-xl transition">
+            Check Status
+          </button>
+        </form>
+
+        <div id="lookup-result-box" class="hidden"></div>
+      </div>
+    </div>
+
+    <!-- TAB 4: INVESTIGATOR DASHBOARD -->
+    <div id="tab-dashboard" class="tab-pane hidden space-y-8">
+      <!-- Welcome Header -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900">Investigator Operational Dashboard</h2>
+          <p class="text-xs text-slate-500 mt-1">Real-time surveillance leads, case management, and biometric matching metrics.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="App.openModal('create-case-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
+            + Register Case
+          </button>
+          <button onclick="App.switchTab('review-queue')" class="bg-slate-900 hover:bg-black text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
+            Open Review Queue
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Open Cases</div>
+          <div id="stat-open-cases" class="text-3xl font-extrabold text-blue-700 mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1">Registered under investigation</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Lead Reviews</div>
+          <div id="stat-pending-reviews" class="text-3xl font-extrabold text-amber-600 mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1">Awaiting human adjudication</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Verified Matches</div>
+          <div id="stat-verified-matches" class="text-3xl font-extrabold text-emerald-600 mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1">Confirmed by investigator</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Sightings Ingested</div>
+          <div id="stat-total-sightings" class="text-3xl font-extrabold text-slate-800 mt-2">0</div>
+          <div class="text-xs text-slate-400 mt-1">Public submissions processed</div>
+        </div>
+      </div>
+
+      <!-- Recent Tables Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Recent Cases -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 text-base">Recent Registered Cases</h3>
+            <button onclick="App.switchTab('cases')" class="text-xs text-blue-600 font-semibold hover:underline">View All</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase">
+                <tr>
+                  <th class="py-2.5 px-4">Ref</th>
+                  <th class="py-2.5 px-4">Name</th>
+                  <th class="py-2.5 px-4">Date</th>
+                  <th class="py-2.5 px-4">Location</th>
+                  <th class="py-2.5 px-4">Status</th>
+                  <th class="py-2.5 px-4">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-cases">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Sightings Inbox -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 text-base">Recent Sightings Inbox</h3>
+            <button onclick="App.switchTab('review-queue')" class="text-xs text-blue-600 font-semibold hover:underline">Review All</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase">
+                <tr>
+                  <th class="py-2.5 px-4">Receipt</th>
+                  <th class="py-2.5 px-4">Location</th>
+                  <th class="py-2.5 px-4">Date</th>
+                  <th class="py-2.5 px-4">AI Score</th>
+                  <th class="py-2.5 px-4">Status</th>
+                  <th class="py-2.5 px-4">Action</th>
+                </tr>
+              </thead>
+              <tbody id="dashboard-recent-sightings">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: CASES MANAGEMENT -->
+    <div id="tab-cases" class="tab-pane hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold text-slate-900">Missing-Person Cases</h2>
+          <p class="text-xs text-slate-500 mt-1">Manage active case records, enrolled reference portraits, and identity vectors.</p>
+        </div>
+        <button onclick="App.openModal('create-case-modal')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm transition">
+          + Register New Case
+        </button>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-4 items-center justify-between">
+        <div class="flex-1 min-w-[240px]">
+          <input type="text" id="cases-search" oninput="App.loadCases()" placeholder="Search by name, reference code, or location..." class="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300">
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-xs text-slate-500">Status:</label>
+          <select id="cases-status-filter" onchange="App.loadCases()" class="text-xs px-3 py-2 rounded-lg border border-slate-300">
+            <option value="">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="under_review">Under Review</option>
+            <option value="resolved">Resolved</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cases Cards Grid -->
+      <div id="cases-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 6: CASE DETAIL VIEW -->
+    <div id="tab-case-detail" class="tab-pane hidden space-y-6">
+      <div class="flex items-center justify-between">
+        <button onclick="App.switchTab('cases')" class="text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1 font-semibold">
+          ← Back to Cases
+        </button>
+        <span id="case-detail-status" class="badge"></span>
+      </div>
+
+      <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-8">
+        <div>
+          <span id="case-detail-ref" class="font-mono text-sm font-bold text-blue-700"></span>
+          <h2 id="case-detail-name" class="text-3xl font-extrabold text-slate-900 mt-1"></h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+          <div><span class="text-slate-500">Age:</span> <div id="case-detail-age" class="font-semibold text-slate-800"></div></div>
+          <div><span class="text-slate-500">Gender:</span> <div id="case-detail-gender" class="font-semibold text-slate-800"></div></div>
+          <div><span class="text-slate-500">Last Seen:</span> <div id="case-detail-lastseen" class="font-semibold text-slate-800"></div></div>
+          <div><span class="text-slate-500">Location:</span> <div id="case-detail-location" class="font-semibold text-slate-800 truncate"></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
+          <div>
+            <span class="font-bold text-slate-900">Identifying Features:</span>
+            <p id="case-detail-features" class="mt-1 text-slate-600"></p>
+          </div>
+          <div>
+            <span class="font-bold text-slate-900">Clothing Description:</span>
+            <p id="case-detail-clothing" class="mt-1 text-slate-600"></p>
+          </div>
+        </div>
+
+        <div>
+          <span class="font-bold text-slate-900 text-xs">Confidential Investigator Notes:</span>
+          <p id="case-detail-notes" class="mt-1 text-xs text-slate-600"></p>
+        </div>
+
+        <!-- Reference Photos -->
+        <div class="pt-6 border-t border-slate-200 space-y-4">
+          <h3 class="text-base font-bold text-slate-900">Authorized Reference Portraits & Facial Embeddings</h3>
+          <div id="case-detail-photos" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- Linked Sighting Leads -->
+        <div class="pt-6 border-t border-slate-200 space-y-4">
+          <h3 class="text-base font-bold text-slate-900">Correlated Sighting Leads</h3>
+          <div id="case-detail-leads" class="space-y-3">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: CANDIDATE MATCH REVIEW QUEUE -->
+    <div id="tab-review-queue" class="tab-pane hidden space-y-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900">Candidate Match Review Queue</h2>
+        <p class="text-xs text-slate-500 mt-1">Side-by-side comparative evidence review. Every match requires human investigator adjudication and recorded rationale.</p>
+      </div>
+
+      <div id="review-queue-list">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- TAB 8: INVESTIGATION MAP -->
+    <div id="tab-map" class="tab-pane hidden space-y-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900">Geographic Investigation Map</h2>
+        <p class="text-xs text-slate-500 mt-1">Visual correlation between missing-person last-seen points (Blue) and reported sightings (Amber/Green).</p>
+      </div>
+      <div id="investigation-map" class="map-container"></div>
+    </div>
+
+    <!-- TAB 9: AUDIT LOGS -->
+    <div id="tab-audit" class="tab-pane hidden space-y-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900">System Audit Trail & Chain of Custody</h2>
+        <p class="text-xs text-slate-500 mt-1">Immutable audit records for all authentication events, case creations, sighting submissions, and review adjudications.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase">
+              <tr>
+                <th class="py-3 px-4">Timestamp</th>
+                <th class="py-3 px-4">Actor</th>
+                <th class="py-3 px-4">Action</th>
+                <th class="py-3 px-4">Resource</th>
+                <th class="py-3 px-4">Audit Details</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 10: AI QUALITY & BENCHMARK -->
+    <div id="tab-benchmark" class="tab-pane hidden space-y-6">
+      <div>
+        <h2 class="text-2xl font-extrabold text-slate-900">AI Model Evaluation & Governance Metrics</h2>
+        <p class="text-xs text-slate-500 mt-1">Empirical evaluation of Recall@K, false-match rates at calibrated operating thresholds, and processing latency.</p>
+      </div>
+      <div id="benchmark-metrics-box">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL 1: REGISTER NEW CASE -->
+  <div id="create-case-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-8 shadow-2xl max-h-[90vh] overflow-y-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="text-xl font-bold text-slate-900">Register Missing-Person Case</h3>
+          <p class="text-xs text-slate-500">Enrolls a new case profile and extracts 128-D biometric embeddings from authorized portrait.</p>
+        </div>
+        <button onclick="App.closeModal('create-case-modal')" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      </div>
+
+      <form id="create-case-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+            <input type="text" id="case-fullname" required placeholder="Person's legal full name" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Age</label>
+              <input type="number" id="case-age" placeholder="Age" class="w-full text-xs px-3 py-2.5 rounded-lg border border-slate-300">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Gender</label>
+              <select id="case-gender" class="w-full text-xs px-3 py-2.5 rounded-lg border border-slate-300">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Last Seen Date *</label>
+            <input type="date" id="case-date" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Last Seen Time</label>
+            <input type="time" id="case-time" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Last Seen Location Description *</label>
+          <input type="text" id="case-location" required placeholder="e.g. Marina Beach Promenade, Chennai" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Latitude</label>
+            <input type="number" step="any" id="case-lat" value="13.0827" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Longitude</label>
+            <input type="number" step="any" id="case-lng" value="80.2707" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300">
+          </div>
+        </div>
+
+        <!-- Authorized Reference Photo Upload -->
+        <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-200 space-y-2">
+          <label class="block text-xs font-bold text-blue-900">Authorized Reference Portrait * (Requires Single Human Face)</label>
+          <input type="file" id="case-photo-file" accept="image/jpeg,image/png,image/webp" required class="w-full text-xs text-slate-600">
+          <p class="text-xs text-blue-800">YuNet detector verifies exactly 1 face exists. SFace generates 128-D vector embedding.</p>
+          <div id="case-preview-box" class="hidden mt-2">
+            <img id="case-preview-img" class="w-20 h-20 object-cover rounded border border-blue-300" alt="Reference Preview"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Identifying Features</label>
+          <input type="text" id="case-features" placeholder="e.g. Scar on left cheek, birthmark, tattoo" class="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Clothing Description</label>
+          <input type="text" id="case-clothing" placeholder="e.g. Blue shirt, black jeans" class="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Confidential Notes</label>
+          <textarea id="case-notes" rows="2" placeholder="Police complaint reference, family contact..." class="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeModal('create-case-modal')" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" id="case-submit-btn" class="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">Enroll Case & Embeddings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: RECORD REVIEW DECISION -->
+  <div id="review-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-8 shadow-2xl space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Adjudicate Candidate Match</h3>
+          <p class="text-xs text-slate-500">Record investigator finding with mandatory justification.</p>
+        </div>
+        <button onclick="App.closeReviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+      </div>
+
+      <form id="review-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Review Disposition *</label>
+          <select id="review-disposition" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300 font-semibold">
+            <option value="verified">Verified Match (Confirmed by Officer)</option>
+            <option value="escalated">Escalate to Field Operations</option>
+            <option value="request_more_info">Request Additional Information</option>
+            <option value="rejected">Reject Lead (False Positive)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Mandatory Written Rationale *</label>
+          <textarea id="review-rationale" rows="3" required placeholder="Explain observational rationale, facial landmark comparison, or witness corroboration..." class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-300"></textarea>
+          <p class="text-xs text-slate-400 mt-1">Audit requirement: Minimum 5 characters explaining your decision.</p>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Next Operational Steps</label>
+          <input type="text" id="review-next-steps" placeholder="e.g. Dispatch local patrol, contact reporting witness" class="w-full text-xs px-3.5 py-2 rounded-lg border border-slate-300">
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeReviewModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800">Cancel</button>
+          <button type="submit" class="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm">Save & Sign Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: PUBLIC SUBMISSION RECEIPT -->
+  <div id="receipt-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl text-center space-y-4">
+      <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
+        ✓
+      </div>
+      <h3 class="text-xl font-extrabold text-slate-900">Sighting Report Received</h3>
+      <p class="text-xs text-slate-600">Your sighting has been logged securely and queued for authorized investigator review.</p>
+
+      <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+        <div class="text-xs text-slate-400 uppercase font-bold tracking-wider">Your Tracking Reference Code</div>
+        <div id="receipt-number-display" class="font-mono text-2xl font-extrabold text-blue-700"></div>
+        <div id="receipt-faces-count" class="text-xs text-slate-500 font-semibold mt-1"></div>
+        <div id="receipt-location" class="text-xs text-slate-400"></div>
+      </div>
+
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Save this reference code to check status later on the "Track Receipt" page. For privacy and safety, matching results are confidential to law enforcement officers.
+      </p>
+
+      <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="w-full bg-slate-900 hover:bg-black text-white font-bold text-xs py-3 rounded-xl transition">
+        Return to Home
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 text-xs text-slate-500 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold text-slate-700">AI-Based Missing Person Identification and Tracking Using Facial Recognition and Computer Vision</p>
+        <p class="text-slate-400 mt-0.5">Professional Training I • S. Praveen Kumar (Reg: 44111131) • Guide: Dr. S. Gayathri, Ph.D.</p>
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <span>YuNet + SFace (128-D)</span>
+        <span>•</span>
+        <span>FastAPI</span>
+        <span>•</span>
+        <span>SQLite + Vector Cosine</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application JS Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/map.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
