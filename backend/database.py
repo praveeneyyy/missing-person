@@ -2,11 +2,11 @@ import sqlite3
 import json
 from contextlib import contextmanager
 from typing import Generator
-from backend.config import DATABASE_PATH
+import backend.config
 
 def get_db_connection() -> sqlite3.Connection:
     """Creates a SQLite connection with foreign keys enabled and row factory set to Row."""
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = sqlite3.connect(backend.config.DATABASE_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
     return conn

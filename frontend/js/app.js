@@ -86,6 +86,29 @@ const App = {
       refFile.addEventListener('change', (e) => this.handlePhotoPreview(e, 'case-preview-img', 'case-preview-box', 'case-img-meta'));
     }
 
+    // Module 2: Case Status Workflow Form
+    const statusForm = document.getElementById('update-case-status-form');
+    if (statusForm) {
+      statusForm.addEventListener('submit', (e) => this.handleCaseStatusSubmit(e));
+    }
+
+    // Module 2: Add Additional Reference Portrait Form
+    const addRefForm = document.getElementById('add-reference-form');
+    if (addRefForm) {
+      addRefForm.addEventListener('submit', (e) => this.handleAddReferenceSubmit(e));
+    }
+    const addRefFile = document.getElementById('additional-ref-file');
+    if (addRefFile) {
+      addRefFile.addEventListener('change', (e) => this.handlePhotoPreview(e, 'add-ref-preview-img', 'add-ref-preview-box', 'add-ref-img-meta'));
+    }
+
+    // Module 2: Edit Case Dossier Form
+    const editCaseForm = document.getElementById('edit-case-form');
+    if (editCaseForm) {
+      editCaseForm.addEventListener('submit', (e) => this.handleEditCaseSubmit(e));
+    }
+
+
     // Receipt lookup
     const lookupForm = document.getElementById('receipt-lookup-form');
     if (lookupForm) {
@@ -396,12 +419,19 @@ const App = {
               </div>
               <div class="p-3 bg-slate-950 border-t border-slate-800 text-xs text-slate-300 flex items-center justify-between">
                 <div>
-                  <div class="font-mono font-bold text-cyan-400">128-D VECTOR #${p.id}</div>
+                  <div class="font-mono font-bold text-cyan-400">128-D VECTOR #${p.id} ${idx === 0 ? '<span class="text-[10px] text-blue-400 font-normal">(Primary)</span>' : ''}</div>
                   <div class="text-[10px] text-slate-500 font-mono">${p.model_name} • ${p.model_version}</div>
                 </div>
-                <button onclick="App.toggleCanvasMode('ref-canvas-${p.id}', '/${p.file_path}', ${p.bbox_json || 'null'}, null)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded border border-slate-700 font-mono text-cyan-300">
-                  Toggle HUD
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="App.toggleCanvasMode('ref-canvas-${p.id}', '/${p.file_path}', ${p.bbox_json || 'null'}, null)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded border border-slate-700 font-mono text-cyan-300">
+                    Toggle HUD
+                  </button>
+                  ${c.reference_photos.length > 1 ? `
+                    <button onclick="App.deleteReferencePhoto(${p.id})" title="Remove reference portrait" class="text-[10px] bg-red-950/60 hover:bg-red-900 px-2 py-1 rounded border border-red-800 font-mono text-red-300">
+                      Delete
+                    </button>
+                  ` : ''}
+                </div>
               </div>
             </div>
           `).join('');
@@ -1244,6 +1274,228 @@ const App = {
       this.loadOfficers();
     } catch (err) {
       alert('Status update failed: ' + err.message);
+    }
+  },
+
+  // ==========================================================================
+  // MODULE 2: CASE LIFECYCLE, REFERENCE ENROLLMENT & DOSSIER CONTROLS
+  // ==========================================================================
+  openUpdateStatusModal() {
+    if (!this.currentCaseId) return;
+    const statusSelect = document.getElementById('case-new-status');
+    const currBadge = document.getElementById('case-detail-status');
+    if (statusSelect && currBadge) {
+      statusSelect.value = currBadge.innerText.trim().toLowerCase();
+    }
+    const notesInput = document.getElementById('case-status-notes');
+    if (notesInput) notesInput.value = '';
+    this.openModal('update-case-status-modal');
+  },
+
+  async handleCaseStatusSubmit(e) {
+    e.preventDefault();
+    if (!this.currentCaseId) return;
+    const btn = document.getElementById('btn-save-case-status');
+    if (btn) btn.disabled = true;
+
+    try {
+      const newStatus = document.getElementById('case-new-status').value;
+      const notes = document.getElementById('case-status-notes').value.trim();
+
+      await API.updateCaseStatus(this.currentCaseId, newStatus, notes);
+      alert(`Case status transitioned to '${newStatus.toUpperCase()}'! Audit log updated.`);
+      this.closeModal('update-case-status-modal');
+      await this.viewCaseDetails(this.currentCaseId);
+    } catch (err) {
+      alert('Status transition failed: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  openAddReferenceModal() {
+    if (!this.currentCaseId) return;
+    document.getElementById('add-reference-form').reset();
+    document.getElementById('add-ref-preview-box').classList.add('hidden');
+    this.openModal('add-reference-modal');
+  },
+
+  async handleAddReferenceSubmit(e) {
+    e.preventDefault();
+    if (!this.currentCaseId) return;
+    const btn = document.getElementById('btn-save-additional-ref');
+    const fileInput = document.getElementById('additional-ref-file');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+      alert('Please select a reference portrait image.');
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Validating Facial Vector...';
+    }
+
+    try {
+      const res = await API.addReferencePhoto(this.currentCaseId, fileInput.files[0]);
+      alert(`Reference portrait enrolled successfully! 128-D vector computed (Confidence: ${(res.confidence * 100).toFixed(1)}%).`);
+      this.closeModal('add-reference-modal');
+      await this.viewCaseDetails(this.currentCaseId);
+    } catch (err) {
+      alert('Reference validation failed: ' + err.message);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Validate & Enroll Vector';
+      }
+    }
+  },
+
+  async openEditCaseModal() {
+    if (!this.currentCaseId) return;
+    try {
+      const c = await API.getCase(this.currentCaseId);
+      document.getElementById('edit-case-fullname').value = c.full_name || '';
+      document.getElementById('edit-case-age').value = c.age || '';
+      document.getElementById('edit-case-gender').value = c.gender || 'Male';
+      document.getElementById('edit-case-date').value = c.last_seen_date || '';
+      document.getElementById('edit-case-time').value = c.last_seen_time || '';
+      document.getElementById('edit-case-location').value = c.last_seen_location || '';
+      document.getElementById('edit-case-lat').value = c.latitude || 13.0827;
+      document.getElementById('edit-case-lng').value = c.longitude || 80.2707;
+      document.getElementById('edit-case-features').value = c.identifying_features || '';
+      document.getElementById('edit-case-clothing').value = c.clothing_description || '';
+      document.getElementById('edit-case-notes').value = c.notes || '';
+
+      this.openModal('edit-case-modal');
+    } catch (err) {
+      alert('Failed to load case data: ' + err.message);
+    }
+  },
+
+  async handleEditCaseSubmit(e) {
+    e.preventDefault();
+    if (!this.currentCaseId) return;
+    const btn = document.getElementById('btn-save-edit-case');
+    if (btn) btn.disabled = true;
+
+    try {
+      const updateData = {
+        full_name: document.getElementById('edit-case-fullname').value.trim(),
+        age: parseInt(document.getElementById('edit-case-age').value) || null,
+        gender: document.getElementById('edit-case-gender').value,
+        last_seen_date: document.getElementById('edit-case-date').value,
+        last_seen_time: document.getElementById('edit-case-time').value,
+        last_seen_location: document.getElementById('edit-case-location').value.trim(),
+        latitude: parseFloat(document.getElementById('edit-case-lat').value) || null,
+        longitude: parseFloat(document.getElementById('edit-case-lng').value) || null,
+        identifying_features: document.getElementById('edit-case-features').value.trim(),
+        clothing_description: document.getElementById('edit-case-clothing').value.trim(),
+        notes: document.getElementById('edit-case-notes').value.trim()
+      };
+
+      await API.updateCase(this.currentCaseId, updateData);
+      alert('Case dossier metadata updated successfully!');
+      this.closeModal('edit-case-modal');
+      await this.viewCaseDetails(this.currentCaseId);
+    } catch (err) {
+      alert('Failed to update case: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  async printCaseBulletin() {
+    if (!this.currentCaseId) return;
+    try {
+      const b = await API.getCaseBulletin(this.currentCaseId);
+      const container = document.getElementById('bulletin-content');
+      if (!container) return;
+
+      container.innerHTML = `
+        <div class="border-4 border-red-700 p-6 rounded-xl space-y-5 bg-white text-slate-900">
+          <div class="text-center space-y-1">
+            <span class="bg-red-700 text-white font-mono font-black text-xs px-3 py-1 rounded uppercase tracking-widest">
+              OFFICIAL POLICE NOTICE • DO NOT REMOVE
+            </span>
+            <h2 class="text-3xl font-black tracking-tight text-slate-950 uppercase mt-2">${b.subject_name}</h2>
+            <div class="font-mono text-sm text-red-700 font-bold">CASE FILE REF: ${b.reference_no}</div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 items-center">
+            <div class="sm:col-span-1 h-56 bg-slate-100 rounded-xl overflow-hidden border-2 border-slate-900 flex items-center justify-center">
+              ${b.primary_photo_path ? `
+                <img src="/${b.primary_photo_path}" class="w-full h-full object-cover" alt="${b.subject_name}"/>
+              ` : `
+                <span class="text-4xl text-slate-400">👤</span>
+              `}
+            </div>
+
+            <div class="sm:col-span-2 space-y-2 text-xs font-mono">
+              <div class="grid grid-cols-2 gap-2 p-3 bg-slate-100 rounded-lg">
+                <div><strong>AGE:</strong> ${b.age || 'Unknown'} years</div>
+                <div><strong>GENDER:</strong> ${b.gender || 'Not specified'}</div>
+                <div><strong>LAST SEEN:</strong> ${b.last_seen_date}</div>
+                <div><strong>TIME:</strong> ${b.last_seen_time || 'N/A'}</div>
+              </div>
+              <div class="p-2 border border-slate-200 rounded">
+                <strong>LAST KNOWN LOCATION:</strong>
+                <p class="text-slate-800 text-[11px] mt-0.5">${b.last_seen_location}</p>
+              </div>
+              <div class="p-2 border border-slate-200 rounded">
+                <strong>DISTINGUISHING FEATURES:</strong>
+                <p class="text-slate-800 text-[11px] mt-0.5">${b.identifying_features}</p>
+              </div>
+              <div class="p-2 border border-slate-200 rounded">
+                <strong>CLOTHING AT TIME OF DISAPPEARANCE:</strong>
+                <p class="text-slate-800 text-[11px] mt-0.5">${b.clothing_description}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-4 bg-red-50 border-2 border-dashed border-red-300 rounded-xl text-center space-y-1">
+            <div class="font-bold text-red-900 text-sm">IF YOU HAVE ANY INFORMATION, IMMEDIATELY CONTACT:</div>
+            <div class="text-base font-black text-red-700 font-mono">${b.emergency_contact}</div>
+            <div class="text-xs text-slate-700 font-mono">INVESTIGATING OFFICER: ${b.investigating_officer} (${b.badge_number})</div>
+            <div class="text-[11px] text-slate-500 font-mono">Tip Line: ${b.tip_hotline}</div>
+          </div>
+
+          <div class="text-center text-[10px] text-slate-400 font-mono pt-2 border-t border-slate-200">
+            ${b.legal_notice} • Generated from AI Missing Persons Central Dossier System
+          </div>
+        </div>
+      `;
+
+      this.openModal('bulletin-modal');
+    } catch (err) {
+      alert('Failed to generate bulletin: ' + err.message);
+    }
+  },
+
+  async archiveActiveCase() {
+    if (!this.currentCaseId) return;
+    if (!confirm('Are you sure you want to ARCHIVE this case dossier? Archived cases remain accessible via the status filter.')) return;
+
+    try {
+      const res = await API.archiveCase(this.currentCaseId);
+      alert(res.message);
+      this.switchTab('cases');
+      await this.loadCases();
+    } catch (err) {
+      alert('Failed to archive case: ' + err.message);
+    }
+  },
+
+  async deleteReferencePhoto(refId) {
+    if (!this.currentCaseId) return;
+    if (!confirm('Are you sure you want to remove this reference portrait?')) return;
+
+    try {
+      const res = await API.deleteReferencePhoto(this.currentCaseId, refId);
+      alert(res.message);
+      await this.viewCaseDetails(this.currentCaseId);
+    } catch (err) {
+      alert('Failed to delete photo: ' + err.message);
     }
   }
 };

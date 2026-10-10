@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, status, Query
 from backend.database import get_db
-from backend.models import CaseCreate, CaseUpdate
+from backend.models import CaseCreate, CaseUpdate, CaseStatusUpdate
 from backend.auth import require_role
 from backend.config import REFERENCES_DIR
 from backend.face_engine import face_engine
@@ -12,7 +12,15 @@ from backend.face_engine import face_engine
 router = APIRouter(prefix="/api/v1/cases", tags=["Case Management"])
 
 def generate_case_ref(cursor) -> str:
-    """Generates unique reference code like MP-2026-001."""
+    """Generates unique monotonic reference code like MP-2026-001."""
+    cursor.execute("SELECT reference_no FROM cases WHERE reference_no LIKE 'MP-2026-%' ORDER BY id DESC LIMIT 1;")
+    row = cursor.fetchone()
+    if row and row["reference_no"]:
+        try:
+            seq = int(row["reference_no"].split("-")[-1])
+            return f"MP-2026-{seq + 1:03d}"
+        except Exception:
+            pass
     cursor.execute("SELECT COUNT(*) AS cnt FROM cases;")
     count = cursor.fetchone()["cnt"] + 1
     return f"MP-2026-{count:03d}"
@@ -251,3 +259,167 @@ async def add_reference_photo(
             "model_version": validation["model_version"],
             "message": "Authorized reference photo enrolled and 128-D embedding generated successfully."
         }
+
+@router.put("/{case_id}/status")
+def update_case_status(
+    case_id: int,
+    payload: CaseStatusUpdate,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """Updates case status workflow with mandatory audit trail and status note history."""
+    valid_statuses = ["draft", "open", "under_review", "resolved", "archived"]
+    if payload.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status '{payload.status}'. Must be one of: {', '.join(valid_statuses)}")
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cases WHERE id = ?", (case_id,))
+        case = cursor.fetchone()
+        if not case:
+            raise HTTPException(status_code=404, detail="Case not found")
+
+        old_status = case["status"]
+        status_note = payload.notes.strip() if payload.notes else f"Status transitioned from {old_status} to {payload.status}."
+
+        existing_notes = case["notes"] or ""
+        updated_notes = f"{existing_notes}\n[{old_status.upper()} -> {payload.status.upper()} by {user['full_name']}]: {status_note}".strip()
+
+        cursor.execute("""
+            UPDATE cases
+            SET status = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (payload.status, updated_notes, case_id))
+
+        # Audit log
+        cursor.execute("""
+            INSERT INTO audit_logs (actor_id, actor_name, action, resource_type, resource_id, details_json)
+            VALUES (?, ?, 'CASE_STATUS_CHANGED', 'cases', ?, ?)
+        """, (
+            user["id"], user["full_name"], str(case_id),
+            json.dumps({
+                "reference_no": case["reference_no"],
+                "old_status": old_status,
+                "new_status": payload.status,
+                "notes": status_note
+            })
+        ))
+
+        cursor.execute("""
+            SELECT c.*, u.full_name AS investigator_name
+            FROM cases c
+            LEFT JOIN users u ON c.assigned_investigator_id = u.id
+            WHERE c.id = ?
+        """, (case_id,))
+        return dict(cursor.fetchone())
+
+@router.get("/{case_id}/bulletin")
+def get_case_bulletin(
+    case_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """Generates official Missing Person Bulletin / Poster payload for field distribution."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT c.*, u.full_name AS investigator_name, u.badge_number AS investigator_badge
+            FROM cases c
+            LEFT JOIN users u ON c.assigned_investigator_id = u.id
+            WHERE c.id = ?
+        """, (case_id,))
+        case = cursor.fetchone()
+        if not case:
+            raise HTTPException(status_code=404, detail="Case not found")
+
+        cursor.execute("""
+            SELECT id, file_path, original_filename, bbox_json, created_at
+            FROM reference_images WHERE case_id = ?
+            ORDER BY id ASC
+        """, (case_id,))
+        photos = [dict(p) for p in cursor.fetchall()]
+
+        return {
+            "bulletin_id": f"BULLETIN-{case['reference_no']}",
+            "agency": "Tamil Nadu State Police • Missing Persons Bureau",
+            "reference_no": case["reference_no"],
+            "subject_name": case["full_name"],
+            "age": case["age"],
+            "gender": case["gender"],
+            "last_seen_date": case["last_seen_date"],
+            "last_seen_time": case["last_seen_time"],
+            "last_seen_location": case["last_seen_location"],
+            "latitude": case["latitude"],
+            "longitude": case["longitude"],
+            "identifying_features": case["identifying_features"] or "None recorded",
+            "clothing_description": case["clothing_description"] or "None recorded",
+            "status": case["status"],
+            "investigating_officer": case["investigator_name"] or "Investigator on Duty",
+            "badge_number": case["investigator_badge"] or "INV-44111131",
+            "emergency_contact": "Emergency Control Room: 112 / 100",
+            "tip_hotline": "+91 44 2844 7777 / missing-help@tnpolice.gov.in",
+            "photos": photos,
+            "primary_photo_path": photos[0]["file_path"] if photos else None,
+            "issued_at": case["created_at"],
+            "legal_notice": "Authorized law enforcement missing person bulletin. If spotted, please notify the nearest police post immediately."
+        }
+
+@router.delete("/{case_id}")
+def archive_or_delete_case(
+    case_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """Archives a missing person case dossier with audit tracking."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cases WHERE id = ?", (case_id,))
+        case = cursor.fetchone()
+        if not case:
+            raise HTTPException(status_code=404, detail="Case not found")
+
+        cursor.execute("""
+            UPDATE cases SET status = 'archived', updated_at = CURRENT_TIMESTAMP WHERE id = ?
+        """, (case_id,))
+
+        cursor.execute("""
+            INSERT INTO audit_logs (actor_id, actor_name, action, resource_type, resource_id, details_json)
+            VALUES (?, ?, 'CASE_ARCHIVED', 'cases', ?, ?)
+        """, (
+            user["id"], user["full_name"], str(case_id),
+            json.dumps({"reference_no": case["reference_no"], "name": case["full_name"]})
+        ))
+
+        return {"message": f"Case {case['reference_no']} archived successfully.", "case_id": case_id, "status": "archived"}
+
+@router.delete("/{case_id}/references/{ref_id}")
+def delete_reference_photo(
+    case_id: int,
+    ref_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """Deletes an enrolled reference photo with audit logging."""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM reference_images WHERE id = ? AND case_id = ?", (ref_id, case_id))
+        ref = cursor.fetchone()
+        if not ref:
+            raise HTTPException(status_code=404, detail="Reference photo not found for this case")
+
+        cursor.execute("SELECT COUNT(*) AS cnt FROM reference_images WHERE case_id = ?", (case_id,))
+        cnt = cursor.fetchone()["cnt"]
+        if cnt <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete the sole reference photo of an active case. Enroll a replacement photo first."
+            )
+
+        cursor.execute("DELETE FROM reference_images WHERE id = ?", (ref_id,))
+
+        cursor.execute("""
+            INSERT INTO audit_logs (actor_id, actor_name, action, resource_type, resource_id, details_json)
+            VALUES (?, ?, 'REFERENCE_PHOTO_DELETED', 'reference_images', ?, ?)
+        """, (
+            user["id"], user["full_name"], str(ref_id),
+            json.dumps({"case_id": case_id, "file_path": ref["file_path"]})
+        ))
+
+        return {"message": "Reference photo deleted successfully.", "ref_id": ref_id}
+

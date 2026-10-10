@@ -490,11 +490,28 @@
          TAB 6: CASE DETAIL DOSSIER (S05)
          ==================================================================== -->
     <div id="tab-case-detail" class="tab-pane hidden space-y-6">
-      <div class="flex items-center justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-4">
         <button onclick="App.switchTab('cases')" class="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-bold flex items-center gap-1">
           ← Return to Cases Dossier
         </button>
-        <span id="case-detail-status" class="badge-tactical"></span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="case-detail-status" class="badge-tactical"></span>
+          <button onclick="App.openUpdateStatusModal()" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 shadow-sm transition flex items-center gap-1.5">
+            <span>⚖️</span>
+            <span>Update Status</span>
+          </button>
+          <button onclick="App.openEditCaseModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 shadow-sm transition flex items-center gap-1.5">
+            <span>✏️</span>
+            <span>Edit Dossier</span>
+          </button>
+          <button onclick="App.printCaseBulletin()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+            <span>🖨️</span>
+            <span>Official Bulletin</span>
+          </button>
+          <button onclick="App.archiveActiveCase()" class="bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-red-800 shadow-sm transition">
+            Archive Case
+          </button>
+        </div>
       </div>
 
       <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-8">
@@ -529,7 +546,16 @@
 
         <!-- Reference Photos with Biometric Overlays -->
         <div class="pt-6 border-t border-slate-800 space-y-4">
-          <h3 class="text-base font-bold text-white">Authorized Reference Portraits & Biometric HUD Overlays</h3>
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Authorized Reference Portraits & Biometric HUD Overlays</h3>
+              <p class="text-xs text-slate-400 font-mono">YuNet-verified single-face reference vectors (128-D) used for candidate matching.</p>
+            </div>
+            <button onclick="App.openAddReferenceModal()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs font-mono px-3.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+              <span>+</span>
+              <span>Add Reference Photo</span>
+            </button>
+          </div>
           <div id="case-detail-photos" class="grid grid-cols-1 sm:grid-cols-3 gap-6"></div>
         </div>
 
@@ -936,6 +962,191 @@
             <div class="text-[10px] font-mono text-slate-400 truncate">Dr. S. Gayathri</div>
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 6: UPDATE CASE STATUS WORKFLOW (MODULE 2)
+       ==================================================================== -->
+  <div id="update-case-status-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white">Transition Case Status</h3>
+          <p class="text-xs text-slate-400 font-mono">Formal case lifecycle adjudication</p>
+        </div>
+        <button onclick="App.closeModal('update-case-status-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+      </div>
+
+      <form id="update-case-status-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">New Lifecycle Status *</label>
+          <select id="case-new-status" required class="w-full text-xs font-mono font-bold px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-cyan-300">
+            <option value="open">Open (Active Investigation)</option>
+            <option value="under_review">Under Review (Leads Being Correlated)</option>
+            <option value="resolved">Resolved (Individual Located & Verified)</option>
+            <option value="archived">Archived (Closed / Inactive)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Investigator Status Transition Notes *</label>
+          <textarea id="case-status-notes" rows="3" required placeholder="Explain why the status is being changed (e.g. Field patrol confirmed subject match; family verified identity)..." class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-blue-500"></textarea>
+          <p class="text-[11px] text-slate-500 font-mono mt-1">Recorded immutably in system audit trail.</p>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeModal('update-case-status-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" id="btn-save-case-status" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition font-mono">Commit Status Change</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 7: ENROLL ADDITIONAL REFERENCE PORTRAIT (MODULE 2)
+       ==================================================================== -->
+  <div id="add-reference-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white">Enroll Reference Portrait</h3>
+          <p class="text-xs text-slate-400 font-mono">YuNet single-face check & SFace 128-D vector extraction</p>
+        </div>
+        <button onclick="App.closeModal('add-reference-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+      </div>
+
+      <form id="add-reference-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-mono font-bold text-cyan-400 uppercase mb-1">Portrait Image File *</label>
+          <input type="file" id="additional-ref-file" accept="image/jpeg,image/png,image/webp" required class="w-full text-xs text-slate-400">
+          <p class="text-[11px] text-slate-500 font-mono mt-1">Standard: Exactly 1 unambiguous front-facing human face required.</p>
+          <div id="add-ref-preview-box" class="hidden mt-3 p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-3">
+            <img id="add-ref-preview-img" class="w-16 h-16 object-cover rounded-lg border border-slate-700" alt="Preview"/>
+            <div id="add-ref-img-meta" class="text-[11px] font-mono text-cyan-400"></div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeModal('add-reference-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" id="btn-save-additional-ref" class="px-5 py-2.5 text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-slate-950 rounded-lg shadow-md transition font-mono">Validate & Enroll Vector</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 8: EDIT CASE DOSSIER METADATA (MODULE 2)
+       ==================================================================== -->
+  <div id="edit-case-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 rounded-2xl max-w-xl w-full p-8 shadow-2xl border border-slate-800 max-h-[90vh] overflow-y-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white">Edit Case Dossier Details</h3>
+          <p class="text-xs text-slate-400 font-mono">Update subject profile, location, or physical attributes</p>
+        </div>
+        <button onclick="App.closeModal('edit-case-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+      </div>
+
+      <form id="edit-case-form" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Subject Full Name *</label>
+            <input type="text" id="edit-case-fullname" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Age</label>
+              <input type="number" id="edit-case-age" class="w-full text-xs font-mono px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+            </div>
+            <div>
+              <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Gender</label>
+              <select id="edit-case-gender" class="w-full text-xs font-mono px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Last Seen Date *</label>
+            <input type="date" id="edit-case-date" required class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Last Seen Time</label>
+            <input type="time" id="edit-case-time" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Last Seen Location *</label>
+          <input type="text" id="edit-case-location" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Latitude</label>
+            <input type="number" step="any" id="edit-case-lat" class="w-full text-xs font-mono px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-cyan-300">
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Longitude</label>
+            <input type="number" step="any" id="edit-case-lng" class="w-full text-xs font-mono px-3 py-2 rounded-lg border border-slate-800 bg-slate-950 text-cyan-300">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Identifying Features</label>
+          <input type="text" id="edit-case-features" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Clothing Description</label>
+          <input type="text" id="edit-case-clothing" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white">
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Confidential Notes</label>
+          <textarea id="edit-case-notes" rows="2" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white"></textarea>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeModal('edit-case-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" id="btn-save-edit-case" class="px-5 py-2.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-md transition font-mono">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 9: OFFICIAL MISSING PERSON BULLETIN / POSTER (MODULE 2)
+       ==================================================================== -->
+  <div id="bulletin-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white text-slate-900 rounded-2xl max-w-2xl w-full p-8 shadow-2xl border border-slate-300 max-h-[92vh] overflow-y-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-red-700 text-white flex items-center justify-center font-bold text-base">
+            ⚠️
+          </div>
+          <div>
+            <h3 class="text-lg font-black tracking-tight text-red-700 uppercase">OFFICIAL MISSING PERSON BULLETIN</h3>
+            <p class="text-[11px] font-mono text-slate-500">TAMIL NADU POLICE DEPARTMENT • STATE CRIME RECORDS BUREAU</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+            🖨️ Print Poster
+          </button>
+          <button onclick="App.closeModal('bulletin-modal')" class="text-slate-400 hover:text-slate-700 font-bold text-xl">&times;</button>
+        </div>
+      </div>
+
+      <!-- Poster Body -->
+      <div id="bulletin-content" class="space-y-4">
+        <!-- Injected via JS -->
       </div>
     </div>
   </div>

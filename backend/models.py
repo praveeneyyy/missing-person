@@ -67,6 +67,11 @@ class CaseUpdate(BaseModel):
     clothing_description: Optional[str] = None
     notes: Optional[str] = None
 
+class CaseStatusUpdate(BaseModel):
+    status: str = Field(..., description="open | under_review | resolved | archived")
+    notes: Optional[str] = Field(None, description="Investigator notes explaining status transition")
+
+
 class ReviewCreate(BaseModel):
     disposition: str = Field(..., description="verified | escalated | request_more_info | rejected")
     rationale: str = Field(..., min_length=5, description="Mandatory investigator explanation")

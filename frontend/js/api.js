@@ -146,6 +146,30 @@ const API = {
     });
   },
 
+  async updateCaseStatus(caseId, status, notes = '') {
+    return this.request(`/cases/${caseId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status, notes })
+    });
+  },
+
+  async getCaseBulletin(caseId) {
+    return this.request(`/cases/${caseId}/bulletin`);
+  },
+
+  async archiveCase(caseId) {
+    return this.request(`/cases/${caseId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async deleteReferencePhoto(caseId, refId) {
+    return this.request(`/cases/${caseId}/references/${refId}`, {
+      method: 'DELETE'
+    });
+  },
+
+
   // Sightings Endpoints
   async submitSighting(formData) {
     return this.request('/sightings', {

@@ -5,3 +5,5 @@ __pycache__/
 .coverage
 htmlcov/
 *.sqlite3-journal
+*.db-journal
+test_missing_persons.db*
