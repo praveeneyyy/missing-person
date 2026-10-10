@@ -58,6 +58,18 @@ const App = {
       sightingForm.addEventListener('submit', (e) => this.handleSightingSubmit(e));
     }
 
+    // Officer login form
+    const loginForm = document.getElementById('officer-login-form');
+    if (loginForm) {
+      loginForm.addEventListener('submit', (e) => this.handleLoginSubmit(e));
+    }
+
+    // Provision officer form (Admin only)
+    const provisionForm = document.getElementById('provision-officer-form');
+    if (provisionForm) {
+      provisionForm.addEventListener('submit', (e) => this.handleProvisionOfficerSubmit(e));
+    }
+
     const sightingFile = document.getElementById('sighting-file');
     if (sightingFile) {
       sightingFile.addEventListener('change', (e) => this.handlePhotoPreview(e, 'sighting-preview-img', 'sighting-preview-box', 'sighting-img-meta'));
@@ -98,6 +110,7 @@ const App = {
     const userBadge = document.getElementById('user-profile-badge');
     const roleSelect = document.getElementById('quick-role-select');
     const staffNav = document.getElementById('staff-navigation');
+    const adminNav = document.getElementById('admin-nav-item');
 
     if (user) {
       if (userBadge) {
@@ -106,6 +119,7 @@ const App = {
             <span class="pulse-indicator pulse-emerald"></span>
             <span class="font-semibold text-slate-200 text-xs">${user.full_name}</span>
             <span class="font-mono text-[10px] bg-blue-900/80 text-blue-300 font-bold px-1.5 py-0.5 rounded border border-blue-700">${user.badge_number || user.role.toUpperCase()}</span>
+            <button onclick="App.handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-400 text-xs px-1.5 py-0.5 rounded transition">🚪</button>
           </div>
         `;
       }
@@ -115,13 +129,20 @@ const App = {
       if (staffNav) {
         staffNav.classList.remove('hidden');
       }
+      if (adminNav) {
+        if (user.role === 'admin') {
+          adminNav.classList.remove('hidden');
+        } else {
+          adminNav.classList.add('hidden');
+        }
+      }
     } else {
       if (userBadge) {
         userBadge.innerHTML = `
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
-            <span class="text-xs text-slate-300 font-medium">Public Visitor</span>
-          </div>
+          <button onclick="App.openModal('login-modal')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+            <span>🔒</span>
+            <span>OFFICER SIGN IN</span>
+          </button>
         `;
       }
       if (roleSelect) {
@@ -129,6 +150,9 @@ const App = {
       }
       if (staffNav) {
         staffNav.classList.add('hidden');
+      }
+      if (adminNav) {
+        adminNav.classList.add('hidden');
       }
     }
   },
@@ -177,6 +201,9 @@ const App = {
         break;
       case 'audit':
         await this.loadAuditLogs();
+        break;
+      case 'officers':
+        await this.loadOfficers();
         break;
       case 'benchmark':
         await this.loadBenchmark();
@@ -1091,6 +1118,133 @@ const App = {
   closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
+  },
+
+  // Module 1: Authentication & Officer Management Methods
+  async handleLogout() {
+    if (confirm('Sign out from active investigation session?')) {
+      await API.logout();
+      this.switchTab('public-home');
+    }
+  },
+
+  async handleLoginSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-submit-btn');
+    const errBox = document.getElementById('login-error-alert');
+    if (errBox) errBox.classList.add('hidden');
+    if (btn) btn.disabled = true;
+
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+
+    try {
+      await API.login(u, p);
+      this.closeModal('login-modal');
+      document.getElementById('officer-login-form').reset();
+      this.switchTab('dashboard');
+    } catch (err) {
+      if (errBox) {
+        errBox.innerText = err.message || 'Authentication failed. Please verify credentials.';
+        errBox.classList.remove('hidden');
+      } else {
+        alert('Authentication failed: ' + err.message);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  async quickFillLogin(username, password) {
+    document.getElementById('login-username').value = username;
+    document.getElementById('login-password').value = password;
+    document.getElementById('login-submit-btn').click();
+  },
+
+  async loadOfficers() {
+    try {
+      const officers = await API.getOfficers();
+      const tbody = document.getElementById('officers-table-body');
+      if (!tbody) return;
+
+      const currentUser = API.getUser();
+
+      tbody.innerHTML = officers.map(o => {
+        const isSelf = currentUser && currentUser.id === o.id;
+        const statusBadge = o.is_active
+          ? `<span class="badge-tactical badge-verified">ACTIVE</span>`
+          : `<span class="badge-tactical badge-escalated">DEACTIVATED</span>`;
+
+        const actionBtn = isSelf
+          ? `<span class="text-[11px] text-slate-500 font-mono">(Your Account)</span>`
+          : `<button onclick="App.toggleOfficerStatus(${o.id}, ${o.is_active})" class="text-xs px-2.5 py-1 rounded font-mono font-bold transition ${o.is_active ? 'bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800' : 'bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-800'}">
+              ${o.is_active ? 'Deactivate' : 'Activate'}
+             </button>`;
+
+        return `
+          <tr class="border-b border-slate-800 hover:bg-slate-950 font-mono text-xs transition">
+            <td class="py-3 px-4 font-bold text-white">${o.full_name}</td>
+            <td class="py-3 px-4 text-cyan-400 font-bold">${o.badge_number || 'N/A'}</td>
+            <td class="py-3 px-4 text-slate-300">${o.username}</td>
+            <td class="py-3 px-4 text-slate-400">${o.email}</td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-0.5 rounded font-bold uppercase text-[10px] border ${o.role === 'admin' ? 'bg-purple-950/80 text-purple-300 border-purple-700' : 'bg-blue-950/80 text-blue-300 border-blue-700'}">
+                ${o.role}
+              </span>
+            </td>
+            <td class="py-3 px-4">${statusBadge}</td>
+            <td class="py-3 px-4 text-right">${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Failed to load officers list:', err);
+    }
+  },
+
+  async handleProvisionOfficerSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('provision-submit-btn');
+    if (btn) btn.disabled = true;
+
+    try {
+      const username = document.getElementById('prov-username').value.trim();
+      const email = document.getElementById('prov-email').value.trim();
+      const password = document.getElementById('prov-password').value;
+      const fullName = document.getElementById('prov-fullname').value.trim();
+      const badgeNumber = document.getElementById('prov-badge').value.trim();
+      const role = document.getElementById('prov-role').value;
+
+      await API.provisionOfficer({
+        username,
+        email,
+        password,
+        full_name: fullName,
+        badge_number: badgeNumber,
+        role
+      });
+
+      alert(`Officer ${fullName} (${badgeNumber}) provisioned successfully!`);
+      this.closeModal('provision-officer-modal');
+      document.getElementById('provision-officer-form').reset();
+      this.loadOfficers();
+    } catch (err) {
+      alert('Failed to provision officer: ' + err.message);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
+  async toggleOfficerStatus(userId, currentStatus) {
+    const actionText = currentStatus ? 'deactivate' : 'activate';
+    if (!confirm(`Are you sure you want to ${actionText} this officer account?`)) return;
+
+    try {
+      await API.updateOfficerStatus(userId, !currentStatus);
+      this.loadOfficers();
+    } catch (err) {
+      alert('Status update failed: ' + err.message);
+    }
   }
 };
 

@@ -74,14 +74,41 @@ const API = {
     return res;
   },
 
-  logout() {
-    this.setToken('');
-    this.setUser(null);
-    window.dispatchEvent(new CustomEvent('auth-changed'));
+  async logout() {
+    try {
+      if (this.getToken()) {
+        await this.request('/auth/logout', { method: 'POST' });
+      }
+    } catch (e) {
+      // Ignore network errors on logout
+    } finally {
+      this.setToken('');
+      this.setUser(null);
+      window.dispatchEvent(new CustomEvent('auth-changed'));
+    }
   },
 
   async getMe() {
     return this.request('/auth/me');
+  },
+
+  // Staff & RBAC Management (Admin Only)
+  async getOfficers() {
+    return this.request('/auth/users');
+  },
+
+  async provisionOfficer(officerData) {
+    return this.request('/auth/users', {
+      method: 'POST',
+      body: JSON.stringify(officerData)
+    });
+  },
+
+  async updateOfficerStatus(userId, isActive) {
+    return this.request(`/auth/users/${userId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ is_active: isActive })
+    });
   },
 
   // Cases Endpoints

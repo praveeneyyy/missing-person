@@ -17,6 +17,28 @@ class UserResponse(BaseModel):
     full_name: str
     badge_number: Optional[str] = None
     role: str
+    is_active: Optional[bool] = True
+
+class UserCreate(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(..., min_length=5)
+    password: str = Field(..., min_length=6)
+    full_name: str = Field(..., min_length=2)
+    badge_number: Optional[str] = None
+    role: str = Field("investigator", description="admin | investigator")
+
+class UserUpdateStatus(BaseModel):
+    is_active: bool
+
+class UserDetailResponse(BaseModel):
+    id: int
+    username: str
+    email: str
+    full_name: str
+    badge_number: Optional[str] = None
+    role: str
+    is_active: bool
+    created_at: Optional[str] = None
 
 class CaseCreate(BaseModel):
     full_name: str

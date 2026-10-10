@@ -89,6 +89,10 @@
             <button data-tab="map" class="px-3.5 py-1.5 rounded-lg transition">GIS Map</button>
             <button data-tab="audit" class="px-3.5 py-1.5 rounded-lg transition">Audit Trail</button>
             <button data-tab="benchmark" class="px-3.5 py-1.5 rounded-lg transition">AI Benchmark</button>
+            <button id="admin-nav-item" data-tab="officers" class="px-3.5 py-1.5 rounded-lg transition hidden flex items-center gap-1.5">
+              <span>Staff Roster</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-mono font-bold border border-purple-500/30">ADMIN</span>
+            </button>
           </div>
         </div>
 
@@ -603,6 +607,41 @@
       <div id="benchmark-metrics-box"></div>
     </div>
 
+    <!-- ====================================================================
+         TAB 11: OFFICER ROSTER & RBAC MANAGEMENT (ADMIN ONLY)
+         ==================================================================== -->
+    <div id="tab-officers" class="tab-pane hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-white">Staff Roster & Role Authorization</h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Admin-controlled officer provisioning, credential security, and active session status.</p>
+        </div>
+        <button onclick="App.openModal('provision-officer-modal')" class="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-1.5 font-mono">
+          <span>+</span>
+          <span>Provision New Officer</span>
+        </button>
+      </div>
+
+      <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead class="bg-slate-950 border-b border-slate-800 text-[11px] font-mono font-bold text-slate-400 uppercase">
+              <tr>
+                <th class="py-3 px-4">Officer Name</th>
+                <th class="py-3 px-4">Badge No</th>
+                <th class="py-3 px-4">Username</th>
+                <th class="py-3 px-4">Official Email</th>
+                <th class="py-3 px-4">Role</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-right">Access Control</th>
+              </tr>
+            </thead>
+            <tbody id="officers-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- ====================================================================
@@ -788,6 +827,116 @@
       <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-3 rounded-xl transition">
         Return to Overview
       </button>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 4: PROVISION NEW OFFICER (ADMIN ONLY)
+       ==================================================================== -->
+  <div id="provision-officer-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-8 shadow-2xl border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-white">Provision Law Enforcement Account</h3>
+          <p class="text-xs text-slate-400 font-mono">Admin-authorized personnel enrollment with role-based access.</p>
+        </div>
+        <button onclick="App.closeModal('provision-officer-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+      </div>
+
+      <form id="provision-officer-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Full Legal Name *</label>
+          <input type="text" id="prov-fullname" required placeholder="e.g. Inspector Ramesh Kumar" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-purple-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Badge Number *</label>
+            <input type="text" id="prov-badge" required placeholder="e.g. INV-9042" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-cyan-300 focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">System Role *</label>
+            <select id="prov-role" required class="w-full text-xs font-mono font-bold px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-purple-300 focus:border-purple-500">
+              <option value="investigator">Investigator (Case & Leads Workbench)</option>
+              <option value="admin">Admin (Full System & User Control)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Username *</label>
+            <input type="text" id="prov-username" required placeholder="e.g. ramesh_k" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Official Email *</label>
+            <input type="email" id="prov-email" required placeholder="ramesh@police.gov.in" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-purple-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Temporary Initial Password *</label>
+          <input type="password" id="prov-password" required placeholder="Minimum 6 characters" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-purple-500">
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="App.closeModal('provision-officer-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-400 hover:text-white">Cancel</button>
+          <button type="submit" id="provision-submit-btn" class="px-5 py-2.5 text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white rounded-lg shadow-md transition font-mono">Provision Officer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       MODAL 5: OFFICER SECURE AUTHENTICATION (MODULE 1)
+       ==================================================================== -->
+  <div id="login-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-800 space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-950 border border-blue-800 flex items-center justify-center text-lg">
+            🛡️
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white">Authorized Officer Login</h3>
+            <p class="text-xs text-slate-400 font-mono">Role-Based Access Control Gate</p>
+          </div>
+        </div>
+        <button onclick="App.closeModal('login-modal')" class="text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+      </div>
+
+      <div id="login-error-alert" class="hidden p-3 rounded-lg bg-red-950/80 border border-red-800 text-red-200 text-xs font-mono"></div>
+
+      <form id="officer-login-form" class="space-y-4">
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Username or Official Email</label>
+          <input type="text" id="login-username" required placeholder="investigator or admin" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-blue-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Passphrase / Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••••••" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-blue-500">
+        </div>
+
+        <button type="submit" id="login-submit-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl transition font-mono shadow-md">
+          Authenticate & Obtain Session Token
+        </button>
+      </form>
+
+      <!-- Quick Demo Accounts -->
+      <div class="pt-4 border-t border-slate-800 space-y-2">
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider text-center">Demonstration One-Click Credentials:</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="App.quickFillLogin('investigator', 'investigator123')" class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-blue-500 text-left transition">
+            <div class="text-xs font-bold text-blue-300">Investigator</div>
+            <div class="text-[10px] font-mono text-slate-400 truncate">S. Praveen Kumar</div>
+          </button>
+          <button type="button" onclick="App.quickFillLogin('admin', 'admin123')" class="p-2.5 rounded-lg bg-slate-950 border border-slate-800 hover:border-purple-500 text-left transition">
+            <div class="text-xs font-bold text-purple-300">Admin Guide</div>
+            <div class="text-[10px] font-mono text-slate-400 truncate">Dr. S. Gayathri</div>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 

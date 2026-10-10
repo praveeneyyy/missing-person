@@ -6,9 +6,6 @@ from backend.config import BASE_DIR
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_data():
-    seed_database()
 
 def test_health_endpoint():
     res = client.get("/api/v1/health")

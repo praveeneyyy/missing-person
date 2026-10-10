@@ -16,7 +16,16 @@ from backend.auth import hash_password
 from backend.config import REFERENCES_DIR, SIGHTINGS_DIR, BASE_DIR
 from backend.face_engine import face_engine
 
-def seed_database():
+def seed_database(reset: bool = False):
+    if reset:
+        print("[Seed] Resetting database tables...")
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA foreign_keys = OFF;")
+            for tbl in ["notifications", "reviews", "candidate_matches", "sighting_media", "sightings", "reference_images", "cases", "audit_logs", "users"]:
+                cursor.execute(f"DROP TABLE IF EXISTS {tbl};")
+            cursor.execute("PRAGMA foreign_keys = ON;")
+
     print("[Seed] Initializing database schema...")
     init_db()
 
