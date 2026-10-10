@@ -1088,6 +1088,95 @@ const App = {
             <!-- Updated via JS -->
           </div>
         </div>
+
+        <!-- Module 3: Face Processing Diagnostic Inspector -->
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div class="inline-flex items-center gap-2 bg-blue-500/10 text-cyan-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-400/20 mb-1">
+                MODULE 3 • COMPUTER VISION PIPELINE
+              </div>
+              <h3 class="text-lg font-bold text-white">Face Processing & Alignment Inspector</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Inspect YuNet 5-landmark localization, SFace canonical 112x112 affine warp, and 128-D vector extraction.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <label for="face-inspect-upload" class="bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold text-xs px-3.5 py-2 rounded-lg cursor-pointer transition shadow-sm">
+                📁 Upload Image to Inspect
+              </label>
+              <input type="file" id="face-inspect-upload" accept="image/*" class="hidden" onchange="App.handleInspectUpload(event)">
+            </div>
+          </div>
+
+          <!-- Pipeline Architecture Telemetry Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="text-[10px] text-cyan-400 font-bold uppercase">STAGE 1: DETECTION</div>
+              <div class="font-bold text-white">OpenCV YuNet DNN</div>
+              <div class="text-[11px] text-slate-400">Dynamic input resolution • 5 landmark points (eyes, nose, mouth) • Calibrated threshold 0.60</div>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="text-[10px] text-blue-400 font-bold uppercase">STAGE 2: ALIGNMENT</div>
+              <div class="font-bold text-white">SFace Affine Warp</div>
+              <div class="text-[11px] text-slate-400">Canonical 112x112 pixel crop • Eye axis leveled to horizontal • Rotation & scale invariant</div>
+            </div>
+            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
+              <div class="text-[10px] text-emerald-400 font-bold uppercase">STAGE 3: EMBEDDING</div>
+              <div class="font-bold text-white">SFace 128-D Vector</div>
+              <div class="text-[11px] text-slate-400">Dense deep features • L2 unit spherical normalization (||v||₂ = 1.0) • Cosine metric</div>
+            </div>
+          </div>
+
+          <!-- Live Analysis Display Container -->
+          <div id="face-inspect-results" class="space-y-4">
+            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-500 font-mono">
+              Upload an image above to run live YuNet detection, landmark localization, affine alignment, and 128-D vector profiling.
+            </div>
+          </div>
+        </div>
+
+        <!-- Module 3: 1-to-1 Pairwise Biometric Verifier -->
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/20 mb-1">
+                MODULE 3 • PAIRWISE BIOMETRICS
+              </div>
+              <h3 class="text-lg font-bold text-white">1-to-1 Facial Verification Workbench</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Direct pairwise cosine similarity and Euclidean distance calculation between two face images.</p>
+            </div>
+          </div>
+
+          <form id="face-compare-form" onsubmit="App.handleCompareSubmit(event)" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Photo 1 -->
+              <div class="space-y-2">
+                <label class="block text-xs font-mono font-bold text-cyan-400 uppercase">Image A (Reference / Suspect)</label>
+                <input type="file" id="compare-file-1" accept="image/*" required class="w-full text-xs text-slate-400" onchange="App.handleComparePreview(event, 'compare-preview-1')">
+                <div id="compare-preview-1" class="h-44 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden">
+                  <span class="text-xs font-mono text-slate-600">No Image A Selected</span>
+                </div>
+              </div>
+
+              <!-- Photo 2 -->
+              <div class="space-y-2">
+                <label class="block text-xs font-mono font-bold text-blue-400 uppercase">Image B (Probe / Sighting)</label>
+                <input type="file" id="compare-file-2" accept="image/*" required class="w-full text-xs text-slate-400" onchange="App.handleComparePreview(event, 'compare-preview-2')">
+                <div id="compare-preview-2" class="h-44 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden">
+                  <span class="text-xs font-mono text-slate-600">No Image B Selected</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-mono text-slate-500">Calculates exact cosine angle & Euclidean distance between 128-D vectors.</span>
+              <button type="submit" id="btn-compare-faces" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-5 py-2.5 rounded-lg shadow-md transition">
+                Compute Pairwise Metric Distance →
+              </button>
+            </div>
+          </form>
+
+          <div id="compare-results-box" class="hidden"></div>
+        </div>
       `;
 
       this.updateThresholdSimulation(this.simulatedThreshold);
@@ -1118,6 +1207,201 @@ const App = {
       <div class="leading-relaxed text-slate-600 mt-1">${tierDesc}</div>
     `;
   },
+
+  async handleInspectUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const container = document.getElementById('face-inspect-results');
+    if (!container) return;
+    container.innerHTML = `
+      <div class="p-6 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-cyan-400 font-mono animate-pulse">
+        Running OpenCV YuNet DNN detection, landmark triangulation, affine alignment, and SFace 128-D embedding extraction...
+      </div>
+    `;
+
+    try {
+      const res = await API.analyzeFace(file);
+      const lat = res.latency_profile_ms;
+
+      container.innerHTML = `
+        <!-- Latency Waterfall Strip -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+          <div class="flex items-center gap-4">
+            <span class="text-cyan-400 font-bold">LATENCY WATERFALL:</span>
+            <span class="text-slate-300">YuNet Detection: <strong class="text-cyan-300">${lat.detection_ms} ms</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-slate-300">SFace Alignment: <strong class="text-blue-300">${lat.alignment_ms} ms</strong></span>
+            <span class="text-slate-600">|</span>
+            <span class="text-slate-300">128-D Extraction: <strong class="text-emerald-300">${lat.feature_extraction_ms} ms</strong></span>
+          </div>
+          <div class="bg-blue-950/80 px-3 py-1 rounded border border-blue-700 text-blue-200 font-bold">
+            TOTAL PIPELINE: ${lat.total_pipeline_ms} ms (${res.faces_detected_count} face${res.faces_detected_count === 1 ? '' : 's'})
+          </div>
+        </div>
+
+        ${res.faces_detected_count === 0 ? `
+          <div class="p-6 bg-amber-950/40 rounded-xl border border-amber-800/60 text-xs text-amber-200 font-mono">
+            ⚠️ <strong>0 Faces Detected:</strong> YuNet score threshold was not met. Ensure face is unobstructed and well-lit.
+          </div>
+        ` : `
+          <div class="grid grid-cols-1 lg:grid-cols-${Math.min(res.faces_detected_count, 2)} gap-6">
+            ${res.detections.map(d => `
+              <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span class="font-mono font-bold text-cyan-400 text-xs">FACE #${d.face_index + 1} • CONFIDENCE: ${(d.confidence * 100).toFixed(1)}%</span>
+                  <span class="text-[10px] font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">BBOX: [${d.bbox.join(', ')}]</span>
+                </div>
+
+                <div class="flex items-start gap-4">
+                  <!-- Aligned 112x112 Thumbnail -->
+                  <div class="space-y-1 text-center">
+                    <img src="${d.aligned_crop_base64}" class="w-24 h-24 rounded-lg border-2 border-cyan-500/50 shadow-md object-cover" alt="Aligned Face"/>
+                    <span class="text-[9px] font-mono text-cyan-400 block">112×112 Canonical</span>
+                  </div>
+
+                  <!-- Geometric & Quality Metrics -->
+                  <div class="flex-1 space-y-1.5 font-mono text-xs">
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">EYE TILT ANGLE:</span>
+                      <span class="text-slate-200 font-bold">${d.tilt_angle_deg}°</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">IMAGE SHARPNESS:</span>
+                      <span class="text-slate-200 font-bold">${d.sharpness_score} (Laplacian var)</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">L2 SPHERICAL NORM:</span>
+                      <span class="text-emerald-400 font-bold">${d.embedding_summary.l2_norm} (Unit)</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span class="text-slate-500">VECTOR DIMS:</span>
+                      <span class="text-slate-200 font-bold">${d.embedding_summary.dimensions} Dense Floats</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 128-D Vector Sparkline / Coefficient Preview -->
+                <div class="p-3 bg-slate-900 rounded-lg border border-slate-800 space-y-2">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                    <span>128-D EMBEDDING COEFFICIENTS (SAMPLE):</span>
+                    <span>Range: [${d.embedding_summary.min}, ${d.embedding_summary.max}]</span>
+                  </div>
+                  <div class="flex gap-1 h-6 items-end bg-slate-950 p-1 rounded border border-slate-800">
+                    ${d.embedding.slice(0, 32).map(val => {
+                      const pct = Math.min(100, Math.max(5, Math.abs(val) * 350));
+                      const color = val >= 0 ? 'bg-cyan-500' : 'bg-blue-500';
+                      return `<div style="height: ${pct}%; width: 3%;" class="${color} rounded-sm" title="${val.toFixed(4)}"></div>`;
+                    }).join('')}
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-500 truncate">
+                    Preview: [${d.embedding_summary.preview.join(', ')}...]
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      `;
+    } catch (err) {
+      container.innerHTML = `
+        <div class="p-6 bg-red-950/60 rounded-xl border border-red-800 text-xs text-red-200 font-mono">
+          Face analysis failed: ${err.message}
+        </div>
+      `;
+    }
+  },
+
+  handleComparePreview(event, previewId) {
+    const file = event.target.files[0];
+    const box = document.getElementById(previewId);
+    if (!file || !box) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      box.innerHTML = `<img src="${e.target.result}" class="w-full h-full object-cover rounded-xl" alt="Preview"/>`;
+    };
+    reader.readAsDataURL(file);
+  },
+
+  async handleCompareSubmit(event) {
+    event.preventDefault();
+    const f1 = document.getElementById('compare-file-1')?.files[0];
+    const f2 = document.getElementById('compare-file-2')?.files[0];
+    if (!f1 || !f2) {
+      alert('Please select both Image A and Image B for pairwise comparison.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-compare-faces');
+    const resultsBox = document.getElementById('compare-results-box');
+    if (btn) btn.disabled = true;
+    if (resultsBox) {
+      resultsBox.classList.remove('hidden');
+      resultsBox.innerHTML = `
+        <div class="p-6 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-emerald-400 font-mono animate-pulse">
+          Computing pairwise cosine similarity and Euclidean vector distance between SFace 128-D embeddings...
+        </div>
+      `;
+    }
+
+    try {
+      const res = await API.compareFaces(f1, f2);
+      const isVerified = res.disposition === 'verified';
+      const isModerate = res.disposition === 'moderate';
+      const tierBadge = isVerified
+        ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+        : (isModerate ? 'bg-amber-950 border-amber-500 text-amber-300' : 'bg-red-950 border-red-500 text-red-300');
+
+      resultsBox.innerHTML = `
+        <div class="p-6 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <span class="text-[10px] font-mono uppercase text-slate-500 block">PAIRWISE METRIC EVALUATION</span>
+              <div class="text-2xl font-black font-mono ${isVerified ? 'text-emerald-400' : (isModerate ? 'text-amber-400' : 'text-red-400')}">
+                ${res.similarity_percent}% Cosine Similarity
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="px-3 py-1 rounded-full text-xs font-mono font-bold border ${tierBadge}">
+                ${res.disposition_label}
+              </span>
+              <div class="text-[10px] font-mono text-slate-500 mt-1">Euclidean Distance: ${res.euclidean_distance}</div>
+            </div>
+          </div>
+
+          <!-- Dual Aligned Face View -->
+          <div class="grid grid-cols-2 gap-6 items-center text-center">
+            <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+              <img src="${res.image1.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border-2 border-cyan-500 object-cover shadow" alt="Face A"/>
+              <div class="text-xs font-mono font-bold text-cyan-300">Image A (Canonical 112×112)</div>
+              <div class="text-[10px] font-mono text-slate-400">Confidence: ${(res.image1.confidence * 100).toFixed(1)}% • Sharpness: ${res.image1.sharpness}</div>
+            </div>
+
+            <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
+              <img src="${res.image2.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border-2 border-blue-500 object-cover shadow" alt="Face B"/>
+              <div class="text-xs font-mono font-bold text-blue-300">Image B (Canonical 112×112)</div>
+              <div class="text-[10px] font-mono text-slate-400">Confidence: ${(res.image2.confidence * 100).toFixed(1)}% • Sharpness: ${res.image2.sharpness}</div>
+            </div>
+          </div>
+
+          <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+            <span>Formula: cos(θ) = u · v / (||u|| ||v||) • d_E = √(2 - 2cos(θ))</span>
+            <span>Inference Time: ${res.combined_latency_ms} ms</span>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      resultsBox.innerHTML = `
+        <div class="p-6 bg-red-950/60 rounded-xl border border-red-800 text-xs text-red-200 font-mono">
+          Comparison failed: ${err.message}
+        </div>
+      `;
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  },
+
 
   handlePhotoPreview(event, imgId, boxId, metaId) {
     const file = event.target.files[0];

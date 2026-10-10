@@ -222,5 +222,29 @@ const API = {
 
   async getNotifications() {
     return this.request('/notifications');
+  },
+
+  // Module 3: Face Processing Engine Endpoints
+  async getFaceModels() {
+    return this.request('/faces/models');
+  },
+
+  async analyzeFace(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request('/faces/analyze', {
+      method: 'POST',
+      body: formData
+    });
+  },
+
+  async compareFaces(file1, file2) {
+    const formData = new FormData();
+    formData.append('file1', file1);
+    formData.append('file2', file2);
+    return this.request('/faces/compare', {
+      method: 'POST',
+      body: formData
+    });
   }
 };

@@ -1,6 +1,9 @@
 import os
 import cv2
 import numpy as np
+import base64
+import time
+import math
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 from backend.config import (
@@ -151,6 +154,160 @@ class FaceEngine:
                 "embedding": embedding
             })
         return processed_faces
+
+    def analyze_face_image(self, img: np.ndarray) -> Dict[str, Any]:
+        """
+        Diagnostic inspection of the 3-stage computer vision pipeline:
+        Stage 1: Detection & 5-Landmark Localization (YuNet DNN)
+        Stage 2: Affine Canonical Alignment & 112x112 Cropping (SFace alignCrop)
+        Stage 3: 128-Dimensional Feature Representation & L2 Normalization (SFace)
+        """
+        h, w = img.shape[:2]
+
+        t0 = time.perf_counter()
+        detector = self._get_detector(w, h)
+        _, raw_faces = detector.detect(img)
+        t_detect = (time.perf_counter() - t0) * 1000.0
+
+        detections = []
+        t_align_total = 0.0
+        t_feature_total = 0.0
+
+        if raw_faces is not None:
+            for idx, face in enumerate(raw_faces):
+                bbox = [int(face[0]), int(face[1]), int(face[2]), int(face[3])]
+                bbox[0] = max(0, bbox[0])
+                bbox[1] = max(0, bbox[1])
+                bbox[2] = min(w - bbox[0], bbox[2])
+                bbox[3] = min(h - bbox[1], bbox[3])
+
+                landmarks = []
+                for i in range(4, 14, 2):
+                    landmarks.append([float(face[i]), float(face[i+1])])
+
+                confidence = float(face[14])
+
+                # Calculate pre-alignment eye tilt angle in degrees
+                dx = landmarks[1][0] - landmarks[0][0]
+                dy = landmarks[1][1] - landmarks[0][1]
+                tilt_angle = math.degrees(math.atan2(dy, dx + 1e-7))
+
+                # Stage 2: Canonical Affine Alignment (112x112)
+                t_a0 = time.perf_counter()
+                aligned_face = self.recognizer.alignCrop(img, face)
+                t_align_total += (time.perf_counter() - t_a0) * 1000.0
+
+                # Measure sharpness / blur of aligned face
+                sharpness = float(cv2.Laplacian(aligned_face, cv2.CV_64F).var())
+
+                # Stage 3: Feature Extraction (128-D)
+                t_f0 = time.perf_counter()
+                feature = self.recognizer.feature(aligned_face)
+                vec = feature.flatten().astype(float)
+                norm = float(np.linalg.norm(vec))
+                if norm > 0:
+                    vec = vec / norm
+                t_feature_total += (time.perf_counter() - t_f0) * 1000.0
+
+                # Encode 112x112 aligned thumbnail
+                _, enc = cv2.imencode(".jpg", aligned_face, [cv2.IMWRITE_JPEG_QUALITY, 90])
+                aligned_b64 = f"data:image/jpeg;base64,{base64.b64encode(enc).decode('utf-8')}"
+
+                detections.append({
+                    "face_index": idx,
+                    "bbox": bbox,
+                    "landmarks": landmarks,
+                    "confidence": round(confidence, 4),
+                    "tilt_angle_deg": round(tilt_angle, 2),
+                    "sharpness_score": round(sharpness, 1),
+                    "aligned_crop_base64": aligned_b64,
+                    "embedding": vec.tolist(),
+                    "embedding_summary": {
+                        "dimensions": len(vec),
+                        "l2_norm": round(float(np.linalg.norm(vec)), 5),
+                        "min": round(float(np.min(vec)), 4),
+                        "max": round(float(np.max(vec)), 4),
+                        "mean": round(float(np.mean(vec)), 5),
+                        "std": round(float(np.std(vec)), 5),
+                        "preview": [round(float(x), 4) for x in vec[:8]]
+                    }
+                })
+
+        total_time = t_detect + t_align_total + t_feature_total
+
+        return {
+            "image_dimensions": {"width": w, "height": h},
+            "faces_detected_count": len(detections),
+            "latency_profile_ms": {
+                "detection_ms": round(t_detect, 2),
+                "alignment_ms": round(t_align_total, 2),
+                "feature_extraction_ms": round(t_feature_total, 2),
+                "total_pipeline_ms": round(total_time, 2)
+            },
+            "model_metadata": {
+                "detector": "OpenCV YuNet (ONNX)",
+                "detector_version": "2023mar",
+                "recognizer": "OpenCV SFace 128-D (ONNX)",
+                "recognizer_version": "2021dec",
+                "canonical_crop_size": "112x112",
+                "feature_dimensions": 128,
+                "metric": "Cosine Similarity"
+            },
+            "detections": detections
+        }
+
+    def compare_two_faces(self, img1: np.ndarray, img2: np.ndarray) -> Dict[str, Any]:
+        """
+        Direct pairwise biometric comparison between two face images.
+        """
+        diag1 = self.analyze_face_image(img1)
+        diag2 = self.analyze_face_image(img2)
+
+        if diag1["faces_detected_count"] == 0:
+            raise ValueError("No face detected in Image 1.")
+        if diag2["faces_detected_count"] == 0:
+            raise ValueError("No face detected in Image 2.")
+
+        face1 = diag1["detections"][0]
+        face2 = diag2["detections"][0]
+
+        sim = self.cosine_similarity(face1["embedding"], face2["embedding"])
+        euclidean_dist = math.sqrt(max(0.0, 2.0 * (1.0 - sim)))
+
+        if sim >= SIMILARITY_THRESHOLD_HIGH:
+            disposition = "verified"
+            disposition_label = "Confirmed Match (High Confidence ≥ 0.70)"
+        elif sim >= SIMILARITY_THRESHOLD_MODERATE:
+            disposition = "moderate"
+            disposition_label = "Plausible Match (Moderate 0.50 - 0.69)"
+        else:
+            disposition = "non_match"
+            disposition_label = "Non-Match (Low Similarity < 0.50)"
+
+        return {
+            "cosine_similarity": round(sim, 4),
+            "similarity_percent": round(max(0.0, sim) * 100, 1),
+            "euclidean_distance": round(euclidean_dist, 4),
+            "disposition": disposition,
+            "disposition_label": disposition_label,
+            "image1": {
+                "bbox": face1["bbox"],
+                "landmarks": face1["landmarks"],
+                "confidence": face1["confidence"],
+                "sharpness": face1["sharpness_score"],
+                "aligned_crop_base64": face1["aligned_crop_base64"],
+                "embedding_preview": face1["embedding_summary"]["preview"]
+            },
+            "image2": {
+                "bbox": face2["bbox"],
+                "landmarks": face2["landmarks"],
+                "confidence": face2["confidence"],
+                "sharpness": face2["sharpness_score"],
+                "aligned_crop_base64": face2["aligned_crop_base64"],
+                "embedding_preview": face2["embedding_summary"]["preview"]
+            },
+            "combined_latency_ms": round(diag1["latency_profile_ms"]["total_pipeline_ms"] + diag2["latency_profile_ms"]["total_pipeline_ms"], 2)
+        }
 
     @staticmethod
     def cosine_similarity(vec1: List[float], vec2: List[float]) -> float:
