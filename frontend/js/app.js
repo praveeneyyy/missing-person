@@ -159,7 +159,10 @@ const App = {
           adminNav.classList.add('hidden');
         }
       }
+      this.loadNotifications();
     } else {
+      const bell = document.getElementById('notification-bell-container');
+      if (bell) bell.classList.add('hidden');
       if (userBadge) {
         userBadge.innerHTML = `
           <button onclick="App.openModal('login-modal')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
@@ -475,27 +478,134 @@ const App = {
           }).join('');
         }
       }
+
+      // Load chronological timeline (Module 6)
+      await this.loadCaseTimeline(caseId);
+
     } catch (err) {
       alert('Failed to load case dossier: ' + err.message);
+    }
+  },
+
+  async loadCaseTimeline(caseId) {
+    const container = document.getElementById('case-detail-timeline');
+    if (!container) return;
+
+    try {
+      const res = await API.getCaseTimeline(caseId);
+      if (!res.events || res.events.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 font-mono text-xs bg-slate-950 rounded-xl border border-slate-800">No events recorded in case timeline yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = res.events.map(ev => {
+        const badgeColor = ev.badge_color || 'blue';
+        const colorClasses = {
+          blue: 'border-blue-500/40 bg-blue-950/40 text-blue-300',
+          cyan: 'border-cyan-500/40 bg-cyan-950/40 text-cyan-300',
+          emerald: 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300',
+          amber: 'border-amber-500/40 bg-amber-950/40 text-amber-300',
+          orange: 'border-orange-500/40 bg-orange-950/40 text-orange-300',
+          rose: 'border-rose-500/40 bg-rose-950/40 text-rose-300',
+          purple: 'border-purple-500/40 bg-purple-950/40 text-purple-300',
+          slate: 'border-slate-700 bg-slate-900 text-slate-300'
+        }[badgeColor] || 'border-slate-700 bg-slate-900 text-slate-300';
+
+        return `
+          <div class="relative pl-6 pb-6 border-l border-slate-800 last:border-l-0 last:pb-0">
+            <!-- Timeline Marker Icon -->
+            <div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[10px]">
+              ${ev.icon || '•'}
+            </div>
+
+            <!-- Event Card -->
+            <div class="p-4 rounded-xl border ${colorClasses} space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-white text-xs">${ev.title}</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300">${ev.event_type}</span>
+                </div>
+                <span class="text-[11px] font-mono text-slate-400">${ev.timestamp}</span>
+              </div>
+
+              <p class="text-xs text-slate-300 font-sans leading-relaxed">${ev.description}</p>
+
+              <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
+                <div>
+                  <span>OFFICER / ACTOR:</span> <strong class="text-slate-200">${ev.actor_name}</strong> (${ev.badge_number})
+                </div>
+                ${ev.metadata && ev.metadata.similarity_score ? `
+                  <div class="text-amber-400 font-bold">
+                    AI Match: ${(ev.metadata.similarity_score * 100).toFixed(1)}% Cosine
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Failed to load case timeline:', err);
+      container.innerHTML = `<div class="p-4 text-center text-red-400 text-xs">Failed to load timeline: ${err.message}</div>`;
+    }
+  },
+
+  refreshCaseTimeline() {
+    if (this.currentCaseId) {
+      this.loadCaseTimeline(this.currentCaseId);
     }
   },
 
   // 3. Forensic Candidate Review Workbench (Module 6 Core)
   async loadReviewQueue() {
     try {
-      const candidates = await API.getPendingCandidates();
+      // 1. Fetch queue workload telemetry
+      try {
+        const stats = await API.getCandidateStats();
+        const elPending = document.getElementById('rq-stat-pending');
+        const elHigh = document.getElementById('rq-stat-high');
+        const elVerified = document.getElementById('rq-stat-verified');
+        const elEscalated = document.getElementById('rq-stat-escalated');
+        if (elPending) elPending.innerText = stats.pending_review ?? 0;
+        if (elHigh) elHigh.innerText = stats.high_confidence_pending ?? 0;
+        if (elVerified) elVerified.innerText = stats.verified_count ?? 0;
+        if (elEscalated) elEscalated.innerText = stats.escalated_count ?? 0;
+      } catch (stErr) {
+        console.error('Failed to load queue telemetry:', stErr);
+      }
+
+      // 2. Read active filter selections
+      const statusVal = document.getElementById('rq-filter-status')?.value || 'requires_human_review';
+      const tierVal = document.getElementById('rq-filter-tier')?.value || 'all';
+      const sortVal = document.getElementById('rq-sort-by')?.value || 'score_desc';
+
+      let minScore = null;
+      if (tierVal === 'high') minScore = 0.70;
+      else if (tierVal === 'moderate') minScore = 0.50;
+
+      const filterParams = {
+        status: statusVal,
+        minScore: minScore,
+        sortBy: sortVal
+      };
+
+      let candidates = await API.getCandidates(filterParams);
+      if (tierVal === 'low') {
+        candidates = candidates.filter(c => c.similarity_score < 0.50);
+      }
+
       const container = document.getElementById('review-queue-list');
       if (!container) return;
 
       if (candidates.length === 0) {
         container.innerHTML = `
-          <div class="p-16 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
-            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-2xl border border-emerald-200">
+          <div class="p-16 text-center bg-slate-900 rounded-2xl border border-slate-800 shadow-sm space-y-3">
+            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-950/80 text-emerald-400 flex items-center justify-center font-bold text-2xl border border-emerald-700/50">
               ✓
             </div>
-            <h3 class="text-lg font-extrabold text-slate-900">Review Queue Cleared</h3>
-            <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-              All potential candidate matches have been adjudicated with recorded rationale. New public sightings will appear here automatically.
+            <h3 class="text-lg font-extrabold text-white">No Leads Matching Active Filter</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed font-mono">
+              All candidate leads for filter [Status: ${statusVal.toUpperCase()}, Tier: ${tierVal.toUpperCase()}] have been cleared or none are queued. Adjust filters above to inspect historical or low-similarity items.
             </p>
           </div>
         `;
@@ -505,11 +615,12 @@ const App = {
       container.innerHTML = candidates.map(c => {
         const scorePercent = (c.similarity_score * 100).toFixed(1);
         const isHigh = c.similarity_score >= 0.70;
-        const tierLabel = isHigh ? 'HIGH CONFIDENCE (≥ 0.70)' : (c.similarity_score >= 0.50 ? 'MODERATE (0.50 - 0.69)' : 'LOW SIMILARITY');
-        const tierBadgeClass = isHigh ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        const tierLabel = isHigh ? 'HIGH CONFIDENCE (≥ 0.70)' : (c.similarity_score >= 0.50 ? 'MODERATE (0.50 - 0.69)' : 'LOW SIMILARITY (< 0.50)');
+        const tierBadgeClass = isHigh ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : (c.similarity_score >= 0.50 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-700/40 text-slate-300 border-slate-600');
 
         // Calculate geographical distance in km between Case last-seen and Sighting
-        const distKm = MapManager.calculateDistanceKm(c.case_lat, c.case_lng, c.sighting_lat, c.sighting_lng);
+        const distKm = c.spatial_separation_km !== undefined ? c.spatial_separation_km : MapManager.calculateDistanceKm(c.case_lat, c.case_lng, c.sighting_lat, c.sighting_lng);
+        const daysDelta = c.temporal_delta_days !== undefined ? c.temporal_delta_days : null;
 
         // Parse landmarks & bbox for canvases
         const sightingFaces = c.sighting_faces_json ? JSON.parse(c.sighting_faces_json) : [];
@@ -521,15 +632,18 @@ const App = {
         const refLandmarks = c.ref_landmarks_json ? JSON.parse(c.ref_landmarks_json) : null;
 
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden mb-8">
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden mb-8">
             <!-- Command Console Header -->
             <div class="bg-slate-950 text-white p-5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
               <div class="flex items-center gap-3">
-                <span class="pulse-indicator pulse-amber"></span>
+                <span class="pulse-indicator ${isHigh ? 'pulse-emerald' : 'pulse-amber'}"></span>
                 <div>
                   <div class="flex items-center gap-2">
                     <span class="font-mono font-extrabold text-cyan-400 text-sm tracking-wide">LEAD ADJUDICATION #${c.candidate_id}</span>
                     <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono border border-slate-700">Rank #${c.rank}</span>
+                    ${c.match_status !== 'requires_human_review' ? `
+                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">${c.match_status.toUpperCase()}</span>
+                    ` : ''}
                   </div>
                   <div class="text-xs text-slate-400 mt-0.5">
                     Sighting <strong class="text-slate-200 font-mono">${c.receipt_no}</strong> correlated against Case <strong class="text-slate-200 font-mono">${c.reference_no}</strong> (${c.person_name})
@@ -540,7 +654,7 @@ const App = {
               <!-- Biometric Match Score Badge -->
               <div class="flex items-center gap-4">
                 <div class="text-right">
-                  <div class="font-mono text-2xl font-black ${isHigh ? 'text-emerald-400' : 'text-amber-400'}">
+                  <div class="font-mono text-2xl font-black ${isHigh ? 'text-emerald-400' : (c.similarity_score >= 0.50 ? 'text-amber-400' : 'text-slate-400')}">
                     ${scorePercent}%
                   </div>
                   <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">${tierLabel}</div>
@@ -548,18 +662,18 @@ const App = {
 
                 <div class="h-10 w-px bg-slate-800"></div>
 
-                <span class="badge-tactical badge-under_review">
-                  Pending Human Review
+                <span class="badge-tactical badge-${c.match_status}">
+                  ${c.match_status === 'requires_human_review' ? 'Pending Human Review' : c.match_status}
                 </span>
               </div>
             </div>
 
             <!-- Mandatory Ethical & Legal Caution Banner -->
-            <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-b border-amber-500/20 px-6 py-2.5 text-xs text-amber-900 flex items-center gap-2.5">
+            <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-b border-amber-500/20 px-6 py-2.5 text-xs text-amber-200 flex items-center gap-2.5">
               <span class="text-base">⚖️</span>
               <div>
-                <span class="font-bold">MANDATORY INVESTIGATION GOVERNANCE:</span>
-                <span>Biometric similarity scores are mathematical ranking signals only. Autonomous identification is prohibited. Review officers must record affirmative written findings.</span>
+                <span class="font-bold text-amber-300">MANDATORY INVESTIGATION GOVERNANCE:</span>
+                <span class="text-slate-300">Biometric similarity scores are mathematical ranking signals only. Autonomous identification is prohibited. Review officers must record affirmative written findings.</span>
               </div>
             </div>
 
@@ -651,43 +765,48 @@ const App = {
             </div>
 
             <!-- Forensic Correlation & Spatial Metrics Bar -->
-            <div class="bg-slate-50 border-t border-b border-slate-200 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
-              <div class="flex items-center gap-6 font-mono">
+            <div class="bg-slate-950/80 border-t border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-300">
+              <div class="flex flex-wrap items-center gap-6">
                 <div>
-                  <span class="text-slate-400 text-[10px] block">SPATIAL SEPARATION</span>
-                  <span class="font-bold text-slate-800">${distKm ? `${distKm} km from origin` : 'Coordinates pending'}</span>
+                  <span class="text-slate-500 text-[10px] block">SPATIAL SEPARATION</span>
+                  <span class="font-bold text-cyan-400">${distKm !== null ? `${distKm} km from origin` : 'Coordinates pending'}</span>
                 </div>
                 <div>
-                  <span class="text-slate-400 text-[10px] block">AI FEATURE VECTOR</span>
-                  <span class="font-bold text-slate-800">${c.model_version} (128-D)</span>
+                  <span class="text-slate-500 text-[10px] block">TEMPORAL DELTA</span>
+                  <span class="font-bold text-amber-300">${daysDelta !== null ? `${daysDelta} days elapsed` : 'Simultaneous'}</span>
                 </div>
                 <div>
-                  <span class="text-slate-400 text-[10px] block">METRIC DISTANCE</span>
-                  <span class="font-bold text-slate-800">Cosine: ${c.similarity_score.toFixed(4)}</span>
+                  <span class="text-slate-500 text-[10px] block">FEATURE VECTOR</span>
+                  <span class="font-bold text-slate-200">${c.model_version} (128-D)</span>
+                </div>
+                <div>
+                  <span class="text-slate-500 text-[10px] block">COSINE SIMILARITY</span>
+                  <span class="font-bold text-slate-200">${c.similarity_score.toFixed(4)}</span>
                 </div>
               </div>
 
-              <div class="text-slate-500 text-[11px]">
-                Click an adjudication action below to open the formal decision dialog.
-              </div>
+              <!-- Quick GIS Map Inspection -->
+              <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition flex items-center gap-1.5 shadow-sm">
+                <span>🗺️</span> <span>Inspect on GIS Map</span>
+              </button>
             </div>
 
             <!-- Adjudication Action Command Bar -->
-            <div class="p-6 bg-white flex flex-wrap items-center justify-between gap-4">
+            <div class="p-5 bg-slate-900 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/80">
               <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-500 font-semibold">Quick Decision:</span>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                <span class="text-xs text-slate-400 font-semibold font-mono">Quick Adjudication:</span>
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
                   Reject Lead
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-amber-950/50 hover:bg-amber-900 text-amber-300 border border-amber-800 transition">
                   Request Witness Info
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-orange-950/50 hover:bg-orange-900 text-orange-300 border border-orange-800 transition">
                   Escalate to Field Team
                 </button>
               </div>
 
-              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition flex items-center gap-1.5">
+              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-extrabold font-mono rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition flex items-center gap-1.5">
                 <span>✓</span>
                 <span>Confirm Verified Match</span>
               </button>
@@ -714,6 +833,40 @@ const App = {
 
     } catch (err) {
       console.error('Error loading review queue:', err);
+    }
+  },
+
+  applyReviewFilters() {
+    this.loadReviewQueue();
+  },
+
+  async openBatchRejectModal() {
+    try {
+      const candidates = await API.getCandidates({ status: 'requires_human_review' });
+      const lowConfidenceLeads = candidates.filter(c => c.similarity_score < 0.50);
+
+      if (lowConfidenceLeads.length === 0) {
+        alert('No pending leads with similarity < 0.50 found to batch reject.');
+        return;
+      }
+
+      const confirmed = confirm(
+        `Found ${lowConfidenceLeads.length} low-similarity lead(s) (< 0.50 Cosine).\n\nDo you want to batch-reject these false positives with written rationale: "Batch rejected during routine noise filtering"?`
+      );
+
+      if (confirmed) {
+        const ids = lowConfidenceLeads.map(c => c.candidate_id);
+        const res = await API.submitBatchReview(
+          ids,
+          'rejected',
+          'Batch rejected during routine noise filtering on low-similarity leads (< 0.50).',
+          'Discarded from active lead queue.'
+        );
+        alert(res.message);
+        this.loadReviewQueue();
+      }
+    } catch (err) {
+      alert('Batch reject failed: ' + err.message);
     }
   },
 
@@ -869,8 +1022,96 @@ const App = {
       this.closeReviewModal();
       document.getElementById('review-rationale').value = '';
       this.loadReviewQueue();
+      this.loadNotifications();
     } catch (err) {
       alert('Review submission failed: ' + err.message);
+    }
+  },
+
+  // Notification Operations (Module 6)
+  async loadNotifications() {
+    const user = API.getUser();
+    const bellContainer = document.getElementById('notification-bell-container');
+    const badge = document.getElementById('notif-badge');
+    const list = document.getElementById('notif-dropdown-list');
+    if (!user) {
+      if (bellContainer) bellContainer.classList.add('hidden');
+      return;
+    }
+    if (bellContainer) bellContainer.classList.remove('hidden');
+
+    try {
+      const res = await API.getNotifications(false, 15);
+      const unread = res.unread_count || 0;
+      if (badge) {
+        if (unread > 0) {
+          badge.innerText = unread > 9 ? '9+' : unread;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      if (list) {
+        if (!res.notifications || res.notifications.length === 0) {
+          list.innerHTML = `<div class="p-4 text-center text-slate-500 font-mono text-xs">No active alerts. All operational notifications cleared.</div>`;
+        } else {
+          list.innerHTML = res.notifications.map(n => {
+            const isUnread = !n.is_read;
+            const icon = n.category === 'match_alert' ? '⚡' : (n.category === 'review_update' ? '⚖️' : '🔔');
+            return `
+              <div onclick="App.handleNotificationClick(${n.id}, '${n.link_url || ''}')" class="p-3 ${isUnread ? 'bg-slate-800/80 hover:bg-slate-750' : 'bg-slate-900/40 hover:bg-slate-800/60'} transition cursor-pointer flex items-start gap-3">
+                <span class="text-base mt-0.5">${icon}</span>
+                <div class="flex-grow min-w-0">
+                  <div class="flex items-center justify-between gap-1">
+                    <span class="font-bold text-slate-200 text-xs truncate ${isUnread ? 'text-cyan-300' : ''}">${n.title}</span>
+                    ${isUnread ? '<span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>' : ''}
+                  </div>
+                  <p class="text-slate-400 text-[11px] leading-relaxed mt-0.5">${n.message}</p>
+                  <span class="text-[10px] font-mono text-slate-500 mt-1 block">${n.created_at}</span>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+    }
+  },
+
+  toggleNotificationDropdown() {
+    const drop = document.getElementById('notif-dropdown');
+    if (!drop) return;
+    drop.classList.toggle('hidden');
+    if (!drop.classList.contains('hidden')) {
+      this.loadNotifications();
+    }
+  },
+
+  async markAllNotificationsRead() {
+    try {
+      await API.markAllNotificationsRead();
+      await this.loadNotifications();
+    } catch (err) {
+      console.error('Failed to mark all read:', err);
+    }
+  },
+
+  async handleNotificationClick(notifId, linkUrl) {
+    try {
+      await API.markNotificationRead(notifId);
+      const drop = document.getElementById('notif-dropdown');
+      if (drop) drop.classList.add('hidden');
+      this.loadNotifications();
+
+      if (linkUrl && linkUrl.includes('/review')) {
+        this.switchTab('review-queue');
+      } else if (linkUrl && linkUrl.includes('/cases')) {
+        this.switchTab('cases');
+      }
+    } catch (err) {
+      console.error('Error handling notification click:', err);
     }
   },
 

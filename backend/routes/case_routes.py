@@ -362,6 +362,176 @@ def get_case_bulletin(
             "legal_notice": "Authorized law enforcement missing person bulletin. If spotted, please notify the nearest police post immediately."
         }
 
+@router.get("/{case_id}/timeline")
+def get_case_timeline(
+    case_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """
+    Returns an aggregated, chronological investigation timeline of all events
+    pertaining to a case dossier: registration, reference enrollments, status transitions,
+    correlated sighting discoveries, investigator adjudications, and audit events.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM cases WHERE id = ?", (case_id,))
+        case = cursor.fetchone()
+        if not case:
+            raise HTTPException(status_code=404, detail="Case not found")
+
+        timeline_events = []
+
+        # 1. Case Registration Event
+        cursor.execute("SELECT full_name, badge_number FROM users WHERE id = ?", (case["assigned_investigator_id"],))
+        inv = cursor.fetchone()
+        inv_name = inv["full_name"] if inv else "System"
+        inv_badge = inv["badge_number"] if inv else "N/A"
+
+        timeline_events.append({
+            "event_id": f"case-reg-{case['id']}",
+            "event_type": "CASE_REGISTERED",
+            "title": f"Missing-Person Case Registered ({case['reference_no']})",
+            "description": f"Initial missing person dossier registered for {case['full_name']} (Age {case['age'] or 'N/A'}, {case['gender'] or 'N/A'}). Last seen at {case['last_seen_location']}.",
+            "actor_name": inv_name,
+            "badge_number": inv_badge,
+            "timestamp": case["created_at"],
+            "badge_color": "blue",
+            "icon": "📋",
+            "metadata": {
+                "reference_no": case["reference_no"],
+                "last_seen_date": case["last_seen_date"],
+                "last_seen_location": case["last_seen_location"]
+            }
+        })
+
+        # 2. Reference Image Enrollments
+        cursor.execute("""
+            SELECT id, file_path, original_filename, model_name, model_version, created_at
+            FROM reference_images WHERE case_id = ?
+            ORDER BY created_at ASC
+        """, (case_id,))
+        for img in cursor.fetchall():
+            timeline_events.append({
+                "event_id": f"ref-img-{img['id']}",
+                "event_type": "REFERENCE_PHOTO_ENROLLED",
+                "title": "Authorized Reference Portrait Enrolled",
+                "description": f"Biometric face detection confirmed single face; 128-D embedding indexed using {img['model_name']} ({img['model_version']}). File: {img['original_filename']}.",
+                "actor_name": inv_name,
+                "badge_number": inv_badge,
+                "timestamp": img["created_at"],
+                "badge_color": "cyan",
+                "icon": "👤",
+                "metadata": {
+                    "image_id": img["id"],
+                    "file_path": img["file_path"],
+                    "model_version": img["model_version"]
+                }
+            })
+
+        # 3. Candidate Match Discoveries (Sightings correlated to this case)
+        cursor.execute("""
+            SELECT cm.id AS match_id, cm.similarity_score, cm.rank, cm.status AS match_status, cm.created_at,
+                   s.receipt_no, s.sighting_date, s.location_name
+            FROM candidate_matches cm
+            JOIN sightings s ON cm.sighting_id = s.id
+            WHERE cm.case_id = ?
+            ORDER BY cm.created_at ASC
+        """, (case_id,))
+        for m in cursor.fetchall():
+            score_pct = f"{m['similarity_score'] * 100:.1f}%"
+            tier = "High Confidence" if m["similarity_score"] >= 0.70 else "Moderate"
+            timeline_events.append({
+                "event_id": f"cand-match-{m['match_id']}",
+                "event_type": "SIGHTING_CORRELATED",
+                "title": f"Sighting Lead Correlated ({m['receipt_no']})",
+                "description": f"Sighting at {m['location_name']} matched reference vector with {score_pct} similarity ({tier}, Rank #{m['rank']}). Status: {m['match_status']}.",
+                "actor_name": "AI Matching Engine (YuNet + SFace)",
+                "badge_number": "SYSTEM-AI",
+                "timestamp": m["created_at"],
+                "badge_color": "amber" if m["similarity_score"] >= 0.70 else "slate",
+                "icon": "⚡",
+                "metadata": {
+                    "candidate_id": m["match_id"],
+                    "receipt_no": m["receipt_no"],
+                    "similarity_score": m["similarity_score"],
+                    "rank": m["rank"]
+                }
+            })
+
+        # 4. Reviews / Adjudications on this case's candidate leads
+        cursor.execute("""
+            SELECT r.id AS review_id, r.candidate_match_id, r.disposition, r.rationale, r.next_steps, r.reviewed_at,
+                   u.full_name AS reviewer_name, u.badge_number AS reviewer_badge,
+                   cm.similarity_score, s.receipt_no
+            FROM reviews r
+            JOIN candidate_matches cm ON r.candidate_match_id = cm.id
+            JOIN sightings s ON cm.sighting_id = s.id
+            JOIN users u ON r.reviewer_id = u.id
+            WHERE cm.case_id = ?
+            ORDER BY r.reviewed_at ASC
+        """, (case_id,))
+        for rev in cursor.fetchall():
+            disp_upper = rev["disposition"].upper()
+            color_map = {"verified": "emerald", "escalated": "orange", "request_more_info": "amber", "rejected": "rose"}
+            timeline_events.append({
+                "event_id": f"rev-{rev['review_id']}",
+                "event_type": "ADJUDICATION_REVIEW",
+                "title": f"Formal Lead Adjudication: {disp_upper}",
+                "description": f"Officer {rev['reviewer_name']} recorded decision on Sighting {rev['receipt_no']}: \"{rev['rationale']}\". Next steps: {rev['next_steps'] or 'None recorded'}.",
+                "actor_name": rev["reviewer_name"],
+                "badge_number": rev["reviewer_badge"] or "N/A",
+                "timestamp": rev["reviewed_at"],
+                "badge_color": color_map.get(rev["disposition"], "blue"),
+                "icon": "⚖️",
+                "metadata": {
+                    "review_id": rev["review_id"],
+                    "disposition": rev["disposition"],
+                    "candidate_id": rev["candidate_match_id"],
+                    "receipt_no": rev["receipt_no"]
+                }
+            })
+
+        # 5. Status Transition Events from Audit Logs
+        cursor.execute("""
+            SELECT id, actor_name, action, details_json, created_at
+            FROM audit_logs
+            WHERE resource_type = 'cases' AND resource_id = ? AND action IN ('CASE_STATUS_CHANGED', 'CASE_ARCHIVED')
+            ORDER BY created_at ASC
+        """, (str(case_id),))
+        for al in cursor.fetchall():
+            details = {}
+            if al["details_json"]:
+                try:
+                    details = json.loads(al["details_json"])
+                except Exception:
+                    pass
+            new_st = details.get("new_status", "updated")
+            notes = details.get("notes", "")
+            timeline_events.append({
+                "event_id": f"audit-status-{al['id']}",
+                "event_type": al["action"],
+                "title": f"Case Lifecycle Status Changed to '{new_st.upper()}'",
+                "description": f"Status updated by {al['actor_name']}. Note: {notes or 'No additional notes'}",
+                "actor_name": al["actor_name"],
+                "badge_number": "OFFICER",
+                "timestamp": al["created_at"],
+                "badge_color": "purple" if new_st == "resolved" else "blue",
+                "icon": "🔄",
+                "metadata": details
+            })
+
+        # Sort timeline chronologically (earliest to newest)
+        timeline_events.sort(key=lambda x: x["timestamp"])
+
+        return {
+            "case_id": case_id,
+            "reference_no": case["reference_no"],
+            "subject_name": case["full_name"],
+            "current_status": case["status"],
+            "total_events": len(timeline_events),
+            "events": timeline_events
+        }
+
 @router.delete("/{case_id}")
 def archive_or_delete_case(
     case_id: int,

@@ -95,3 +95,16 @@ class SightingLookupResponse(BaseModel):
 
 class ThresholdSimulateRequest(BaseModel):
     threshold: float = Field(..., ge=0.0, le=1.0, description="Cosine threshold value between 0.0 and 1.0")
+
+class BatchReviewCreate(BaseModel):
+    candidate_ids: List[int] = Field(..., min_length=1, description="List of candidate match IDs to review")
+    disposition: str = Field(..., description="verified | escalated | request_more_info | rejected")
+    rationale: str = Field(..., min_length=5, description="Mandatory investigator explanation")
+    next_steps: Optional[str] = None
+
+class NotificationCreate(BaseModel):
+    user_id: int
+    title: str
+    message: str
+    category: str = "match_alert"
+    link_url: Optional[str] = None

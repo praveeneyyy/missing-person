@@ -157,6 +157,10 @@ const API = {
     return this.request(`/cases/${caseId}/bulletin`);
   },
 
+  async getCaseTimeline(caseId) {
+    return this.request(`/cases/${caseId}/timeline`);
+  },
+
   async archiveCase(caseId) {
     return this.request(`/cases/${caseId}`, {
       method: 'DELETE'
@@ -207,9 +211,32 @@ const API = {
     return this.request(`/sightings/lookup/${encodeURIComponent(receiptNo)}`);
   },
 
-  // Review & Candidate Endpoints
+  // Review & Candidate Endpoints (Module 6)
+  async getCandidates(params = {}) {
+    const qs = new URLSearchParams();
+    if (params.status) qs.append('status', params.status);
+    if (params.minScore !== undefined && params.minScore !== null) qs.append('min_score', params.minScore);
+    if (params.caseId) qs.append('case_id', params.caseId);
+    if (params.sightingId) qs.append('sighting_id', params.sightingId);
+    if (params.sortBy) qs.append('sort_by', params.sortBy);
+    const query = qs.toString();
+    return this.request(`/candidates${query ? '?' + query : ''}`);
+  },
+
   async getPendingCandidates() {
     return this.request('/candidates/pending');
+  },
+
+  async getCandidateDetail(candidateId) {
+    return this.request(`/candidates/${candidateId}`);
+  },
+
+  async getCandidateReviews(candidateId) {
+    return this.request(`/candidates/${candidateId}/reviews`);
+  },
+
+  async getCandidateStats() {
+    return this.request('/candidates/stats');
   },
 
   async submitReview(candidateId, disposition, rationale, nextSteps = '') {
@@ -219,13 +246,30 @@ const API = {
     });
   },
 
-  // Dashboard & Maps
+  async submitBatchReview(candidateIds, disposition, rationale, nextSteps = '') {
+    return this.request('/candidates/batch-review', {
+      method: 'POST',
+      body: JSON.stringify({
+        candidate_ids: candidateIds,
+        disposition,
+        rationale,
+        next_steps: nextSteps
+      })
+    });
+  },
+
+  // Dashboard & Maps (Module 6)
   async getDashboardStats() {
     return this.request('/dashboard/stats');
   },
 
-  async getMapPoints() {
-    return this.request('/map/points');
+  async getMapPoints(minSimilarity = null, statusFilter = null, caseId = null) {
+    const qs = new URLSearchParams();
+    if (minSimilarity !== null && minSimilarity !== undefined) qs.append('min_similarity', minSimilarity);
+    if (statusFilter) qs.append('status_filter', statusFilter);
+    if (caseId) qs.append('case_id', caseId);
+    const query = qs.toString();
+    return this.request(`/map/points${query ? '?' + query : ''}`);
   },
 
   async getAuditLogs(limit = 50) {
@@ -236,8 +280,24 @@ const API = {
     return this.request('/benchmark');
   },
 
-  async getNotifications() {
-    return this.request('/notifications');
+  async getNotifications(unreadOnly = false, limit = 50) {
+    return this.request(`/notifications?unread_only=${unreadOnly}&limit=${limit}`);
+  },
+
+  async getUnreadNotificationCount() {
+    return this.request('/notifications/unread-count');
+  },
+
+  async markNotificationRead(notificationId) {
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: 'PUT'
+    });
+  },
+
+  async markAllNotificationsRead() {
+    return this.request('/notifications/read-all', {
+      method: 'PUT'
+    });
   },
 
   // Module 3: Face Processing Engine Endpoints

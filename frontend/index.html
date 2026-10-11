@@ -65,6 +65,24 @@
 
         <!-- User Profile Session Badge -->
         <div id="user-profile-badge"></div>
+
+        <!-- Operational Notification Bell (Module 6) -->
+        <div class="relative" id="notification-bell-container">
+          <button id="notif-bell-btn" onclick="App.toggleNotificationDropdown()" class="relative p-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-300 hover:text-white transition flex items-center justify-center">
+            <span class="text-sm">🔔</span>
+            <span id="notif-badge" class="hidden absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-mono font-black px-1.5 py-0.2 rounded-full border border-slate-900 shadow">0</span>
+          </button>
+          <!-- Notification Dropdown Menu -->
+          <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+            <div class="p-3 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-slate-200">INVESTIGATOR ALERTS</span>
+              <button onclick="App.markAllNotificationsRead()" class="text-[10px] font-mono text-cyan-400 hover:text-cyan-300">Mark all read</button>
+            </div>
+            <div id="notif-dropdown-list" class="max-h-72 overflow-y-auto divide-y divide-slate-800 text-xs">
+              <div class="p-4 text-center text-slate-500 font-mono text-xs">Loading alerts...</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -583,20 +601,105 @@
           <h3 class="text-base font-bold text-white">Correlated Sighting Leads</h3>
           <div id="case-detail-leads" class="space-y-3"></div>
         </div>
+
+        <!-- Chronological Investigation Timeline & Chain of Custody (Module 6) -->
+        <div class="pt-6 border-t border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white">Chronological Case Timeline & Chain of Custody</h3>
+              <p class="text-xs text-slate-400 font-mono">Immutable audit history of filings, biometric enrollments, sighting correlations, and officer findings.</p>
+            </div>
+            <button onclick="App.refreshCaseTimeline()" class="text-xs font-mono text-cyan-400 hover:text-cyan-300">🔄 Refresh Timeline</button>
+          </div>
+          <div id="case-detail-timeline" class="space-y-3 font-mono text-xs"></div>
+        </div>
       </div>
     </div>
 
     <!-- ====================================================================
-         TAB 7: FORENSIC CANDIDATE REVIEW WORKBENCH (S06)
+         TAB 7: FORENSIC CANDIDATE REVIEW WORKBENCH (S06 - MODULE 6)
          ==================================================================== -->
     <div id="tab-review-queue" class="tab-pane hidden space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-2xl font-black text-white">Forensic Candidate Review Workbench</h2>
-          <p class="text-xs text-slate-400 font-mono mt-0.5">Dual-viewport biometric comparison, landmark triangulation, and recorded adjudication.</p>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Dual-viewport biometric comparison, landmark triangulation, spatial correlation, and recorded adjudication.</p>
         </div>
-        <div class="text-xs font-mono bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
-          OPERATING POINT: <strong class="text-emerald-400">COSINE $\ge$ 0.70</strong>
+        <div class="flex items-center gap-3">
+          <div class="text-xs font-mono bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
+            OPERATING POINT: <strong class="text-emerald-400">COSINE ≥ 0.70</strong>
+          </div>
+          <button onclick="App.loadReviewQueue()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>🔄</span> <span>Refresh Queue</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Review Queue Workload Telemetry Cards -->
+      <div id="review-queue-telemetry" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+          <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">PENDING REVIEW</span>
+          <div id="rq-stat-pending" class="text-2xl font-black text-amber-400 font-mono mt-1">--</div>
+          <span class="text-[10px] font-mono text-slate-500">Requires human sign-off</span>
+        </div>
+        <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+          <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">HIGH CONFIDENCE (≥0.70)</span>
+          <div id="rq-stat-high" class="text-2xl font-black text-emerald-400 font-mono mt-1">--</div>
+          <span class="text-[10px] font-mono text-slate-500">Strong biometric alignment</span>
+        </div>
+        <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+          <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">VERIFIED MATCHES</span>
+          <div id="rq-stat-verified" class="text-2xl font-black text-cyan-400 font-mono mt-1">--</div>
+          <span class="text-[10px] font-mono text-slate-500">Confirmed by officer</span>
+        </div>
+        <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 shadow-inner">
+          <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">ESCALATED TO FIELD</span>
+          <div id="rq-stat-escalated" class="text-2xl font-black text-orange-400 font-mono mt-1">--</div>
+          <span class="text-[10px] font-mono text-slate-500">Patrol dispatch active</span>
+        </div>
+      </div>
+
+      <!-- Queue Tactical Filter Bar -->
+      <div class="p-4 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex flex-wrap items-center gap-3">
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">STATUS</label>
+            <select id="rq-filter-status" onchange="App.applyReviewFilters()" class="bg-slate-950 text-xs font-mono text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 focus:border-cyan-500">
+              <option value="requires_human_review">Pending Review (Action Required)</option>
+              <option value="all">All Leads (Historical & Pending)</option>
+              <option value="verified">Verified Matches</option>
+              <option value="escalated">Escalated to Field</option>
+              <option value="info_requested">More Info Requested</option>
+              <option value="rejected">Rejected Leads</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">CONFIDENCE TIER</label>
+            <select id="rq-filter-tier" onchange="App.applyReviewFilters()" class="bg-slate-950 text-xs font-mono text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 focus:border-cyan-500">
+              <option value="all">All Tiers (≥ 0.30)</option>
+              <option value="high">High Confidence (≥ 0.70)</option>
+              <option value="moderate">Moderate Confidence (≥ 0.50)</option>
+              <option value="low">Low Similarity (< 0.50)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-mono font-bold text-slate-400 uppercase mb-1">SORT ORDER</label>
+            <select id="rq-sort-by" onchange="App.applyReviewFilters()" class="bg-slate-950 text-xs font-mono text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 focus:border-cyan-500">
+              <option value="score_desc">Similarity (Highest First)</option>
+              <option value="date_desc">Lead Date (Newest First)</option>
+              <option value="distance_asc">Spatial Separation (Closest)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Quick Batch Actions -->
+        <div class="flex items-center gap-2">
+          <button onclick="App.openBatchRejectModal()" class="px-3.5 py-1.5 rounded-lg bg-red-950/40 hover:bg-red-900 text-red-300 font-mono text-xs font-bold border border-red-800 transition flex items-center gap-1.5">
+            <span>🗑️</span>
+            <span>Batch Reject Noise</span>
+          </button>
         </div>
       </div>
 
@@ -605,13 +708,57 @@
     </div>
 
     <!-- ====================================================================
-         TAB 8: GIS INVESTIGATION MAP
+         TAB 8: GIS INVESTIGATION MAP (S08 - MODULE 6)
          ==================================================================== -->
     <div id="tab-map" class="tab-pane hidden space-y-6">
-      <div>
-        <h2 class="text-2xl font-black text-white">Geographic Investigation Map</h2>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">Spatial correlation between registered case origins (Blue) and reported sightings (Amber/Green).</p>
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-white">Geographic Investigation Map</h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Spatial correlation vectors between registered case origins (Blue) and reported sightings (Amber/Green).</p>
+        </div>
+
+        <!-- Map Layer & Filter Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="MapManager.loadMapPoints({ minSimilarity: null, statusFilter: null })" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-bold border border-slate-700 transition">
+            All Points
+          </button>
+          <button onclick="MapManager.loadMapPoints({ minSimilarity: 0.70 })" class="px-3 py-1.5 rounded-lg bg-amber-950/60 hover:bg-amber-900 text-amber-300 text-xs font-mono font-bold border border-amber-800 transition">
+            High Sim (≥0.70)
+          </button>
+          <button onclick="MapManager.loadMapPoints({ statusFilter: 'verified_match' })" class="px-3 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 text-xs font-mono font-bold border border-emerald-800 transition">
+            Verified Matches
+          </button>
+          <button onclick="MapManager.currentFilters.showVectors = !MapManager.currentFilters.showVectors; MapManager.loadMapPoints()" class="px-3 py-1.5 rounded-lg bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 text-xs font-mono font-bold border border-cyan-800 transition">
+            Toggle Vectors
+          </button>
+        </div>
       </div>
+
+      <!-- Tactical GIS Legend -->
+      <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-300">
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-blue-600 border border-white"></span>
+            <span>Case Origin (Dossier Location)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 border border-white"></span>
+            <span>Verified Sighting Match</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500 border border-white"></span>
+            <span>High-Confidence Lead (≥0.70)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-slate-500 border border-white"></span>
+            <span>Pending/Low Sighting</span>
+          </div>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          Dashed Lines = Geodesic Spatial Correlation Vectors
+        </div>
+      </div>
+
       <div id="investigation-map" class="map-container"></div>
     </div>
 
