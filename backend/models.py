@@ -77,11 +77,18 @@ class ReviewCreate(BaseModel):
     rationale: str = Field(..., min_length=5, description="Mandatory investigator explanation")
     next_steps: Optional[str] = None
 
+class SightingStatusUpdateRequest(BaseModel):
+    status: str = Field(..., description="pending_review | in_review | verified_match | escalated | rejected")
+    rationale: str = Field(..., min_length=5, description="Mandatory investigator explanation for status change")
+
 class SightingLookupResponse(BaseModel):
     receipt_no: str
     sighting_date: str
     sighting_time: Optional[str] = None
     location_name: str
     status: str
+    status_label: str = "Screened & Queued for Officer Review"
+    faces_detected_count: int = 0
     submitted_at: str
     notice: str = "For confidentiality, sensitive matching results and identity data are restricted to authorized investigators."
+    privacy_statement: str = "This public lookup provides verification status only. Suspect dossiers and facial biometrics are shielded by law enforcement privacy standards."

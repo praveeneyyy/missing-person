@@ -178,13 +178,29 @@ const API = {
     });
   },
 
-  async getSightings(status = '') {
-    const params = status ? `?status=${status}` : '';
-    return this.request(`/sightings${params}`);
+  async getSightings(status = '', search = '') {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    const qs = params.toString();
+    return this.request(`/sightings${qs ? '?' + qs : ''}`);
   },
 
   async getSighting(id) {
     return this.request(`/sightings/${id}`);
+  },
+
+  async updateSightingStatus(id, status, rationale) {
+    return this.request(`/sightings/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, rationale })
+    });
+  },
+
+  async deleteSighting(id) {
+    return this.request(`/sightings/${id}`, {
+      method: 'DELETE'
+    });
   },
 
   async lookupReceipt(receiptNo) {

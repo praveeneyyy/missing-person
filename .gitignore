@@ -7,5 +7,9 @@ htmlcov/
 *.sqlite3-journal
 *.db-journal
 test_missing_persons.db*
-storage/references/ref_3_*
-storage/sightings/sight_3_*
+storage/references/ref_*_*
+!storage/references/ref_1_primary.jpg
+!storage/references/ref_2_primary.jpg
+storage/sightings/sight_*_*
+!storage/sightings/sight_1_tambaram.jpg
+!storage/sightings/sight_2_koyambedu.jpg

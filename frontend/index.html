@@ -284,8 +284,18 @@
 
           <!-- Location Name -->
           <div>
-            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Location Landmark / Description *</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-mono font-bold text-slate-300 uppercase">Location Landmark / Description *</label>
+              <span class="text-[10px] font-mono text-cyan-400">Click a preset below or pin on map</span>
+            </div>
             <input type="text" id="sighting-location" name="location_name" placeholder="e.g. Near Central Railway Station, Platform 3" required class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-white focus:border-blue-500">
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+              <span class="text-[10px] font-mono text-slate-500 uppercase mr-1">Quick Presets:</span>
+              <button type="button" onclick="App.setSightingLocationPreset('Chennai Central Railway Station, Platform 1', 13.0827, 80.2707)" class="text-[10px] font-mono bg-slate-950 hover:bg-slate-800 text-cyan-400 px-2 py-1 rounded border border-slate-800 transition">Central Station</button>
+              <button type="button" onclick="App.setSightingLocationPreset('Koyambedu CMBT Bus Stand, Gate 3', 13.0694, 80.1948)" class="text-[10px] font-mono bg-slate-950 hover:bg-slate-800 text-cyan-400 px-2 py-1 rounded border border-slate-800 transition">Koyambedu CMBT</button>
+              <button type="button" onclick="App.setSightingLocationPreset('Marina Beach Promenade Lighthouse', 13.0400, 80.2800)" class="text-[10px] font-mono bg-slate-950 hover:bg-slate-800 text-cyan-400 px-2 py-1 rounded border border-slate-800 transition">Marina Beach</button>
+              <button type="button" onclick="App.setSightingLocationPreset('Tambaram Railway Station Concourse', 12.9249, 80.1000)" class="text-[10px] font-mono bg-slate-950 hover:bg-slate-800 text-cyan-400 px-2 py-1 rounded border border-slate-800 transition">Tambaram Station</button>
+            </div>
           </div>
 
           <!-- Interactive GIS Pin Picker -->
@@ -341,10 +351,19 @@
 
         <form id="receipt-lookup-form" class="space-y-4">
           <div>
-            <label class="block text-xs font-mono font-bold text-slate-300 uppercase mb-1">Receipt Reference Code</label>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-mono font-bold text-slate-300 uppercase">Receipt Reference Code</label>
+              <span class="text-[10px] font-mono text-cyan-400">Case-insensitive format</span>
+            </div>
             <input type="text" id="lookup-receipt-input" placeholder="e.g. STG-2026-0001" required class="w-full font-mono text-sm uppercase px-3.5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-cyan-300 focus:border-blue-500">
+            <div class="flex items-center gap-2 mt-2 text-xs font-mono text-slate-400">
+              <span class="text-[10px] text-slate-500 uppercase">Quick Demo:</span>
+              <button type="button" onclick="App.fillReceiptLookup('STG-2026-0001')" class="text-cyan-400 hover:underline">STG-2026-0001</button>
+              <span class="text-slate-700">•</span>
+              <button type="button" onclick="App.fillReceiptLookup('STG-2026-0002')" class="text-cyan-400 hover:underline">STG-2026-0002</button>
+            </div>
           </div>
-          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl transition">
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl transition shadow-md">
             Check Progress
           </button>
         </form>
@@ -832,27 +851,54 @@
        MODAL 3: PUBLIC SUBMISSION RECEIPT
        ==================================================================== -->
   <div id="receipt-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-8 shadow-2xl border border-slate-800 text-center space-y-5">
-      <div class="w-14 h-14 bg-emerald-950 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center text-2xl font-bold mx-auto">
+    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-8 shadow-2xl border border-slate-800 text-center space-y-6">
+      <div class="w-16 h-16 bg-emerald-950 border border-emerald-500/40 text-emerald-400 rounded-full flex items-center justify-center text-3xl font-bold mx-auto shadow-inner">
         ✓
       </div>
-      <h3 class="text-xl font-extrabold text-white">Sighting Ingested by System</h3>
-      <p class="text-xs text-slate-400 leading-relaxed">Your report has been securely registered and routed to authorized officers for review.</p>
-
-      <div class="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-1.5 font-mono">
-        <div class="text-[10px] text-slate-500 uppercase tracking-widest">Tracking Reference Code</div>
-        <div id="receipt-number-display" class="text-2xl font-black text-cyan-400"></div>
-        <div id="receipt-faces-count" class="text-xs text-emerald-400 mt-1"></div>
-        <div id="receipt-location" class="text-xs text-slate-400"></div>
+      <div>
+        <h3 class="text-2xl font-black text-white">Sighting Ingested by System</h3>
+        <p class="text-xs text-slate-400 mt-1 leading-relaxed">Your report and photographic evidence have been securely registered and routed to law enforcement investigators.</p>
       </div>
 
-      <p class="text-[11px] text-slate-500 leading-relaxed">
-        Save this receipt number. You can check general status on the "Track Receipt" tab. For safety and privacy, matching results remain restricted to police officers.
-      </p>
+      <div class="p-5 bg-slate-950 border border-slate-800 rounded-xl space-y-2 font-mono text-left">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] text-slate-500 uppercase tracking-widest">Tracking Reference Code</span>
+          <span class="text-[10px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-800 px-2 py-0.5 rounded">AUTHENTICATED INTAKE</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div id="receipt-number-display" class="text-2xl font-black text-cyan-400"></div>
+          <button type="button" id="copy-receipt-btn" onclick="App.copyReceiptToClipboard()" class="text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center gap-1">
+            <span>📋</span> <span>Copy Code</span>
+          </button>
+        </div>
+        <div class="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span class="text-slate-500 text-[10px] block">AI BIOMETRIC STATUS</span>
+            <span id="receipt-faces-count" class="text-emerald-400 font-bold"></span>
+          </div>
+          <div>
+            <span class="text-slate-500 text-[10px] block">LOCATION</span>
+            <span id="receipt-location" class="text-slate-300 truncate block"></span>
+          </div>
+        </div>
+      </div>
 
-      <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs py-3 rounded-xl transition">
-        Return to Overview
-      </button>
+      <div class="p-3 bg-blue-950/40 border border-blue-900/60 rounded-xl text-left text-xs text-slate-300 leading-relaxed flex items-start gap-2.5">
+        <span class="text-base text-cyan-400">🛡️</span>
+        <div>
+          <strong class="text-white block">Privacy Assurance & Chain of Custody:</strong>
+          Save this receipt reference code. You can track high-level processing status anytime on the <em>Track Receipt</em> portal. For investigator integrity and public safety, suspect matching outcomes remain strictly confidential.
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button onclick="App.trackReceiptFromModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md">
+          <span>🔍</span> <span>Track Status Now</span>
+        </button>
+        <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2.5 rounded-xl border border-slate-700 transition">
+          Return to Overview
+        </button>
+      </div>
     </div>
   </div>
 

@@ -875,6 +875,57 @@ const App = {
   },
 
   // 4. Public Sighting Submission
+  // 4. Public Sighting Submission
+  setSightingLocationPreset(name, lat, lng) {
+    const locInput = document.getElementById('sighting-location');
+    const latInput = document.getElementById('sighting-lat');
+    const lngInput = document.getElementById('sighting-lng');
+    if (locInput) locInput.value = name;
+    if (latInput) latInput.value = lat;
+    if (lngInput) lngInput.value = lng;
+    if (this.sightingPickerMarker && this.sightingPickerMap) {
+      this.sightingPickerMarker.setLatLng([lat, lng]);
+      this.sightingPickerMap.setView([lat, lng], 14);
+    }
+  },
+
+  fillReceiptLookup(code) {
+    const input = document.getElementById('lookup-receipt-input');
+    if (input) {
+      input.value = code;
+      const form = document.getElementById('receipt-lookup-form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+      }
+    }
+  },
+
+  async copyReceiptToClipboard() {
+    const code = document.getElementById('receipt-number-display')?.innerText;
+    if (code) {
+      try {
+        await navigator.clipboard.writeText(code);
+        const btn = document.getElementById('copy-receipt-btn');
+        if (btn) {
+          const oldHtml = btn.innerHTML;
+          btn.innerHTML = '<span>✓</span> <span>Copied!</span>';
+          setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+        }
+      } catch (err) {
+        prompt('Copy your receipt tracking code:', code);
+      }
+    }
+  },
+
+  trackReceiptFromModal() {
+    const code = document.getElementById('receipt-number-display')?.innerText;
+    this.closeModal('receipt-modal');
+    this.switchTab('public-track');
+    if (code) {
+      this.fillReceiptLookup(code);
+    }
+  },
+
   async handleSightingSubmit(e) {
     e.preventDefault();
     const btn = document.getElementById('sighting-submit-btn');
@@ -889,9 +940,18 @@ const App = {
 
       const res = await API.submitSighting(formData);
 
-      // Populate receipt modal
+      // Populate enhanced receipt modal
       document.getElementById('receipt-number-display').innerText = res.receipt_no;
-      document.getElementById('receipt-faces-count').innerText = `${res.faces_detected_count} face(s) processed by AI`;
+      const faceBadge = document.getElementById('receipt-faces-count');
+      if (faceBadge) {
+        if (res.faces_detected_count > 0) {
+          faceBadge.innerText = `${res.faces_detected_count} face(s) screened by SFace`;
+          faceBadge.className = 'text-emerald-400 font-bold';
+        } else {
+          faceBadge.innerText = '0 faces detected (Queued as observational lead)';
+          faceBadge.className = 'text-amber-400 font-bold';
+        }
+      }
       document.getElementById('receipt-location').innerText = res.location_name;
       document.getElementById('receipt-modal').classList.remove('hidden');
 
@@ -979,31 +1039,121 @@ const App = {
     const receiptNo = document.getElementById('lookup-receipt-input').value.trim();
     if (!receiptNo) return;
 
+    const container = document.getElementById('lookup-result-box');
+    container.classList.remove('hidden');
+    container.innerHTML = `
+      <div class="p-6 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-2">
+        <div class="inline-block animate-spin text-2xl">⏳</div>
+        <p class="text-xs font-mono text-cyan-400">Querying cryptographic intake registry for ${receiptNo}...</p>
+      </div>
+    `;
+
     try {
       const res = await API.lookupReceipt(receiptNo);
-      const container = document.getElementById('lookup-result-box');
-      container.classList.remove('hidden');
+
+      // Determine progress stage (1 to 4)
+      let currentStage = 3;
+      let statusBadgeColor = 'badge-under_review';
+      if (res.status === 'verified_match') {
+        currentStage = 4;
+        statusBadgeColor = 'badge-verified';
+      } else if (res.status === 'escalated') {
+        currentStage = 4;
+        statusBadgeColor = 'badge-escalated';
+      } else if (res.status === 'rejected') {
+        currentStage = 4;
+        statusBadgeColor = 'badge-rejected';
+      } else if (res.status === 'in_review') {
+        currentStage = 3;
+        statusBadgeColor = 'badge-open';
+      } else {
+        currentStage = 2; // pending_review
+        statusBadgeColor = 'badge-under_review';
+      }
+
+      const steps = [
+        { num: 1, label: 'Intake Registered', done: true, desc: 'Evidence & telemetry signed' },
+        { num: 2, label: 'Biometric Screening', done: currentStage >= 2, desc: `${res.faces_detected_count} face(s) evaluated via SFace` },
+        { num: 3, label: 'Investigator Queue', done: currentStage >= 3, active: currentStage === 3, desc: 'Assigned to law enforcement review' },
+        { num: 4, label: 'Action Disposition', done: currentStage >= 4, active: currentStage === 4, desc: res.status_label }
+      ];
+
       container.innerHTML = `
-        <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="p-6 bg-slate-950 border border-slate-800 rounded-2xl shadow-xl space-y-6">
+          <!-- Receipt Header -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
             <div>
-              <span class="text-[10px] font-mono uppercase text-slate-400 block">RECEIPT REFERENCE</span>
-              <span class="font-mono font-extrabold text-blue-700 text-base">${res.receipt_no}</span>
+              <span class="text-[10px] font-mono uppercase text-slate-500 block">AUTHENTICATED RECEIPT</span>
+              <span class="font-mono font-black text-cyan-400 text-xl">${res.receipt_no}</span>
             </div>
-            <span class="badge-tactical badge-under_review">${res.status}</span>
+            <span class="badge-tactical ${statusBadgeColor}">${res.status_label || res.status}</span>
           </div>
-          <div class="space-y-1.5 text-xs text-slate-600 font-mono">
-            <div><strong>Location:</strong> ${res.location_name}</div>
-            <div><strong>Sighting Date:</strong> ${res.sighting_date} ${res.sighting_time || ''}</div>
-            <div><strong>Submitted:</strong> ${res.submitted_at}</div>
+
+          <!-- 4-Stage Progress Stepper -->
+          <div class="space-y-2">
+            <span class="text-[10px] font-mono uppercase text-slate-500 block tracking-wider">LIFECYCLE VERIFICATION PROGRESS</span>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              ${steps.map(s => {
+                const border = s.done ? 'border-emerald-600 bg-emerald-950/40 text-emerald-300' : (s.active ? 'border-amber-500 bg-amber-950/40 text-amber-300 animate-pulse' : 'border-slate-800 bg-slate-900/50 text-slate-500');
+                const dot = s.done ? '✓' : s.num;
+                return `
+                  <div class="p-2.5 rounded-xl border ${border} text-xs font-mono space-y-1">
+                    <div class="flex items-center justify-between">
+                      <span class="font-bold text-[11px]">${dot} ${s.label}</span>
+                    </div>
+                    <div class="text-[10px] text-slate-400 truncate">${s.desc}</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
-          <div class="p-3 bg-blue-50/60 rounded-xl border border-blue-100 text-[11px] text-blue-900 leading-relaxed">
-            ℹ️ <strong>Status Notice:</strong> ${res.notice}
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-900 rounded-xl border border-slate-800 text-xs font-mono">
+            <div>
+              <span class="text-slate-500 text-[10px] block">LOCATION LANDMARK</span>
+              <span class="text-white font-bold">${res.location_name}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] block">SIGHTING TIMESTAMP</span>
+              <span class="text-white font-bold">${res.sighting_date} ${res.sighting_time || ''}</span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] block">BIOMETRIC FACIAL COUNT</span>
+              <span class="text-cyan-400 font-bold">${res.faces_detected_count} face(s) processed</span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] block">SUBMISSION INGESTED AT</span>
+              <span class="text-slate-300">${res.submitted_at}</span>
+            </div>
+          </div>
+
+          <!-- Official Status Guidance Notice -->
+          <div class="p-4 bg-blue-950/40 border border-blue-900/70 rounded-xl text-xs space-y-1">
+            <div class="flex items-center gap-1.5 text-cyan-400 font-bold text-[11px] font-mono">
+              <span>ℹ️</span> <span>OFFICIAL STATUS GUIDANCE</span>
+            </div>
+            <p class="text-slate-300 leading-relaxed">${res.notice}</p>
+          </div>
+
+          <!-- Privacy Shield Notice -->
+          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-[11px] text-slate-400 flex items-start gap-2">
+            <span class="text-sm">🛡️</span>
+            <div>
+              <strong class="text-slate-300">Privacy Shield Enforced:</strong> ${res.privacy_statement || 'Sensitive missing-person records remain strictly restricted to sworn officers.'}
+            </div>
           </div>
         </div>
       `;
     } catch (err) {
-      alert(err.message);
+      container.innerHTML = `
+        <div class="p-6 bg-red-950/40 border border-red-900 rounded-2xl text-center space-y-2">
+          <div class="text-2xl text-red-400">⚠️</div>
+          <h4 class="text-sm font-bold text-red-200">Receipt Lookup Failed</h4>
+          <p class="text-xs text-red-300">${err.message}</p>
+          <p class="text-[11px] text-slate-400 font-mono mt-1">Please check the code syntax (e.g. STG-2026-0001) or contact police helpline.</p>
+        </div>
+      `;
     }
   },
 
