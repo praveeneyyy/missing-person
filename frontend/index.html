@@ -763,26 +763,208 @@
     </div>
 
     <!-- ====================================================================
-         TAB 9: SYSTEM AUDIT TRAIL
+         TAB 9: SYSTEM AUDIT TRAIL & AI GOVERNANCE WORKBENCH (MODULE 7)
          ==================================================================== -->
     <div id="tab-audit" class="tab-pane hidden space-y-6">
-      <div>
-        <h2 class="text-2xl font-black text-white">System Audit Trail & Chain of Custody</h2>
-        <p class="text-xs text-slate-400 font-mono mt-0.5">Cryptographically logged events recording all authentications, case changes, and officer adjudications.</p>
+      <!-- Section Header & Export Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-black text-white">System Audit Trail & AI Governance Workbench</h2>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Immutable cryptographic ledger, ISO/IEC 27037 forensic chain of custody, algorithmic bias monitoring, and security telemetry.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="App.downloadAuditCsv()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono font-bold px-3.5 py-2 rounded-lg border border-slate-700 shadow-sm transition flex items-center gap-1.5">
+            <span>📥</span>
+            <span>Export RFC-4180 CSV</span>
+          </button>
+          <button onclick="App.downloadAuditJson()" class="bg-blue-900/60 hover:bg-blue-800 text-blue-200 text-xs font-mono font-bold px-3.5 py-2 rounded-lg border border-blue-700 shadow-sm transition flex items-center gap-1.5">
+            <span>📜</span>
+            <span>Export Forensic JSON</span>
+          </button>
+          <button onclick="App.loadAuditLogs()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono font-bold px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+            <span>🔄</span>
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
+
+      <!-- Security Hardening & Integrity Telemetry Banner -->
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="font-bold text-white uppercase tracking-wider text-[11px]">System Security & Forensic Integrity Seal</span>
+          </div>
+          <div class="flex items-center gap-2 text-slate-400 text-[11px]">
+            <span>CHAIN-OF-CUSTODY SEAL (SHA-256):</span>
+            <span id="audit-seal-hash" class="text-emerald-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800 font-mono font-bold truncate max-w-xs cursor-pointer" title="Click to copy full hash" onclick="navigator.clipboard.writeText(this.getAttribute('data-full-hash')||this.innerText); alert('Copied cryptographic SHA-256 seal to clipboard!');">Computing...</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 border-t border-slate-800/80 text-xs font-mono">
+          <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="text-[10px] text-slate-500 block">DB INTEGRITY</span>
+              <span id="sec-db-status" class="font-bold text-slate-200 text-[11px]">PRAGMA: OK</span>
+            </div>
+          </div>
+          <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="text-[10px] text-slate-500 block">STORAGE ISOLATION</span>
+              <span id="sec-storage-status" class="font-bold text-slate-200 text-[11px]">Isolated & Protected</span>
+            </div>
+          </div>
+          <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="text-[10px] text-slate-500 block">MODEL WEIGHTS SHA-256</span>
+              <span id="sec-model-status" class="font-bold text-slate-200 text-[11px]">Tamper-Free</span>
+            </div>
+          </div>
+          <div class="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 flex items-center gap-2">
+            <span class="text-emerald-400 font-bold">✓</span>
+            <div>
+              <span class="text-[10px] text-slate-500 block">INTAKE RATE LIMIT</span>
+              <span id="sec-rate-status" class="font-bold text-slate-200 text-[11px]">10/min Per IP Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Governance, Ethics & Demographic Fairness Dashboard -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: 100% Human-in-the-Loop Guarantee -->
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">HUMAN-IN-THE-LOOP</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">100.0% COMPLIANT</span>
+          </div>
+          <div class="text-3xl font-black text-white font-mono" id="gov-hitl-percent">100%</div>
+          <p class="text-xs text-slate-400">Autonomous decisions: <strong class="text-emerald-400 font-mono">0</strong> (Strict Invariant).</p>
+          <div class="text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-800/80">
+            Adjudications: <span id="gov-total-reviews" class="text-slate-300 font-bold">--</span> recorded
+          </div>
+        </div>
+
+        <!-- Card 2: Operating Point Calibration & Separation -->
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">OPERATING POINT</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">τ = 0.70</span>
+          </div>
+          <div class="text-3xl font-black text-blue-400 font-mono" id="gov-separation-delta">+0.25</div>
+          <p class="text-xs text-slate-400">Score separation between verified and rejected leads.</p>
+          <div class="text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-800/80">
+            Intake floor: <span class="text-slate-300 font-bold">τ ≥ 0.50</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Demographic Parity & Fairness Monitor -->
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">DEMOGRAPHIC PARITY</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">MONITORED</span>
+          </div>
+          <div class="text-sm font-bold text-white font-mono mt-1" id="gov-gender-summary">Female: 50% | Male: 50%</div>
+          <p class="text-xs text-slate-400">Active monitoring to prevent algorithmic demographic disparity.</p>
+          <div class="text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-800/80" id="gov-age-summary">
+            Age slices: Minor, Adult, Senior
+          </div>
+        </div>
+
+        <!-- Card 4: Model Lineage & Open Source Licensing -->
+        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">MODEL LINEAGE</span>
+            <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">BSD 3-CLAUSE</span>
+          </div>
+          <div class="text-xs font-bold text-white font-mono">YuNet + SFace (128-D)</div>
+          <p class="text-[11px] text-slate-400 leading-snug">OpenCV ONNX MobileFaceNet. Cosine similarity over L2 sphere.</p>
+          <div class="text-[11px] font-mono text-slate-500 pt-1 border-t border-slate-800/80">
+            Non-autonomous ranking signal only
+          </div>
+        </div>
+      </div>
+
+      <!-- Audit Log Filters Toolbar -->
+      <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 shadow-xl flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div class="flex flex-wrap items-center gap-3">
+          <div>
+            <label class="text-[10px] text-slate-500 uppercase block mb-1">Action Type</label>
+            <select id="audit-filter-action" class="bg-slate-950 border border-slate-800 text-slate-200 rounded-lg px-2.5 py-1.5 focus:border-cyan-500 outline-none">
+              <option value="">All Actions</option>
+              <option value="LOGIN">LOGIN</option>
+              <option value="USER_LOGOUT">USER_LOGOUT</option>
+              <option value="CASE_CREATE">CASE_CREATE</option>
+              <option value="CASE_UPDATED">CASE_UPDATED</option>
+              <option value="CASE_STATUS_UPDATE">CASE_STATUS_UPDATE</option>
+              <option value="REFERENCE_IMAGE_UPLOADED">REFERENCE_IMAGE_UPLOADED</option>
+              <option value="SIGHTING_SUBMISSION">SIGHTING_SUBMISSION</option>
+              <option value="SIGHTING_STATUS_UPDATE">SIGHTING_STATUS_UPDATE</option>
+              <option value="REVIEW_ADJUDICATED">REVIEW_ADJUDICATED</option>
+              <option value="BATCH_REVIEW">BATCH_REVIEW</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-500 uppercase block mb-1">Actor (Officer / System)</label>
+            <input type="text" id="audit-filter-actor" placeholder="Search officer..." class="bg-slate-950 border border-slate-800 text-slate-200 rounded-lg px-2.5 py-1.5 focus:border-cyan-500 outline-none w-36">
+          </div>
+
+          <div>
+            <label class="text-[10px] text-slate-500 uppercase block mb-1">Resource</label>
+            <select id="audit-filter-resource" class="bg-slate-950 border border-slate-800 text-slate-200 rounded-lg px-2.5 py-1.5 focus:border-cyan-500 outline-none">
+              <option value="">All Resources</option>
+              <option value="case">Cases</option>
+              <option value="sighting">Sightings</option>
+              <option value="candidate_match">Candidates</option>
+              <option value="users">Users / Staff</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div>
+              <label class="text-[10px] text-slate-500 uppercase block mb-1">Start Date</label>
+              <input type="date" id="audit-filter-start" class="bg-slate-950 border border-slate-800 text-slate-200 rounded-lg px-2 py-1 focus:border-cyan-500 outline-none">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-500 uppercase block mb-1">End Date</label>
+              <input type="date" id="audit-filter-end" class="bg-slate-950 border border-slate-800 text-slate-200 rounded-lg px-2 py-1 focus:border-cyan-500 outline-none">
+            </div>
+          </div>
+
+          <div class="pt-4 flex items-center gap-2">
+            <button onclick="App.applyAuditFilters()" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+              Filter
+            </button>
+            <button onclick="App.resetAuditFilters()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold px-2.5 py-1.5 rounded-lg transition border border-slate-700">
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 pt-4 sm:pt-0">
+          Showing <span id="audit-count-shown" class="text-white font-bold">--</span> verified records
+        </div>
+      </div>
+
+      <!-- Audit Event Log Table -->
       <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-left">
             <thead class="bg-slate-950 border-b border-slate-800 text-[11px] font-mono font-bold text-slate-400 uppercase">
               <tr>
-                <th class="py-3 px-4">Timestamp</th>
-                <th class="py-3 px-4">Actor</th>
-                <th class="py-3 px-4">Action</th>
-                <th class="py-3 px-4">Resource</th>
-                <th class="py-3 px-4">Audit Details</th>
+                <th class="py-3.5 px-4">Event Timestamp (UTC)</th>
+                <th class="py-3.5 px-4">Officer / Actor</th>
+                <th class="py-3.5 px-4">Action</th>
+                <th class="py-3.5 px-4">Resource Target</th>
+                <th class="py-3.5 px-4">IP Address</th>
+                <th class="py-3.5 px-4">Forensic Evidentiary Details</th>
               </tr>
             </thead>
-            <tbody id="audit-table-body"></tbody>
+            <tbody id="audit-table-body" class="divide-y divide-slate-800/80"></tbody>
           </table>
         </div>
       </div>

@@ -62,6 +62,24 @@ const API = {
     }
   },
 
+  async requestRaw(endpoint, options = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const headers = options.headers || {};
+    const token = this.getToken();
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || `Request failed with status ${response.status}`);
+    }
+    const text = await response.text();
+    const checksum = response.headers.get('X-Audit-Checksum-SHA256') || '';
+    const totalRecords = response.headers.get('X-Total-Records') || '';
+    return { text, checksum, totalRecords, response };
+  },
+
   // Auth Endpoints
   async login(username, password) {
     const res = await this.request('/auth/login', {
@@ -272,8 +290,61 @@ const API = {
     return this.request(`/map/points${query ? '?' + query : ''}`);
   },
 
-  async getAuditLogs(limit = 50) {
-    return this.request(`/audit?limit=${limit}`);
+  async getAuditLogs(params = {}) {
+    if (typeof params === 'number') {
+      return this.request(`/audit?limit=${params}`);
+    }
+    const qs = new URLSearchParams();
+    if (params.limit) qs.append('limit', params.limit);
+    if (params.offset) qs.append('offset', params.offset);
+    if (params.action) qs.append('action', params.action);
+    if (params.actor) qs.append('actor', params.actor);
+    if (params.resource_type) qs.append('resource_type', params.resource_type);
+    if (params.start_date) qs.append('start_date', params.start_date);
+    if (params.end_date) qs.append('end_date', params.end_date);
+    const query = qs.toString();
+    return this.request(`/audit${query ? '?' + query : ''}`);
+  },
+
+  async getAuditLogsWithHeaders(params = {}) {
+    const qs = new URLSearchParams();
+    if (params.limit) qs.append('limit', params.limit);
+    if (params.offset) qs.append('offset', params.offset);
+    if (params.action) qs.append('action', params.action);
+    if (params.actor) qs.append('actor', params.actor);
+    if (params.resource_type) qs.append('resource_type', params.resource_type);
+    if (params.start_date) qs.append('start_date', params.start_date);
+    if (params.end_date) qs.append('end_date', params.end_date);
+    const query = qs.toString();
+    const url = `${this.baseUrl}/audit${query ? '?' + query : ''}`;
+    const token = this.getToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(url, { headers });
+    const checksum = res.headers.get('X-Audit-Checksum-SHA256') || '';
+    const totalCount = parseInt(res.headers.get('X-Total-Count') || '0', 10);
+    const logs = await res.json();
+    return { logs, checksum, totalCount };
+  },
+
+  async exportAuditLogs(format = 'csv', params = {}) {
+    const qs = new URLSearchParams();
+    qs.append('format', format);
+    if (params.limit) qs.append('limit', params.limit);
+    if (params.action) qs.append('action', params.action);
+    if (params.actor) qs.append('actor', params.actor);
+    if (params.resource_type) qs.append('resource_type', params.resource_type);
+    if (params.start_date) qs.append('start_date', params.start_date);
+    if (params.end_date) qs.append('end_date', params.end_date);
+    return this.requestRaw(`/audit/export?${qs.toString()}`);
+  },
+
+  async getGovernanceReport() {
+    return this.request('/audit/governance');
+  },
+
+  async getSecurityHealth() {
+    return this.request('/system/security-health');
   },
 
   async getBenchmark() {
