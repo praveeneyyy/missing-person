@@ -1,5 +1,8 @@
 import os
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, status
+import uuid
+import tempfile
+from pathlib import Path
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query, status
 from backend.face_engine import face_engine
 from backend.auth import require_role
 from backend.config import YUNET_MODEL_PATH, SFACE_MODEL_PATH
@@ -83,3 +86,42 @@ async def compare_faces(
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+@router.post("/video-inspect")
+async def inspect_video_stream(
+    file: UploadFile = File(...),
+    sample_fps: float = Query(1.0, ge=0.2, le=5.0),
+    max_frames: int = Query(60, ge=5, le=120)
+):
+    """
+    Forensic video inspection endpoint (FR-08):
+    Decodes video, samples keyframes at controlled intervals, detects faces across time,
+    and clusters detections into deduplicated person tracklets.
+    """
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="Empty video file uploaded.")
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Video exceeds 50 MB maximum size limit.")
+
+    temp_dir = Path(tempfile.gettempdir()) / "video_inspect"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+    temp_path = temp_dir / f"inspect_{uuid.uuid4().hex[:8]}.mp4"
+
+    try:
+        with open(temp_path, "wb") as f:
+            f.write(content)
+        result = face_engine.process_sighting_video(
+            video_path=str(temp_path),
+            sample_fps=sample_fps,
+            max_sampled_frames=max_frames
+        )
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Video analysis failed: {str(e)}")
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except Exception:
+                pass

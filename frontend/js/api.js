@@ -416,5 +416,19 @@ const API = {
       method: 'POST',
       body: JSON.stringify({ threshold: parseFloat(threshold) })
     });
+  },
+
+  // Module 8: Video Forensic Processing & Surveillance Analysis (FR-08)
+  async getSightingVideoAnalysis(sightingId) {
+    return this.request(`/sightings/${sightingId}/video-analysis`);
+  },
+
+  async inspectVideo(file, sampleFps = 1.0, maxFrames = 60) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.request(`/faces/video-inspect?sample_fps=${sampleFps}&max_frames=${maxFrames}`, {
+      method: 'POST',
+      body: formData
+    });
   }
 };

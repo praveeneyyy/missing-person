@@ -403,7 +403,181 @@ class FaceEngine:
                     (59, 130, 246),
                     2
                 )
-        return annotated
+    def process_sighting_video(
+        self,
+        video_path: str,
+        sample_fps: float = 1.0,
+        max_sampled_frames: int = 60,
+        cluster_threshold: float = 0.65
+    ) -> Dict[str, Any]:
+        """
+        Processes video evidence for FR-08 (Video Support):
+        1. Opens video container and extracts duration, fps, resolution, total frames.
+        2. Samples keyframes at controlled intervals (e.g. 1 frame/sec, capped at max_sampled_frames).
+        3. Detects faces in sampled frames and computes SFace 128-D normalized embeddings.
+        4. Deduplicates repeated detections across frames into identity tracklet clusters.
+        5. Selects the highest-quality exemplar detection for each cluster while preserving
+           all timestamp occurrences for forensic timeline verification.
+        """
+        if not os.path.exists(video_path):
+            raise FileNotFoundError(f"Video file not found at {video_path}")
+
+        cap = cv2.VideoCapture(video_path)
+        if not cap.isOpened():
+            raise ValueError(f"Unable to decode video stream from {video_path}")
+
+        fps = cap.get(cv2.CAP_PROP_FPS) or 25.0
+        if fps <= 0 or math.isnan(fps):
+            fps = 25.0
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 0)
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 0)
+        duration_sec = round(total_frames / fps, 2) if total_frames > 0 else 0.0
+
+        # Calculate sampling step interval
+        step = max(1, int(round(fps / sample_fps)))
+        if total_frames > 0 and (total_frames // step) > max_sampled_frames:
+            step = max(1, total_frames // max_sampled_frames)
+
+        raw_detections = []
+        sampled_count = 0
+        current_frame_idx = 0
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if current_frame_idx % step == 0:
+                sampled_count += 1
+                timestamp_sec = round(current_frame_idx / fps, 3)
+                minutes = int(timestamp_sec // 60)
+                seconds = timestamp_sec % 60
+                timestamp_str = f"{minutes:02d}:{seconds:06.3f}"
+
+                faces = self.detect_faces(frame)
+                for face in faces:
+                    emb = self.extract_embedding(frame, face["raw_face"])
+
+                    # Generate crop thumbnail
+                    bx, by, bw, bh = face["bbox"]
+                    fh, fw = frame.shape[:2]
+                    crop = frame[max(0, by):min(fh, by + bh), max(0, bx):min(fw, bx + bw)]
+                    thumb_b64 = ""
+                    if crop.size > 0:
+                        try:
+                            _, buf = cv2.imencode(".jpg", crop)
+                            thumb_b64 = f"data:image/jpeg;base64,{base64.b64encode(buf).decode('ascii')}"
+                        except Exception:
+                            thumb_b64 = ""
+
+                    raw_detections.append({
+                        "frame_index": current_frame_idx,
+                        "timestamp_sec": timestamp_sec,
+                        "timestamp_str": timestamp_str,
+                        "bbox": face["bbox"],
+                        "landmarks": face["landmarks"],
+                        "confidence": face["confidence"],
+                        "embedding": emb,
+                        "thumbnail_b64": thumb_b64
+                    })
+
+                if sampled_count >= max_sampled_frames:
+                    break
+
+            current_frame_idx += 1
+
+        cap.release()
+
+        # Intra-video tracklet clustering and temporal deduplication
+        clusters = []
+        for det in raw_detections:
+            emb = det["embedding"]
+            best_cluster = None
+            best_sim = -1.0
+
+            for c in clusters:
+                sim = self.cosine_similarity(emb, c["exemplar"]["embedding"])
+                if sim > best_sim:
+                    best_sim = sim
+                    best_cluster = c
+
+            if best_cluster is not None and best_sim >= cluster_threshold:
+                best_cluster["occurrences"].append({
+                    "frame_index": det["frame_index"],
+                    "timestamp_sec": det["timestamp_sec"],
+                    "timestamp_str": det["timestamp_str"],
+                    "confidence": det["confidence"],
+                    "bbox": det["bbox"]
+                })
+                # If new detection has higher confidence, promote as exemplar
+                if det["confidence"] > best_cluster["exemplar"]["confidence"]:
+                    best_cluster["exemplar"] = det
+            else:
+                cluster_id = len(clusters) + 1
+                clusters.append({
+                    "cluster_id": cluster_id,
+                    "exemplar": det,
+                    "occurrences": [{
+                        "frame_index": det["frame_index"],
+                        "timestamp_sec": det["timestamp_sec"],
+                        "timestamp_str": det["timestamp_str"],
+                        "confidence": det["confidence"],
+                        "bbox": det["bbox"]
+                    }]
+                })
+
+        # Format tracklet summaries
+        tracklets = []
+        for idx, c in enumerate(clusters):
+            ex = c["exemplar"]
+            occ = c["occurrences"]
+            timestamps = [o["timestamp_str"] for o in occ]
+            tracklets.append({
+                "tracklet_id": idx,
+                "exemplar_frame_index": ex["frame_index"],
+                "exemplar_timestamp_sec": ex["timestamp_sec"],
+                "exemplar_timestamp_str": ex["timestamp_str"],
+                "confidence": ex["confidence"],
+                "bbox": ex["bbox"],
+                "landmarks": ex["landmarks"],
+                "embedding": ex["embedding"],
+                "thumbnail_b64": ex.get("thumbnail_b64", ""),
+                "exemplar_thumbnail_b64": ex.get("thumbnail_b64", ""),
+                "detection_count": len(occ),
+                "total_sightings_in_video": len(occ),
+                "all_timestamps": timestamps,
+                "first_seen": occ[0]["timestamp_str"],
+                "last_seen": occ[-1]["timestamp_str"],
+                "first_seen_timestamp": occ[0]["timestamp_str"],
+                "last_seen_timestamp": occ[-1]["timestamp_str"],
+                "duration_span_sec": round(occ[-1]["timestamp_sec"] - occ[0]["timestamp_sec"], 3),
+                "occurrences": [
+                    {
+                        "frame_idx": o["frame_index"],
+                        "timestamp_seconds": o["timestamp_sec"],
+                        "timestamp_formatted": o["timestamp_str"],
+                        "confidence": o["confidence"],
+                        "bbox": o["bbox"]
+                    }
+                    for o in occ
+                ]
+            })
+
+        return {
+            "video_metadata": {
+                "duration_seconds": duration_sec,
+                "fps": round(fps, 2),
+                "resolution": f"{width}x{height}",
+                "width": width,
+                "height": height,
+                "total_frames": total_frames,
+                "sampled_frames_count": sampled_count,
+                "total_face_detections": len(raw_detections),
+                "unique_tracklets_count": len(tracklets)
+            },
+            "tracklets": tracklets
+        }
 
 # Global singleton instance
 face_engine = FaceEngine()

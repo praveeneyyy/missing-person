@@ -112,46 +112,39 @@ async def submit_sighting(
     if longitude is not None and not (-180.0 <= longitude <= 180.0):
         raise HTTPException(status_code=400, detail="Longitude must be between -180.0 and 180.0 degrees.")
 
-    # 5. Photographic media file validation
+    # 5. Photographic and video evidence file validation
     if not file or not file.filename:
-        raise HTTPException(status_code=400, detail="A photographic evidence file is required.")
+        raise HTTPException(status_code=400, detail="A photographic or surveillance video evidence file is required.")
 
     file_ext = Path(file.filename).suffix.lower() if file.filename else ".jpg"
-    allowed_exts = [".jpg", ".jpeg", ".png", ".webp"]
-    if file_ext not in allowed_exts:
-        # Check MIME type fallback
-        if not file.content_type or not file.content_type.startswith("image/"):
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported file format '{file_ext}'. Allowed formats: JPEG, PNG, WebP."
-            )
-        file_ext = ".jpg"
+    image_exts = [".jpg", ".jpeg", ".png", ".webp"]
+    video_exts = [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+
+    is_video = (file_ext in video_exts) or (bool(file.content_type) and file.content_type.startswith("video/"))
+    is_image = (file_ext in image_exts) or (bool(file.content_type) and file.content_type.startswith("image/"))
+
+    if not is_video and not is_image:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file format '{file_ext}'. Allowed formats: Images (JPEG, PNG, WebP) or Video (MP4, AVI, MOV, MKV, WebM)."
+        )
 
     content = await file.read()
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Uploaded file is empty (0 bytes).")
-    if len(content) > 15 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File size exceeds maximum 15 MB limit.")
 
-    try:
-        img = face_engine.decode_image(content)
-        if img is None:
-            raise ValueError("Decoded image buffer is None")
-    except Exception as e:
+    max_limit = 50 * 1024 * 1024 if is_video else 15 * 1024 * 1024
+    if len(content) > max_limit:
         raise HTTPException(
             status_code=400,
-            detail=f"Image decoding failed: file is corrupted or not a valid image format ({str(e)})."
+            detail=f"File size exceeds maximum {'50 MB surveillance video' if is_video else '15 MB image'} limit."
         )
-
-    # 6. Biometric Multi-Stage Face Processing
-    detected_faces = face_engine.process_sighting_image(img)
-    faces_count = len(detected_faces)
 
     with get_db() as conn:
         cursor = conn.cursor()
         receipt_no = generate_receipt_no(cursor)
 
-        # 7. Save sighting record
+        # 6. Save sighting record
         cursor.execute("""
             INSERT INTO sightings (
                 receipt_no, sighting_date, sighting_time, location_name,
@@ -165,13 +158,64 @@ async def submit_sighting(
         ))
         sighting_id = cursor.lastrowid
 
-        # 8. Save media file securely to storage/sightings
-        stored_name = f"sight_{sighting_id}_{uuid.uuid4().hex[:8]}{file_ext}"
+        # 7. Save media file securely to storage/sightings
+        prefix = "sight_video" if is_video else "sight"
+        stored_name = f"{prefix}_{sighting_id}_{uuid.uuid4().hex[:8]}{file_ext}"
         saved_path = SIGHTINGS_DIR / stored_name
         with open(saved_path, "wb") as f:
             f.write(content)
 
         rel_path = f"storage/sightings/{stored_name}"
+
+        # 8. Biometric Multi-Stage Face & Video Processing
+        query_faces = []
+
+        if is_video:
+            try:
+                video_res = face_engine.process_sighting_video(str(saved_path))
+                tracklets = video_res["tracklets"]
+                faces_count = len(tracklets)
+                faces_metadata_payload = {
+                    "media_type": "video",
+                    "metadata": video_res["video_metadata"],
+                    "tracklets": tracklets
+                }
+                faces_metadata_json = json.dumps(faces_metadata_payload)
+                for t in tracklets:
+                    query_faces.append({
+                        "face_index": t["tracklet_id"],
+                        "embedding": t["embedding"],
+                        "exemplar_timestamp": t["exemplar_timestamp_str"]
+                    })
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Video decoding and frame processing failed: {str(e)}"
+                )
+        else:
+            try:
+                img = face_engine.decode_image(content)
+                if img is None:
+                    raise ValueError("Decoded image buffer is None")
+            except Exception as e:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Image decoding failed: file is corrupted or not a valid image format ({str(e)})."
+                )
+
+            detected_faces = face_engine.process_sighting_image(img)
+            faces_count = len(detected_faces)
+            faces_metadata_json = json.dumps([{
+                "face_index": f["face_index"],
+                "bbox": f["bbox"],
+                "confidence": f["confidence"]
+            } for f in detected_faces])
+
+            for f in detected_faces:
+                query_faces.append({
+                    "face_index": f["face_index"],
+                    "embedding": f["embedding"]
+                })
 
         # Save media asset record
         cursor.execute("""
@@ -180,20 +224,16 @@ async def submit_sighting(
                 faces_detected_count, faces_metadata_json
             ) VALUES (?, ?, ?, ?, ?)
         """, (
-            sighting_id, rel_path, file.filename or "sighting.jpg",
+            sighting_id, rel_path, file.filename or ("sighting.mp4" if is_video else "sighting.jpg"),
             faces_count,
-            json.dumps([{
-                "face_index": f["face_index"],
-                "bbox": f["bbox"],
-                "confidence": f["confidence"]
-            } for f in detected_faces])
+            faces_metadata_json
         ))
 
         matches_generated = 0
         high_similarity_alerts = []
 
         # 9. Perform vector candidate retrieval if faces are present
-        if faces_count > 0:
+        if len(query_faces) > 0:
             cursor.execute("""
                 SELECT r.id AS reference_image_id, r.case_id, r.embedding_json,
                        c.reference_no, c.full_name, c.age, c.gender, c.last_seen_date, c.last_seen_location,
@@ -223,8 +263,8 @@ async def submit_sighting(
                 except Exception:
                     continue
 
-            for face in detected_faces:
-                query_emb = face["embedding"]
+            for qf in query_faces:
+                query_emb = qf["embedding"]
                 top_matches = face_engine.rank_candidates(query_emb, enrolled_cases, top_k=DEFAULT_TOP_K)
 
                 for match in top_matches:
@@ -234,7 +274,7 @@ async def submit_sighting(
                             similarity_score, rank, model_version, status
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, 'requires_human_review')
                     """, (
-                        sighting_id, face["face_index"], match["case_id"],
+                        sighting_id, qf["face_index"], match["case_id"],
                         match["reference_image_id"], match["similarity_score"],
                         match["rank"], match["model_version"]
                     ))
@@ -266,32 +306,49 @@ async def submit_sighting(
             str(sighting_id),
             json.dumps({
                 "receipt_no": receipt_no,
+                "media_type": "video" if is_video else "image",
                 "faces_detected": faces_count,
                 "candidates_ranked": matches_generated
             })
         ))
 
         # 12. Contextual citizen feedback message
-        if faces_count > 0:
-            user_message = (
-                f"Thank you for submitting this sighting. System detected {faces_count} face(s) and queued "
-                f"biometric leads for authorized investigator verification. Keep this receipt number for your records."
-            )
-            submission_status = "Submitted and queued for authorized investigator review"
+        if is_video:
+            if faces_count > 0:
+                user_message = (
+                    f"Thank you for submitting this surveillance video sighting. System extracted and deduplicated "
+                    f"{faces_count} person tracklet(s) across the video timeline, and queued biometric leads for investigator review."
+                )
+                submission_status = "Submitted and queued for authorized investigator review"
+            else:
+                user_message = (
+                    "Thank you for submitting this video sighting. No automated facial biometrics could be extracted from sampled video frames; "
+                    "this report has been securely queued as an observational lead for manual officer review."
+                )
+                submission_status = "Observation lead queued for manual investigator assessment"
         else:
-            user_message = (
-                "Thank you for submitting this sighting. No automated facial biometric could be detected in this photo; "
-                "this report has been securely queued as an observational lead for manual officer review."
-            )
-            submission_status = "Observation lead queued for manual investigator assessment"
+            if faces_count > 0:
+                user_message = (
+                    f"Thank you for submitting this sighting. System detected {faces_count} face(s) and queued "
+                    f"biometric leads for authorized investigator verification. Keep this receipt number for your records."
+                )
+                submission_status = "Submitted and queued for authorized investigator review"
+            else:
+                user_message = (
+                    "Thank you for submitting this sighting. No automated facial biometric could be detected in this photo; "
+                    "this report has been securely queued as an observational lead for manual officer review."
+                )
+                submission_status = "Observation lead queued for manual investigator assessment"
 
-        # Return public receipt only (PRD FR-05: no confidential case data disclosed)
         return {
             "success": True,
+            "sighting_id": sighting_id,
             "receipt_no": receipt_no,
             "sighting_date": cleaned_date,
             "location_name": cleaned_location,
             "faces_detected_count": faces_count,
+            "media_type": "video" if is_video else "image",
+            "matches_generated": matches_generated,
             "status": submission_status,
             "message": user_message
         }
@@ -498,4 +555,73 @@ def public_lookup_receipt(receipt_no: str):
             "submitted_at": str(row["created_at"]),
             "notice": status_info["notice"],
             "privacy_statement": "This public lookup provides verification status only. Suspect dossiers and facial biometrics are shielded by law enforcement privacy standards."
+        }
+
+@router.get("/{sighting_id}/video-analysis")
+def get_sighting_video_analysis(
+    sighting_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """
+    Returns granular forensic video telemetry for a sighting (FR-08):
+    Duration, FPS, resolution, sampled frames, deduplicated face tracklets,
+    frame timestamps, and correlated case leads.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT s.id, s.receipt_no, s.location_name, s.sighting_date, s.sighting_time,
+                   sm.file_path, sm.original_filename, sm.faces_metadata_json
+            FROM sightings s
+            JOIN sighting_media sm ON s.id = sm.sighting_id
+            WHERE s.id = ?
+        """, (sighting_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Sighting media record not found")
+
+        sighting_data = dict(row)
+        meta_json = sighting_data.get("faces_metadata_json") or "{}"
+        try:
+            parsed_meta = json.loads(meta_json)
+        except Exception:
+            parsed_meta = {}
+
+        if not isinstance(parsed_meta, dict) or parsed_meta.get("media_type") != "video":
+            return {
+                "sighting_id": sighting_id,
+                "receipt_no": sighting_data["receipt_no"],
+                "is_video": False,
+                "message": "Sighting media is a static photograph, not a video stream."
+            }
+
+        # Fetch candidate matches associated with each tracklet
+        cursor.execute("""
+            SELECT cm.id AS match_id, cm.sighting_face_index AS tracklet_id, cm.case_id,
+                   cm.similarity_score, cm.rank, cm.status AS match_status,
+                   c.reference_no, c.full_name, c.age, c.gender, c.status AS case_status
+            FROM candidate_matches cm
+            JOIN cases c ON cm.case_id = c.id
+            WHERE cm.sighting_id = ?
+            ORDER BY cm.similarity_score DESC
+        """, (sighting_id,))
+        matches = [dict(m) for m in cursor.fetchall()]
+
+        # Map matches to tracklets
+        tracklets = parsed_meta.get("tracklets", [])
+        for t in tracklets:
+            tid = t.get("tracklet_id")
+            t["candidates"] = [m for m in matches if m.get("tracklet_id") == tid]
+
+        return {
+            "sighting_id": sighting_id,
+            "receipt_no": sighting_data["receipt_no"],
+            "location_name": sighting_data["location_name"],
+            "sighting_date": sighting_data["sighting_date"],
+            "media_url": f"/{sighting_data['file_path']}",
+            "filename": sighting_data["original_filename"],
+            "is_video": True,
+            "video_metadata": parsed_meta.get("metadata", {}),
+            "tracklets": tracklets,
+            "total_tracklets": len(tracklets)
         }

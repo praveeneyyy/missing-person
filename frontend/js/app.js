@@ -72,7 +72,7 @@ const App = {
 
     const sightingFile = document.getElementById('sighting-file');
     if (sightingFile) {
-      sightingFile.addEventListener('change', (e) => this.handlePhotoPreview(e, 'sighting-preview-img', 'sighting-preview-box', 'sighting-img-meta'));
+      sightingFile.addEventListener('change', (e) => this.handleSightingEvidenceSelect(e));
     }
 
     // Case registration form
@@ -624,11 +624,30 @@ const App = {
         const distKm = c.spatial_separation_km !== undefined ? c.spatial_separation_km : MapManager.calculateDistanceKm(c.case_lat, c.case_lng, c.sighting_lat, c.sighting_lng);
         const daysDelta = c.temporal_delta_days !== undefined ? c.temporal_delta_days : null;
 
-        // Parse landmarks & bbox for canvases
-        const sightingFaces = c.sighting_faces_json ? JSON.parse(c.sighting_faces_json) : [];
-        const activeSightFace = sightingFaces[c.sighting_face_index] || sightingFaces[0] || {};
+        // Parse metadata & tracklets for video sightings vs static photos
+        let isVideo = false;
+        let videoTracklet = null;
+        let sightingMetaObj = null;
+        try {
+          sightingMetaObj = c.sighting_faces_json ? JSON.parse(c.sighting_faces_json) : null;
+          if (sightingMetaObj && sightingMetaObj.media_type === 'video') {
+            isVideo = true;
+            const tracklets = sightingMetaObj.tracklets || [];
+            videoTracklet = tracklets.find(t => t.tracklet_id === c.sighting_face_index) || tracklets[0] || null;
+          }
+        } catch (e) {}
+
+        if (!isVideo && c.sighting_photo_path && (c.sighting_photo_path.endsWith('.mp4') || c.sighting_photo_path.endsWith('.webm') || c.sighting_photo_path.endsWith('.mov') || c.sighting_photo_path.endsWith('.avi') || c.sighting_photo_path.endsWith('.mkv'))) {
+          isVideo = true;
+        }
+
+        const sightingFaces = Array.isArray(sightingMetaObj) ? sightingMetaObj : [];
+        const activeSightFace = isVideo ? (videoTracklet || {}) : (sightingFaces[c.sighting_face_index] || sightingFaces[0] || {});
         const sightBbox = activeSightFace.bbox || null;
         const sightLandmarks = activeSightFace.landmarks || null;
+        const sightImgSrc = (isVideo && videoTracklet && videoTracklet.exemplar_thumbnail_b64)
+          ? videoTracklet.exemplar_thumbnail_b64
+          : `/${c.sighting_photo_path}`;
 
         const refBbox = c.ref_bbox_json ? JSON.parse(c.ref_bbox_json) : null;
         const refLandmarks = c.ref_landmarks_json ? JSON.parse(c.ref_landmarks_json) : null;
@@ -643,6 +662,9 @@ const App = {
                   <div class="flex items-center gap-2">
                     <span class="font-mono font-extrabold text-cyan-400 text-sm tracking-wide">LEAD ADJUDICATION #${c.candidate_id}</span>
                     <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono border border-slate-700">Rank #${c.rank}</span>
+                    ${isVideo ? `
+                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1">🎥 CCTV VIDEO STREAM</span>
+                    ` : ''}
                     ${c.match_status !== 'requires_human_review' ? `
                       <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">${c.match_status.toUpperCase()}</span>
                     ` : ''}
@@ -681,15 +703,20 @@ const App = {
 
             <!-- Dual Forensic Viewport Comparison -->
             <div class="p-6 bg-slate-900 grid grid-cols-1 lg:grid-cols-2 gap-6 hud-grid">
-              <!-- Left Viewport: Submitted Sighting Image -->
+              <!-- Left Viewport: Submitted Sighting Image / Video Stream -->
               <div class="space-y-3">
                 <div class="flex items-center justify-between text-xs text-slate-300">
                   <div class="flex items-center gap-2 font-bold">
                     <span class="text-cyan-400 font-mono">PANEL A</span>
-                    <span>Submitted Sighting Evidence</span>
+                    <span>${isVideo ? 'Surveillance Video Exemplar' : 'Submitted Sighting Evidence'}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <button onclick="App.toggleCanvasMode('canvas-sight-${c.candidate_id}', '/${c.sighting_photo_path}', ${JSON.stringify(sightBbox)}, ${JSON.stringify(sightLandmarks)})" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-cyan-300 font-mono border border-slate-700">
+                    ${isVideo ? `
+                      <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="text-[10px] bg-purple-950/80 hover:bg-purple-900 px-2 py-1 rounded text-purple-300 font-mono border border-purple-800 flex items-center gap-1 transition shadow-sm">
+                        🎥 Inspect Video Stream
+                      </button>
+                    ` : ''}
+                    <button onclick="App.toggleCanvasMode('canvas-sight-${c.candidate_id}', '${sightImgSrc}', ${JSON.stringify(sightBbox)}, ${JSON.stringify(sightLandmarks)})" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-cyan-300 font-mono border border-slate-700">
                       Toggle Overlays
                     </button>
                   </div>
@@ -701,8 +728,8 @@ const App = {
                   <div class="hud-corner hud-corner-tr"></div>
                   <div class="hud-corner hud-corner-bl"></div>
                   <div class="hud-corner hud-corner-br"></div>
-                  <div class="absolute bottom-3 left-3 bg-black/80 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono text-cyan-300 border border-cyan-500/30">
-                    SIGHTING FACE #${c.sighting_face_index + 1}
+                  <div class="absolute bottom-3 left-3 bg-black/80 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono ${isVideo ? 'text-purple-300 border-purple-500/30' : 'text-cyan-300 border-cyan-500/30'} border">
+                    ${isVideo ? `CCTV TRACKLET #${(videoTracklet ? videoTracklet.tracklet_id : c.sighting_face_index) + 1} (${videoTracklet ? videoTracklet.detection_count : 1} detections)` : `SIGHTING FACE #${c.sighting_face_index + 1}`}
                   </div>
                 </div>
 
@@ -787,10 +814,17 @@ const App = {
                 </div>
               </div>
 
-              <!-- Quick GIS Map Inspection -->
-              <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition flex items-center gap-1.5 shadow-sm">
-                <span>🗺️</span> <span>Inspect on GIS Map</span>
-              </button>
+              <!-- Quick GIS Map Inspection & Video Telemetry -->
+              <div class="flex items-center gap-2">
+                ${isVideo ? `
+                  <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800 transition flex items-center gap-1.5 shadow-sm">
+                    <span>🎥</span> <span>Inspect Video Stream</span>
+                  </button>
+                ` : ''}
+                <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition flex items-center gap-1.5 shadow-sm">
+                  <span>🗺️</span> <span>Inspect on GIS Map</span>
+                </button>
+              </div>
             </div>
 
             <!-- Adjudication Action Command Bar -->
@@ -820,15 +854,35 @@ const App = {
       // Draw biometric canvases after DOM insertion
       setTimeout(() => {
         candidates.forEach(c => {
-          const sightingFaces = c.sighting_faces_json ? JSON.parse(c.sighting_faces_json) : [];
-          const activeSightFace = sightingFaces[c.sighting_face_index] || sightingFaces[0] || {};
+          let isVideo = false;
+          let videoTracklet = null;
+          let sightingMetaObj = null;
+          try {
+            sightingMetaObj = c.sighting_faces_json ? JSON.parse(c.sighting_faces_json) : null;
+            if (sightingMetaObj && sightingMetaObj.media_type === 'video') {
+              isVideo = true;
+              const tracklets = sightingMetaObj.tracklets || [];
+              videoTracklet = tracklets.find(t => t.tracklet_id === c.sighting_face_index) || tracklets[0] || null;
+            }
+          } catch (e) {}
+
+          if (!isVideo && c.sighting_photo_path && (c.sighting_photo_path.endsWith('.mp4') || c.sighting_photo_path.endsWith('.webm') || c.sighting_photo_path.endsWith('.mov') || c.sighting_photo_path.endsWith('.avi') || c.sighting_photo_path.endsWith('.mkv'))) {
+            isVideo = true;
+          }
+
+          const sightingFaces = Array.isArray(sightingMetaObj) ? sightingMetaObj : [];
+          const activeSightFace = isVideo ? (videoTracklet || {}) : (sightingFaces[c.sighting_face_index] || sightingFaces[0] || {});
           const sightBbox = activeSightFace.bbox || null;
           const sightLandmarks = activeSightFace.landmarks || null;
 
           const refBbox = c.ref_bbox_json ? JSON.parse(c.ref_bbox_json) : null;
           const refLandmarks = c.ref_landmarks_json ? JSON.parse(c.ref_landmarks_json) : null;
 
-          this.drawForensicCanvas(`canvas-sight-${c.candidate_id}`, `/${c.sighting_photo_path}`, sightBbox, sightLandmarks, 'forensic');
+          const sightImgSrc = (isVideo && videoTracklet && videoTracklet.exemplar_thumbnail_b64)
+            ? videoTracklet.exemplar_thumbnail_b64
+            : `/${c.sighting_photo_path}`;
+
+          this.drawForensicCanvas(`canvas-sight-${c.candidate_id}`, sightImgSrc, sightBbox, sightLandmarks, 'forensic');
           this.drawForensicCanvas(`canvas-ref-${c.candidate_id}`, `/${c.reference_photo_path}`, refBbox, refLandmarks, 'forensic');
         });
       }, 150);
@@ -969,6 +1023,20 @@ const App = {
           ctx.fill();
         });
       }
+    };
+
+    img.onerror = () => {
+      canvas.width = 640;
+      canvas.height = 360;
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#c084fc';
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('🎥 CCTV SURVEILLANCE VIDEO STREAM', canvas.width / 2, canvas.height / 2 - 10);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px monospace';
+      ctx.fillText('Click "Inspect Video Stream" to view multi-frame tracklets', canvas.width / 2, canvas.height / 2 + 15);
     };
 
     img.src = imageSrc;
@@ -2270,6 +2338,52 @@ const App = {
     }
   },
 
+  handleSightingEvidenceSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const box = document.getElementById('sighting-preview-box');
+    const img = document.getElementById('sighting-preview-img');
+    const video = document.getElementById('sighting-preview-video');
+    const title = document.getElementById('sighting-preview-title');
+    const meta = document.getElementById('sighting-img-meta');
+
+    if (box) box.classList.remove('hidden');
+
+    const isVideo = file.type.startsWith('video/') || /\.(mp4|webm|mov|avi|mkv)$/i.test(file.name);
+
+    if (isVideo) {
+      if (img) img.classList.add('hidden');
+      if (video) {
+        video.classList.remove('hidden');
+        video.src = URL.createObjectURL(file);
+      }
+      if (title) title.innerText = 'CCTV / Video Stream Loaded for AI Forensic Analysis';
+      if (meta) {
+        const mb = (file.size / (1024 * 1024)).toFixed(2);
+        meta.innerText = `${file.name} • ${mb} MB • Surveillance Video Stream (YuNet frame sampling & SFace tracklet clustering enabled)`;
+      }
+    } else {
+      if (video) {
+        video.classList.add('hidden');
+        video.pause();
+      }
+      if (img) {
+        img.classList.remove('hidden');
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+      if (title) title.innerText = 'Photographic Evidence Decoded & Ready for AI Processing';
+      if (meta) {
+        const kb = (file.size / 1024).toFixed(1);
+        meta.innerText = `${file.name} • ${kb} KB • Valid format for YuNet DNN face detection`;
+      }
+    }
+  },
+
   openModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.remove('hidden');
@@ -2278,6 +2392,10 @@ const App = {
   closeModal(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
+    if (id === 'video-forensic-modal') {
+      const player = document.getElementById('forensic-video-player');
+      if (player) player.pause();
+    }
   },
 
   // Module 1: Authentication & Officer Management Methods
@@ -2626,6 +2744,152 @@ const App = {
       await this.viewCaseDetails(this.currentCaseId);
     } catch (err) {
       alert('Failed to delete photo: ' + err.message);
+    }
+  },
+
+  // Module 8: Video Forensic Surveillance Methods
+  async openVideoForensicModal(sightingId) {
+    try {
+      const res = await API.getSightingVideoAnalysis(sightingId);
+      if (!res.is_video) {
+        alert(res.message || 'Selected sighting media is a static photograph, not a video stream.');
+        return;
+      }
+
+      // Populate header info
+      const receiptEl = document.getElementById('vid-modal-receipt');
+      if (receiptEl) receiptEl.innerText = res.receipt_no || `SIGHTING #${sightingId}`;
+
+      const subEl = document.getElementById('vid-modal-sub');
+      if (subEl) subEl.innerText = `${res.location_name || 'Field Location'} • ${res.sighting_date || ''} • ${res.total_tracklets || 0} Deduplicated Identity Cluster(s)`;
+
+      const filenameEl = document.getElementById('vid-meta-filename');
+      if (filenameEl) filenameEl.innerText = res.filename || 'surveillance_stream.mp4';
+
+      // Set video player source
+      const player = document.getElementById('forensic-video-player');
+      if (player) {
+        player.src = res.media_url;
+        player.load();
+      }
+
+      // Populate telemetry HUD metrics
+      const meta = res.video_metadata || {};
+      const durEl = document.getElementById('vid-meta-duration');
+      if (durEl) durEl.innerText = meta.duration_seconds !== undefined ? `${meta.duration_seconds}s` : '--';
+
+      const fpsEl = document.getElementById('vid-meta-fps');
+      if (fpsEl) fpsEl.innerText = meta.fps !== undefined ? `${meta.fps}` : '--';
+
+      const resEl = document.getElementById('vid-meta-res');
+      if (resEl) resEl.innerText = meta.resolution || '--';
+
+      const sampledEl = document.getElementById('vid-meta-sampled');
+      if (sampledEl) sampledEl.innerText = meta.sampled_frames_count !== undefined ? `${meta.sampled_frames_count}` : '--';
+
+      const trackletsEl = document.getElementById('vid-meta-tracklets');
+      if (trackletsEl) trackletsEl.innerText = `${res.total_tracklets || 0}`;
+
+      const badgeEl = document.getElementById('vid-tracklet-count-badge');
+      if (badgeEl) badgeEl.innerText = `${res.total_tracklets || 0} cluster(s)`;
+
+      // Render tracklets container
+      const trackletsContainer = document.getElementById('vid-tracklets-container');
+      if (trackletsContainer) {
+        if (!res.tracklets || res.tracklets.length === 0) {
+          trackletsContainer.innerHTML = `
+            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 text-slate-500 font-mono text-xs">
+              No human faces detected in sampled surveillance frames.
+            </div>
+          `;
+        } else {
+          trackletsContainer.innerHTML = res.tracklets.map(t => {
+            const occurrences = t.occurrences || [];
+            const candidates = t.candidates || [];
+
+            return `
+              <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                <div class="flex items-start gap-3">
+                  <!-- Exemplar Face Thumbnail -->
+                  <div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    ${t.exemplar_thumbnail_b64 ? `
+                      <img src="${t.exemplar_thumbnail_b64}" class="w-full h-full object-cover" alt="Tracklet #${t.tracklet_id + 1}">
+                    ` : `
+                      <span class="text-xs font-mono text-purple-400 font-bold">#${t.tracklet_id + 1}</span>
+                    `}
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono font-bold text-xs text-purple-300">TRACKLET #${t.tracklet_id + 1}</span>
+                      <span class="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                        ${t.detection_count} detection(s)
+                      </span>
+                    </div>
+                    <div class="text-[11px] font-mono text-slate-400 mt-1">
+                      Span: <span class="text-slate-200 font-bold">${t.first_seen_timestamp || '00:00.000'}</span> → <span class="text-slate-200 font-bold">${t.last_seen_timestamp || '00:00.000'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Occurrence Timestamp Seek Chips -->
+                <div>
+                  <span class="text-[10px] font-mono text-slate-500 block mb-1">OCCURRENCE TIMESTAMPS (CLICK TO SEEK):</span>
+                  <div class="flex flex-wrap gap-1.5">
+                    ${occurrences.map(occ => `
+                      <button type="button" onclick="App.seekVideoPlayer(${occ.timestamp_seconds})" class="px-2 py-1 text-[10px] font-mono font-bold bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800 rounded transition flex items-center gap-1 shadow-sm">
+                        <span>⏱️</span>
+                        <span>${occ.timestamp_formatted}</span>
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+
+                <!-- Correlated Candidate Matches for this Tracklet -->
+                <div class="pt-2 border-t border-slate-800/80">
+                  <span class="text-[10px] font-mono text-slate-500 block mb-1.5">GALLERY CORRELATION MATCHES:</span>
+                  ${candidates.length > 0 ? `
+                    <div class="space-y-1.5">
+                      ${candidates.map(c => {
+                        const scorePct = (c.similarity_score * 100).toFixed(1);
+                        const isHigh = c.similarity_score >= 0.70;
+                        const badgeColor = isHigh ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800' : (c.similarity_score >= 0.50 ? 'text-amber-400 bg-amber-950/60 border-amber-800' : 'text-slate-400 bg-slate-900 border-slate-800');
+                        return `
+                          <div class="p-2 bg-slate-900/90 rounded-lg border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                            <div>
+                              <span class="font-bold text-white">${c.full_name}</span>
+                              <span class="text-slate-400 text-[11px]">(${c.reference_no})</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded font-bold border ${badgeColor}">
+                              ${scorePct}% (Rank #${c.rank})
+                            </span>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  ` : `
+                    <div class="text-[11px] font-mono text-slate-500 italic">
+                      No gallery candidates exceed initial threshold (τ < 0.40).
+                    </div>
+                  `}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      this.openModal('video-forensic-modal');
+    } catch (err) {
+      alert('Failed to load video forensic dossier: ' + err.message);
+    }
+  },
+
+  seekVideoPlayer(seconds) {
+    const player = document.getElementById('forensic-video-player');
+    if (player) {
+      player.currentTime = Math.max(0, Number(seconds) || 0);
+      player.play().catch(() => {});
     }
   }
 };
