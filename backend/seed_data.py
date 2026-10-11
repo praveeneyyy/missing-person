@@ -37,8 +37,8 @@ def seed_database(reset: bool = False):
         if cursor.fetchone()["cnt"] == 0:
             print("[Seed] Seeding authorized staff users...")
             users = [
-                ("admin", "admin@missingpersons.gov.in", hash_password("admin123"), "Dr. S. Gayathri (Administrator)", "ADM-001", "admin"),
-                ("investigator", "praveen.k@missingpersons.gov.in", hash_password("investigator123"), "S. Praveen Kumar (Lead Investigator)", "INV-44111131", "investigator"),
+                ("admin", "admin@missingpersons.gov.in", hash_password("admin123"), "System Administrator", "ADM-001", "admin"),
+                ("investigator", "investigator@missingpersons.gov.in", hash_password("investigator123"), "Senior Lead Investigator", "INV-1001", "investigator"),
                 ("detective_chen", "chen.s@missingpersons.gov.in", hash_password("investigator123"), "Sarah Chen (Senior Detective)", "INV-7809", "investigator"),
             ]
             cursor.executemany("""
@@ -231,15 +231,15 @@ def seed_database(reset: bool = False):
             print("[Seed] Creating audit log records...")
             cursor.execute("""
                 INSERT INTO audit_logs (actor_name, action, resource_type, resource_id, details_json)
-                VALUES ('Dr. S. Gayathri (Administrator)', 'SYSTEM_INITIALIZED', 'system', 'root', '{\"version\": \"1.0.0\"}')
+                VALUES ('System Administrator', 'SYSTEM_INITIALIZED', 'system', 'root', '{\"version\": \"1.0.0\"}')
             """)
             cursor.execute("""
                 INSERT INTO audit_logs (actor_name, action, resource_type, resource_id, details_json)
-                VALUES ('S. Praveen Kumar (Lead Investigator)', 'CASE_CREATED', 'cases', '1', '{\"reference_no\": \"MP-2026-001\"}')
+                VALUES ('Senior Lead Investigator', 'CASE_CREATED', 'cases', '1', '{\"reference_no\": \"MP-2026-001\"}')
             """)
             cursor.execute("""
                 INSERT INTO audit_logs (actor_name, action, resource_type, resource_id, details_json)
-                VALUES ('S. Praveen Kumar (Lead Investigator)', 'CASE_CREATED', 'cases', '2', '{\"reference_no\": \"MP-2026-002\"}')
+                VALUES ('Senior Lead Investigator', 'CASE_CREATED', 'cases', '2', '{\"reference_no\": \"MP-2026-002\"}')
             """)
             cursor.execute("""
                 INSERT INTO audit_logs (actor_name, action, resource_type, resource_id, details_json)

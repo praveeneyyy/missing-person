@@ -39,7 +39,7 @@ def test_review_requires_rationale():
     assert res.status_code == 422
 
 def test_module_1_admin_user_provisioning_and_rbac():
-    # 1. Login as Administrator (Dr. S. Gayathri)
+    # 1. Login as Administrator
     admin_login = client.post("/api/v1/auth/login", json={
         "username": "admin",
         "password": "admin123"
@@ -48,7 +48,7 @@ def test_module_1_admin_user_provisioning_and_rbac():
     admin_token = admin_login.json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # 2. Login as Investigator (Praveen)
+    # 2. Login as Investigator
     inv_login = client.post("/api/v1/auth/login", json={
         "username": "investigator",
         "password": "investigator123"

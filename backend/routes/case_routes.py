@@ -353,7 +353,7 @@ def get_case_bulletin(
             "clothing_description": case["clothing_description"] or "None recorded",
             "status": case["status"],
             "investigating_officer": case["investigator_name"] or "Investigator on Duty",
-            "badge_number": case["investigator_badge"] or "INV-44111131",
+            "badge_number": case["investigator_badge"] or "INV-1001",
             "emergency_contact": "Emergency Control Room: 112 / 100",
             "tip_hotline": "+91 44 2844 7777 / missing-help@tnpolice.gov.in",
             "photos": photos,

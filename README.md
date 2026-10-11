@@ -1,30 +1,30 @@
-# AI-Based Missing Person Identification and Tracking Using Facial Recognition and Computer Vision
+# AI-Based Missing Person Identification and Tracking System
+**Computer Vision & Biometric Surveillance Intelligence Platform**
 
-**Department of Computer Science and Engineering**  
-**Professional Training I**  
-- **Student:** S. Praveen Kumar (Registration No: 44111131)  
-- **Faculty Guide:** Dr. S. Gayathri, Ph.D., Associate Professor, CSE  
+An end-to-end investigation-support system utilizing deep convolutional neural networks, biometric representation vectors, and automated surveillance stream processing for locating missing persons.
 
 ---
 
 ## 1. Project Overview
 
-This prototype implements an investigation-support platform designed to assist in locating missing persons. Authorized officers register cases with personal details and authorized reference photos. Public users submit potential sightings with photos, location, and timestamp metadata. 
+This platform implements an enterprise-grade investigation-support platform designed to assist law enforcement agencies in locating missing persons. Authorized officers register missing person cases with validated facial reference photos, descriptive metadata, and last-seen coordinates. The public portal enables citizen sightings with photo upload, geolocation pin placement, and tamper-resistant tracking receipt issuance.
 
 An AI pipeline powered by OpenCV **YuNet** (DNN face detection) and **SFace** (MobileFaceNet deep representation) detects faces, extracts 128-dimensional normalized biometric embeddings, and ranks candidates using cosine similarity. Crucially, the platform adheres to responsible AI governance: **AI outputs are ranking signals, not autonomous identity confirmations.** All candidate matches require human investigator review and recorded rationale.
 
 ---
 
-## 2. Six Core Modules
+## 2. Eight Core Production Modules
 
 | Module | Name | Key Functionality |
 |---|---|---|
 | **Module 1** | **Authentication & RBAC** | Secure authentication, bcrypt password hashing, signed JWT tokens, role-based endpoint authorization (`investigator`, `admin`, `public`), and immutable audit logging. |
 | **Module 2** | **Case Registration** | Case profile enrollment (`MP-2026-xxx`), last-seen date/location metadata, reference photo ingestion with automated single-face validation. |
-| **Module 3** | **Face Processing** | Deep learning face detection (YuNet), landmark alignment, 128-D vector embedding extraction (SFace), bounding-box coordinate tracking. |
-| **Module 4** | **Sighting Portal** | Public sighting intake with image upload, location pin selection (interactive map), observation notes, and privacy-preserving receipt issuance (`STG-2026-xxxx`). |
+| **Module 3** | **Face Processing Engine** | Deep learning face detection (YuNet), landmark alignment, 128-D vector embedding extraction (SFace), bounding-box coordinate tracking. |
+| **Module 4** | **Public Sighting Portal** | Citizen sighting intake with image upload, location pin selection (interactive map), observation notes, and privacy-preserving receipt issuance (`STG-2026-xxxx`). |
 | **Module 5** | **AI Matching Engine** | Vector similarity computation using cosine distance, Top-K candidate ranking, and calibrated confidence tiers (`High ≥ 0.70`, `Moderate ≥ 0.50`). |
-| **Module 6** | **Review & Tracking** | Side-by-side comparative evidence inspection, mandatory investigator rationale adjudication (`verified`, `escalated`, `request_more_info`, `rejected`), status workflow, and interactive GIS map. |
+| **Module 6** | **Review & Tracking Workflow** | Side-by-side comparative evidence inspection, mandatory investigator rationale adjudication (`verified`, `escalated`, `request_more_info`, `rejected`), status workflow, and interactive GIS map. |
+| **Module 7** | **Surveillance Stream & CCTV Alerting** | Automated CCTV camera feed ingestion, real-time video frame face extraction, live multi-target watchlist scanning, instant alert dispatch, and alert management. |
+| **Module 8** | **Forensic Video Ingestion & Timeline Analysis** | Multi-format forensic video decoding, adaptive keyframe sampling, chronological timeline reconstruction, spatial sighting trajectory mapping, and forensic summary reporting. |
 
 ---
 
@@ -35,7 +35,7 @@ An AI pipeline powered by OpenCV **YuNet** (DNN face detection) and **SFace** (M
 - **Database:** SQLite 3 (relational schema, vector metadata, audit logs)
 - **Security:** Bcrypt password hashing, Python-Jose (JWT Bearer authentication)
 - **Frontend:** Responsive Single-Page Application (Tailwind CSS, Leaflet.js interactive maps, vanilla JavaScript)
-- **Testing:** Pytest (16 automated unit & integration tests)
+- **Testing:** Pytest (71 automated unit, integration, and security tests across 10 test suites)
 
 ---
 
@@ -61,9 +61,9 @@ python run.py
 
 | Role | Username | Password | Full Name / Badge |
 |---|---|---|---|
-| **Lead Investigator** | `investigator` | `investigator123` | S. Praveen Kumar (Badge: `INV-44111131`) |
-| **Administrator** | `admin` | `admin123` | Dr. S. Gayathri (Badge: `ADM-001`) |
-| **Senior Detective** | `detective_chen` | `investigator123` | Sarah Chen (Badge: `INV-7809`) |
+| **Lead Investigator** | `investigator` | `investigator123` | Senior Lead Investigator (Badge: `INV-1001`) |
+| **Administrator** | `admin` | `admin123` | System Administrator (Badge: `ADM-001`) |
+| **Senior Detective** | `detective_chen` | `investigator123` | Detective Chen (Badge: `INV-7809`) |
 | **Public User** | *(No login required)* | — | Anonymous public submission |
 
 *Note: You can easily switch roles using the quick role switcher in the top header.*
@@ -72,19 +72,21 @@ python run.py
 
 ## 6. Running Automated Tests
 
-To run the complete automated test suite (face engine, authentication, API routes, RBAC boundaries):
+To run the complete automated test suite (face engine, authentication, API routes, RBAC boundaries, video forensics, surveillance feeds):
 
 ```bash
 python -m pytest tests/ -v
 ```
 
-All 16 test cases verify:
+All 71 test cases verify:
 - YuNet face detection and bounding-box accuracy.
 - Strict single-face reference photo validation (rejects 0 faces and ambiguous faces).
 - 128-dimensional embedding normalization and cosine ranking math.
 - Public sighting submission receipt creation without data leakage.
 - RBAC boundary enforcement (unauthenticated users blocked from private case data).
 - Investigator review adjudication with mandatory rationale.
+- Live CCTV stream processing, face matching, and real-time alert generation.
+- Forensic video upload, frame sampling, timeline synthesis, and sighting trajectory tracing.
 
 ---
 

@@ -13,8 +13,7 @@ from backend.config import DATABASE_PATH
 def main():
     print("=" * 75)
     print("  AI-BASED MISSING PERSON IDENTIFICATION AND TRACKING SYSTEM")
-    print("  Professional Training I — S. Praveen Kumar (Reg: 44111131)")
-    print("  Guide: Dr. S. Gayathri, Ph.D., Associate Professor, CSE")
+    print("  Computer Vision & Biometric Surveillance Intelligence Platform")
     print("=" * 75)
 
     # Automatically initialize and seed sample data if database not present
@@ -28,9 +27,9 @@ def main():
     print("  - Web Application:       http://127.0.0.1:8000")
     print("  - Interactive API Docs:  http://127.0.0.1:8000/docs")
     print("\n[Staff Credentials]")
-    print("  - Lead Investigator:     investigator / investigator123 (S. Praveen Kumar)")
-    print("  - Administrator:         admin / admin123 (Dr. S. Gayathri)")
-    print("  - Detective:             detective_chen / investigator123 (Sarah Chen)")
+    print("  - Lead Investigator:     investigator / investigator123 (INV-1001)")
+    print("  - Administrator:         admin / admin123 (ADM-001)")
+    print("  - Detective:             detective_chen / investigator123 (INV-7809)")
     print("=" * 75 + "\n")
 
     uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=False)

@@ -23,7 +23,7 @@ def test_auth_login_success():
     data = res.json()
     assert "access_token" in data
     assert data["user"]["role"] == "investigator"
-    assert data["user"]["badge_number"] == "INV-44111131"
+    assert data["user"]["badge_number"] == "INV-1001"
 
 def test_auth_login_invalid_password():
     res = client.post("/api/v1/auth/login", json={
