@@ -92,3 +92,6 @@ class SightingLookupResponse(BaseModel):
     submitted_at: str
     notice: str = "For confidentiality, sensitive matching results and identity data are restricted to authorized investigators."
     privacy_statement: str = "This public lookup provides verification status only. Suspect dossiers and facial biometrics are shielded by law enforcement privacy standards."
+
+class ThresholdSimulateRequest(BaseModel):
+    threshold: float = Field(..., ge=0.0, le=1.0, description="Cosine threshold value between 0.0 and 1.0")

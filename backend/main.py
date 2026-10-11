@@ -14,6 +14,7 @@ from backend.routes.review_routes import router as review_router
 from backend.routes.audit_routes import router as audit_router
 from backend.routes.benchmark_routes import router as benchmark_router
 from backend.routes.face_routes import router as face_router
+from backend.routes.match_routes import router as match_router
 
 from contextlib import asynccontextmanager
 
@@ -46,6 +47,7 @@ app.include_router(review_router)
 app.include_router(audit_router)
 app.include_router(benchmark_router)
 app.include_router(face_router)
+app.include_router(match_router)
 
 @app.get("/api/v1/health", tags=["System"])
 def health_check():

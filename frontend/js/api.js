@@ -262,5 +262,28 @@ const API = {
       method: 'POST',
       body: formData
     });
+  },
+
+  // Module 5: AI Matching Engine & Candidate Retrieval Endpoints
+  async getGalleryTelemetry() {
+    return this.request('/match/gallery');
+  },
+
+  async searchGallery(file, topK = 5, minThreshold = 0.30) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('top_k', topK);
+    formData.append('min_threshold', minThreshold);
+    return this.request('/match/search', {
+      method: 'POST',
+      body: formData
+    });
+  },
+
+  async simulateThreshold(threshold) {
+    return this.request('/match/simulate-threshold', {
+      method: 'POST',
+      body: JSON.stringify({ threshold: parseFloat(threshold) })
+    });
   }
 };

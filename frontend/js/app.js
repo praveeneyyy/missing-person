@@ -1180,7 +1180,7 @@ const App = {
     }
   },
 
-  // 8. AI Quality & Benchmark View with Interactive Threshold Simulator
+  // 8. AI Quality & Benchmark View with Interactive Threshold Simulator & Gallery Retrieval
   async loadBenchmark() {
     try {
       const b = await API.getBenchmark();
@@ -1189,58 +1189,123 @@ const App = {
 
       container.innerHTML = `
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Recall@1 Accuracy</div>
-            <div class="text-3xl font-black text-emerald-600 mt-2 font-mono">${b.metrics.recall_at_1_percent}%</div>
+            <div class="text-3xl font-black text-emerald-400 mt-2 font-mono">${b.metrics.recall_at_1_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Exact Top-1 enrolled self-match</div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Recall@5 Accuracy</div>
-            <div class="text-3xl font-black text-blue-600 mt-2 font-mono">${b.metrics.recall_at_5_percent}%</div>
+            <div class="text-3xl font-black text-cyan-400 mt-2 font-mono">${b.metrics.recall_at_5_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Target in Top-5 candidate retrieval</div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">False Match Rate (≥ 0.70)</div>
-            <div class="text-3xl font-black text-slate-900 mt-2 font-mono">${b.metrics.false_match_rate_high_threshold_percent}%</div>
+            <div class="text-3xl font-black text-amber-400 mt-2 font-mono">${b.metrics.false_match_rate_high_threshold_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Disjoint pairs false-positive risk</div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
             <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Vector Search Latency</div>
-            <div class="text-3xl font-black text-cyan-600 mt-2 font-mono">${b.latency_profile.all_pairs_search_time_ms} ms</div>
+            <div class="text-3xl font-black text-blue-400 mt-2 font-mono">${b.latency_profile.all_pairs_search_time_ms} ms</div>
             <div class="text-xs text-slate-500 mt-1">All-pairs pairwise cosine search</div>
           </div>
         </div>
 
         <!-- Interactive Operating Threshold Calibration Simulator -->
-        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
             <div>
-              <h3 class="text-lg font-bold text-slate-900">Interactive Cosine Threshold Calibration Simulator</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Test operating point trade-offs between investigative sensitivity and false-alarm burden.</p>
+              <h3 class="text-lg font-bold text-white">Interactive Cosine Threshold Calibration Simulator</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Test operating point trade-offs between investigative sensitivity and false-alarm burden.</p>
             </div>
             <div class="text-right">
-              <span class="font-mono text-xl font-black text-blue-700" id="sim-thresh-val">${this.simulatedThreshold.toFixed(2)}</span>
-              <span class="text-[10px] text-slate-400 block font-mono">SELECTED OPERATING POINT</span>
+              <span class="font-mono text-xl font-black text-cyan-400" id="sim-thresh-val">${this.simulatedThreshold.toFixed(2)}</span>
+              <span class="text-[10px] text-slate-500 block font-mono">SELECTED OPERATING POINT</span>
             </div>
           </div>
 
           <!-- Slider -->
           <div class="space-y-2">
-            <div class="flex justify-between text-xs font-mono text-slate-500">
+            <div class="flex justify-between text-xs font-mono text-slate-400">
               <span>0.40 (High Recall / Broad Leads)</span>
               <span>0.70 (Calibrated High Confidence)</span>
               <span>0.90 (Strict / Near-Identical)</span>
             </div>
-            <input type="range" id="sim-thresh-slider" min="0.40" max="0.90" step="0.05" value="${this.simulatedThreshold}" oninput="App.updateThresholdSimulation(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+            <input type="range" id="sim-thresh-slider" min="0.40" max="0.90" step="0.05" value="${this.simulatedThreshold}" oninput="App.updateThresholdSimulation(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
           </div>
 
-          <div id="sim-analysis-box" class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1">
-            <!-- Updated via JS -->
+          <div id="sim-analysis-box" class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+            <!-- Updated via JS with live backend metrics -->
           </div>
         </div>
 
+        <!-- Module 5: Ad-Hoc Investigative Gallery Search Workbench -->
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div>
+              <div class="inline-flex items-center gap-2 bg-blue-500/10 text-cyan-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-400/20 mb-1">
+                MODULE 5 • VECTOR RETRIEVAL ENGINE
+              </div>
+              <h3 class="text-lg font-bold text-white">Investigative Face Search & Top-K Candidate Retrieval</h3>
+              <p class="text-xs text-slate-400 font-mono mt-0.5">Upload a field surveillance photo to rank Top-K matches against active missing person cases via normalized Cosine Similarity.</p>
+            </div>
+            <div class="font-mono text-xs text-cyan-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>128-D GALLERY SEARCH ACTIVE</span>
+            </div>
+          </div>
+
+          <form id="gallery-search-form" onsubmit="App.handleGallerySearchSubmit(event)" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <!-- Probe Photo Input -->
+              <div class="md:col-span-2 space-y-2">
+                <label class="block text-xs font-mono font-bold text-slate-300 uppercase">Surveillance Probe Photo / Field Evidence *</label>
+                <div class="border-2 border-dashed border-slate-700 hover:border-cyan-400 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/60 relative">
+                  <input type="file" id="gallery-search-file" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="App.handleGalleryProbePreview(event)">
+                  <div class="space-y-1 text-slate-400">
+                    <div class="text-3xl">🔍</div>
+                    <div class="text-xs font-bold text-cyan-400">Click or drag & drop probe photo</div>
+                    <div class="text-[10px] font-mono text-slate-500">Extracts SFace 128-D vector and ranks gallery in milliseconds</div>
+                  </div>
+                </div>
+
+                <div id="gallery-probe-preview-box" class="hidden p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-4">
+                  <img id="gallery-probe-preview-img" class="w-16 h-16 object-cover rounded-lg border border-slate-700" alt="Probe Preview">
+                  <div class="text-xs">
+                    <span id="gallery-probe-filename" class="font-bold text-white block"></span>
+                    <span id="gallery-probe-meta" class="text-[11px] font-mono text-cyan-400"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Retrieval Parameters -->
+              <div class="space-y-4 p-5 bg-slate-950 rounded-xl border border-slate-800">
+                <h4 class="text-xs font-bold font-mono text-slate-300 uppercase">Retrieval Controls</h4>
+                <div>
+                  <label class="block text-[11px] font-mono text-slate-400 mb-1">Top-K Candidates</label>
+                  <select id="gallery-topk" class="w-full text-xs font-mono px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white">
+                    <option value="3">Top 3 Candidates</option>
+                    <option value="5" selected>Top 5 Candidates (Standard)</option>
+                    <option value="10">Top 10 Candidates (Discovery)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-mono text-slate-400 mb-1">Min Similarity Cutoff: <span id="gallery-thresh-label" class="text-cyan-400 font-bold">0.30</span></label>
+                  <input type="range" id="gallery-min-thresh" min="0.20" max="0.75" step="0.05" value="0.30" oninput="document.getElementById('gallery-thresh-label').innerText = parseFloat(this.value).toFixed(2)" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-400">
+                </div>
+                <button type="submit" id="btn-run-gallery-search" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-mono font-bold text-xs py-3 rounded-lg shadow-md transition">
+                  Search Gallery (Top-K) →
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Candidate Leads Container -->
+          <div id="gallery-search-results" class="hidden space-y-4"></div>
+        </div>
+
         <!-- Module 3: Face Processing Diagnostic Inspector -->
-        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
           <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
               <div class="inline-flex items-center gap-2 bg-blue-500/10 text-cyan-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-400/20 mb-1">
@@ -1335,7 +1400,169 @@ const App = {
     }
   },
 
-  updateThresholdSimulation(val) {
+  handleGalleryProbePreview(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const box = document.getElementById('gallery-probe-preview-box');
+    const img = document.getElementById('gallery-probe-preview-img');
+    const nameSpan = document.getElementById('gallery-probe-filename');
+    const metaSpan = document.getElementById('gallery-probe-meta');
+
+    if (box && img) {
+      const url = URL.createObjectURL(file);
+      img.src = url;
+      if (nameSpan) nameSpan.innerText = file.name;
+      if (metaSpan) metaSpan.innerText = `${(file.size / 1024).toFixed(1)} KB • ${file.type || 'image'}`;
+      box.classList.remove('hidden');
+    }
+  },
+
+  async handleGallerySearchSubmit(e) {
+    e.preventDefault();
+    const fileInput = document.getElementById('gallery-search-file');
+    if (!fileInput.files || fileInput.files.length === 0) {
+      alert('Please select a probe image to search the gallery.');
+      return;
+    }
+
+    const btn = document.getElementById('btn-run-gallery-search');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerText = 'Extracting Vector & Searching Gallery...';
+    }
+
+    const resultsBox = document.getElementById('gallery-search-results');
+    if (resultsBox) {
+      resultsBox.classList.remove('hidden');
+      resultsBox.innerHTML = `
+        <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+          <div class="inline-block animate-spin text-2xl">⚡</div>
+          <p class="text-xs font-mono text-cyan-400">Running YuNet detection, SFace 128-D embedding extraction, and Top-K cosine search...</p>
+        </div>
+      `;
+    }
+
+    try {
+      const topK = parseInt(document.getElementById('gallery-topk')?.value || '5');
+      const minThresh = parseFloat(document.getElementById('gallery-min-thresh')?.value || '0.30');
+
+      const res = await API.searchGallery(fileInput.files[0], topK, minThresh);
+
+      if (resultsBox) {
+        if (!res.candidates || res.candidates.length === 0) {
+          resultsBox.innerHTML = `
+            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+              <div class="text-2xl">🔍</div>
+              <h4 class="text-sm font-bold text-white">No Gallery Matches Above Threshold (${minThresh.toFixed(2)})</h4>
+              <p class="text-xs text-slate-400 font-mono">Searched ${res.gallery_size_searched} active case embeddings in ${res.latency_profile_ms.total_pipeline_ms} ms.</p>
+            </div>
+          `;
+          return;
+        }
+
+        resultsBox.innerHTML = `
+          <!-- Search Telemetry Banner -->
+          <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+            <div class="flex items-center gap-3">
+              <img src="${res.probe.aligned_crop_base64}" class="w-12 h-12 rounded-lg border border-cyan-500 object-cover" alt="Probe Aligned Face">
+              <div>
+                <span class="text-cyan-400 font-bold block">SURVEILLANCE PROBE DETECTED</span>
+                <span class="text-slate-400 text-[11px]">Face Sharpness: ${res.probe.sharpness_score.toFixed(1)} • Conf: ${(res.probe.confidence * 100).toFixed(1)}%</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 text-right">
+              <div>
+                <span class="text-slate-500 text-[10px] block">SEARCH LATENCY</span>
+                <span class="text-emerald-400 font-bold">${res.latency_profile_ms.total_pipeline_ms} ms</span>
+              </div>
+              <div>
+                <span class="text-slate-500 text-[10px] block">SEARCH SPACE</span>
+                <span class="text-slate-200 font-bold">${res.gallery_size_searched} vectors</span>
+              </div>
+              <div>
+                <span class="text-slate-500 text-[10px] block">TOP-K RETURNED</span>
+                <span class="text-cyan-400 font-bold">${res.candidates.length} candidate(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mandatory AI Governance Banner -->
+          <div class="p-3 bg-amber-950/40 border border-amber-900/60 rounded-xl text-xs text-amber-200 flex items-center gap-2">
+            <span>⚖️</span>
+            <span><strong>AI Governance:</strong> ${res.governance_notice}</span>
+          </div>
+
+          <!-- Candidates Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${res.candidates.map(c => {
+              const tierBadge = c.similarity_score >= 0.70 ? 'badge-verified' : (c.similarity_score >= 0.50 ? 'badge-under_review' : 'badge-rejected');
+              const meterColor = c.similarity_score >= 0.70 ? 'bg-emerald-500' : (c.similarity_score >= 0.50 ? 'bg-amber-500' : 'bg-slate-600');
+              return `
+                <div class="p-5 bg-slate-950 rounded-xl border border-slate-800 space-y-4 hover:border-slate-700 transition">
+                  <div class="flex items-start justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-800 text-cyan-400 flex items-center justify-center font-mono font-black text-xs">
+                        #${c.rank}
+                      </div>
+                      <div>
+                        <span class="text-[10px] font-mono text-cyan-400 block">${c.reference_no}</span>
+                        <h4 class="font-bold text-white text-sm">${c.full_name}</h4>
+                      </div>
+                    </div>
+                    <span class="badge-tactical ${tierBadge}">${c.confidence_tier}</span>
+                  </div>
+
+                  <div class="flex gap-4 items-center">
+                    <img src="${c.reference_photo_path}" class="w-16 h-16 object-cover rounded-lg border border-slate-700" alt="${c.full_name}">
+                    <div class="space-y-1 text-xs font-mono text-slate-300 flex-1">
+                      <div><strong>Age/Gender:</strong> ${c.age || 'N/A'} • ${c.gender}</div>
+                      <div class="truncate"><strong>Last Seen:</strong> ${c.last_seen_location}</div>
+                      <div><strong>Euclidean Dist:</strong> ${c.euclidean_distance.toFixed(4)}</div>
+                    </div>
+                  </div>
+
+                  <!-- Similarity Progress Bar -->
+                  <div class="space-y-1">
+                    <div class="flex justify-between text-xs font-mono">
+                      <span class="text-slate-400">Cosine Similarity:</span>
+                      <span class="font-bold text-white">${(c.similarity_score * 100).toFixed(1)}% (${c.similarity_score.toFixed(4)})</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div class="${meterColor} h-2 rounded-full transition-all" style="width: ${Math.max(0, c.similarity_score * 100)}%"></div>
+                    </div>
+                  </div>
+
+                  <div class="pt-2 border-t border-slate-900 flex justify-end">
+                    <button type="button" onclick="App.viewCaseDetail(${c.case_id})" class="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1">
+                      <span>Inspect Dossier</span> <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+    } catch (err) {
+      if (resultsBox) {
+        resultsBox.innerHTML = `
+          <div class="p-6 bg-red-950/40 border border-red-900 rounded-xl text-center space-y-2">
+            <div class="text-2xl text-red-400">⚠️</div>
+            <h4 class="text-sm font-bold text-red-200">Gallery Search Error</h4>
+            <p class="text-xs text-red-300">${err.message}</p>
+          </div>
+        `;
+      }
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerText = 'Search Gallery (Top-K) →';
+      }
+    }
+  },
+
+  async updateThresholdSimulation(val) {
     this.simulatedThreshold = parseFloat(val);
     const valDisplay = document.getElementById('sim-thresh-val');
     if (valDisplay) valDisplay.innerText = this.simulatedThreshold.toFixed(2);
@@ -1343,19 +1570,39 @@ const App = {
     const box = document.getElementById('sim-analysis-box');
     if (!box) return;
 
-    let tierDesc = '';
-    if (this.simulatedThreshold >= 0.75) {
-      tierDesc = `<strong>Ultra-High Precision Operating Point:</strong> Minimal to 0% false matches on diverse test sets. Suitable for automatic priority alerts and immediate patrol dispatch.`;
-    } else if (this.simulatedThreshold >= 0.65) {
-      tierDesc = `<strong>Recommended Calibrated Operating Point (0.70):</strong> Optimal balance. Catches real sightings with slight facial angle/lighting variation while maintaining low false-alarm risk.`;
-    } else {
-      tierDesc = `<strong>High-Sensitivity / Broad Discovery Mode:</strong> Flags candidate matches with lower similarity (0.50 - 0.64). Increases reviewer workload but reduces risk of missed leads.`;
+    try {
+      const res = await API.simulateThreshold(this.simulatedThreshold);
+      box.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+          <div>
+            <span class="text-[10px] font-mono text-slate-500 uppercase block">OPERATING BAND</span>
+            <span class="font-bold text-cyan-300 text-sm font-mono">${res.tier_label}</span>
+          </div>
+          <div class="flex items-center gap-4 text-xs font-mono">
+            <div>
+              <span class="text-slate-500 text-[10px] block">TRUE MATCH RETENTION</span>
+              <span class="text-emerald-400 font-bold">${res.metrics.true_match_retention_percent}%</span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] block">FALSE MATCH RATE (FMR)</span>
+              <span class="text-amber-400 font-bold">${res.metrics.false_match_rate_percent}%</span>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] block">WORKLOAD REDUCTION</span>
+              <span class="text-blue-400 font-bold">${res.metrics.workload_reduction_percent}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="pt-2 text-xs text-slate-300 leading-relaxed">
+          <strong class="text-white">Operational Guidance:</strong> ${res.operational_recommendation}
+        </div>
+        <div class="text-[10px] text-slate-500 font-mono mt-1">
+          * ${res.governance_note}
+        </div>
+      `;
+    } catch (err) {
+      box.innerHTML = `<p class="text-slate-400">Threshold: ${this.simulatedThreshold.toFixed(2)}</p>`;
     }
-
-    box.innerHTML = `
-      <div class="font-mono font-bold text-slate-900">Analysis for Cosine Threshold $\\ge$ ${this.simulatedThreshold.toFixed(2)}:</div>
-      <div class="leading-relaxed text-slate-600 mt-1">${tierDesc}</div>
-    `;
   },
 
   async handleInspectUpload(event) {
