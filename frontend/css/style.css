@@ -1,54 +1,78 @@
 /* ==========================================================================
-   AI-BASED MISSING PERSON IDENTIFICATION & TRACKING PLATFORM
-   INSTITUTIONAL DESIGN SYSTEM & FORENSIC INVESTIGATION STYLESHEET
+   AI MISSING PERSON INVESTIGATION PLATFORM
+   MINIMAL WHITE INSTITUTIONAL DESIGN SYSTEM & FORENSIC STYLESHEET
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Color Tokens - Command Navy & Institutional Palette */
-  --bg-app: #0B1120;
-  --bg-surface: #0F172A;
+  /* Minimal White Canvas & Slate Palette */
+  --bg-app: #F8FAFC;
+  --bg-surface: #FFFFFF;
   --bg-card: #FFFFFF;
   --bg-canvas: #F8FAFC;
-  --bg-sidebar: #090E1A;
+  --bg-subtle: #F1F5F9;
   
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --primary-light: #EFF6FF;
+  --primary: #0F172A;
+  --primary-hover: #1E293B;
+  --primary-light: #F1F5F9;
+  --primary-blue: #2563EB;
+  --primary-blue-hover: #1D4ED8;
   
-  --accent-cyan: #06B6D4;
+  --accent-cyan: #0284C7;
   --accent-indigo: #4F46E5;
   
   --text-main: #0F172A;
+  --text-body: #334155;
   --text-muted: #64748B;
   --text-light: #94A3B8;
-  --text-white: #F8FAFC;
+  --text-white: #FFFFFF;
   
   --border-subtle: #E2E8F0;
-  --border-dark: #1E293B;
-  --border-focus: #3B82F6;
+  --border-card: #E2E8F0;
+  --border-focus: #0F172A;
   
-  /* Status Colors */
+  /* Status Color Tokens */
   --status-open: #2563EB;
-  --status-pending: #F59E0B;
-  --status-verified: #10B981;
-  --status-escalated: #EF4444;
-  --status-resolved: #059669;
+  --status-open-bg: #EFF6FF;
+  --status-open-border: #BFDBFE;
 
-  /* Fonts */
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --status-pending: #D97706;
+  --status-pending-bg: #FFFBEB;
+  --status-pending-border: #FDE68A;
+
+  --status-verified: #059669;
+  --status-verified-bg: #ECFDF5;
+  --status-verified-border: #A7F3D0;
+
+  --status-escalated: #DC2626;
+  --status-escalated-bg: #FEF2F2;
+  --status-escalated-border: #FECACA;
+
+  --status-resolved: #059669;
+  --status-resolved-bg: #F0FDF4;
+  --status-resolved-border: #BBF7D0;
+
+  /* Typography */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Global Reset & Typography */
+* {
+  box-sizing: border-box;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-canvas);
-  color: var(--text-main);
+  background-color: var(--bg-canvas) !important;
+  color: var(--text-main) !important;
   min-height: 100vh;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .font-mono-data {
@@ -56,13 +80,13 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Custom Scrollbars */
+/* Clean Minimal Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
+  background: #F8FAFC;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
@@ -72,62 +96,72 @@ body {
   background: #94A3B8;
 }
 
-/* Tactical Status Badges */
+/* Tactical Status Badges - Clean White Minimalist Variant */
 .badge-tactical {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.2rem 0.65rem;
+  padding: 0.2rem 0.6rem;
   border-radius: 6px;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   font-family: var(--font-mono);
+  line-height: 1.2;
 }
 
-.badge-open {
-  background-color: #EFF6FF;
-  color: #1D4ED8;
-  border: 1px solid #BFDBFE;
+.badge-open,
+.badge-ACTIVE {
+  background-color: var(--status-open-bg) !important;
+  color: var(--status-open) !important;
+  border: 1px solid var(--status-open-border) !important;
 }
 
-.badge-under_review {
-  background-color: #FFFBEB;
-  color: #B45309;
-  border: 1px solid #FDE68A;
+.badge-under_review,
+.badge-UNDER_INVESTIGATION,
+.badge-PENDING {
+  background-color: var(--status-pending-bg) !important;
+  color: var(--status-pending) !important;
+  border: 1px solid var(--status-pending-border) !important;
 }
 
-.badge-verified {
-  background-color: #ECFDF5;
-  color: #047857;
-  border: 1px solid #A7F3D0;
+.badge-verified,
+.badge-HIGH_LEAD {
+  background-color: var(--status-verified-bg) !important;
+  color: var(--status-verified) !important;
+  border: 1px solid var(--status-verified-border) !important;
 }
 
-.badge-escalated {
-  background-color: #FEF2F2;
-  color: #B91C1C;
-  border: 1px solid #FECACA;
+.badge-escalated,
+.badge-ALERT,
+.badge-NEW {
+  background-color: var(--status-escalated-bg) !important;
+  color: var(--status-escalated) !important;
+  border: 1px solid var(--status-escalated-border) !important;
 }
 
-.badge-resolved {
-  background-color: #F0FDF4;
-  color: #15803D;
-  border: 1px solid #BBF7D0;
+.badge-resolved,
+.badge-RESOLVED {
+  background-color: var(--status-resolved-bg) !important;
+  color: var(--status-resolved) !important;
+  border: 1px solid var(--status-resolved-border) !important;
 }
 
-.badge-archived {
-  background-color: #F8FAFC;
-  color: #64748B;
-  border: 1px solid #E2E8F0;
+.badge-archived,
+.badge-ARCHIVED,
+.badge-FALSE_POSITIVE {
+  background-color: #F1F5F9 !important;
+  color: #64748B !important;
+  border: 1px solid #E2E8F0 !important;
 }
 
 /* Pulsing radar point for live leads */
 .pulse-indicator {
   position: relative;
   display: inline-block;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
 }
 .pulse-indicator::after {
@@ -138,28 +172,28 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  animation: radar-pulse 1.8s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+  animation: radar-pulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
 }
-.pulse-amber { background-color: #F59E0B; }
-.pulse-amber::after { background-color: #F59E0B; }
-.pulse-emerald { background-color: #10B981; }
-.pulse-emerald::after { background-color: #10B981; }
-.pulse-rose { background-color: #EF4444; }
-.pulse-rose::after { background-color: #EF4444; }
+.pulse-amber { background-color: #D97706; }
+.pulse-amber::after { background-color: #D97706; }
+.pulse-emerald { background-color: #059669; }
+.pulse-emerald::after { background-color: #059669; }
+.pulse-rose { background-color: #DC2626; }
+.pulse-rose::after { background-color: #DC2626; }
 
 @keyframes radar-pulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(3); opacity: 0; }
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(3.2); opacity: 0; }
 }
 
-/* Forensic Biometric Canvas & HUD Overlay */
+/* Forensic Biometric Viewport - Clean High-Precision Studio */
 .forensic-viewport {
   position: relative;
-  background: #020617;
+  background: #F8FAFC;
   border-radius: 0.75rem;
   overflow: hidden;
-  border: 1px solid #1E293B;
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+  border: 1px solid #E2E8F0;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .forensic-canvas {
@@ -167,20 +201,21 @@ body {
   height: 100%;
   display: block;
   object-fit: contain;
+  background-color: #F8FAFC;
 }
 
 .hud-grid {
   background-image: 
-    linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
-  background-size: 24px 24px;
+    linear-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .hud-corner {
   position: absolute;
-  width: 12px;
-  height: 12px;
-  border-color: rgba(6, 182, 212, 0.8);
+  width: 10px;
+  height: 10px;
+  border-color: #0F172A;
   pointer-events: none;
 }
 .hud-corner-tl { top: 8px; left: 8px; border-top: 2px solid; border-left: 2px solid; }
@@ -191,15 +226,15 @@ body {
 /* Circular Similarity Meter */
 .circular-meter {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 90px;
+  height: 90px;
 }
 .circular-meter svg {
   transform: rotate(-90deg);
 }
 .circular-meter circle {
   fill: none;
-  stroke-width: 8;
+  stroke-width: 7;
   stroke-linecap: round;
 }
 .circular-meter-bg {
@@ -214,17 +249,19 @@ body {
   height: 520px;
   border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid #CBD5E1;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
   z-index: 1;
+  background-color: #F8FAFC;
 }
 
 .picker-map {
   height: 240px;
   border-radius: 0.75rem;
   overflow: hidden;
-  border: 1px solid #CBD5E1;
+  border: 1px solid #E2E8F0;
   z-index: 1;
+  background-color: #F8FAFC;
 }
 
 /* Stepper Component */
@@ -250,24 +287,29 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.7rem;
-  background-color: #E2E8F0;
+  font-weight: 700;
+  background-color: #F1F5F9;
   color: #64748B;
+  border: 1px solid #CBD5E1;
 }
 .stepper-item.active .stepper-bullet {
-  background-color: var(--primary);
+  background-color: #0F172A;
   color: #FFFFFF;
+  border-color: #0F172A;
 }
 .stepper-item.completed .stepper-bullet {
-  background-color: var(--status-verified);
+  background-color: #059669;
   color: #FFFFFF;
+  border-color: #059669;
 }
 
-/* Quick rationale chip buttons */
+/* Rationale chip buttons */
 .rationale-chip {
-  font-size: 0.75rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  background-color: #F1F5F9;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  background-color: #F8FAFC;
   color: #334155;
   border: 1px solid #E2E8F0;
   cursor: pointer;
@@ -275,25 +317,28 @@ body {
   user-select: none;
 }
 .rationale-chip:hover {
-  background-color: #E2E8F0;
+  background-color: #F1F5F9;
   color: #0F172A;
   border-color: #CBD5E1;
 }
 
-/* Modal styling */
+/* Modal styling - Clean Minimal Backdrop */
 .modal-overlay {
-  background-color: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(6px);
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
   transition: opacity 0.2s ease-in-out;
 }
 
 /* Card hover and micro-elevations */
 .dossier-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .dossier-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 20px -4px rgba(15, 23, 42, 0.06);
   border-color: #CBD5E1;
 }
 
@@ -303,6 +348,75 @@ button, a, input, select, textarea {
 }
 
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline: 2px solid #0F172A;
+  outline-offset: 1px;
+}
+
+/* Clean Input & Form Focus States */
+input, select, textarea {
+  background-color: #FFFFFF;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #0F172A !important;
+  box-shadow: 0 0 0 1px #0F172A !important;
+  outline: none;
+}
+
+/* Universal Light Mode Fallback Classes for Dynamic HTML */
+div.bg-slate-950,
+section.bg-slate-950,
+article.bg-slate-950 {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Primary dark buttons & active tabs retain high-contrast solid slate-900 fill */
+button.bg-slate-900,
+a.bg-slate-900,
+.tab-btn.bg-slate-900,
+.btn-primary {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+}
+button.bg-slate-900:hover,
+a.bg-slate-900:hover {
+  background-color: #1E293B !important;
+}
+
+/* Forensic canvas viewports retain dark stage for facial geometry contrast */
+.forensic-viewport,
+.forensic-viewport.bg-slate-900 {
+  background-color: #0F172A !important;
+}
+
+.border-slate-800,
+.border-slate-700 {
+  border-color: #E2E8F0 !important;
+}
+
+.text-cyan-400,
+.text-cyan-300 {
+  color: #0284C7 !important;
+}
+
+.text-blue-400,
+.text-blue-300 {
+  color: #2563EB !important;
+}
+
+/* Subtle table headers */
+th {
+  background-color: #F8FAFC !important;
+  color: #475569 !important;
+  border-color: #E2E8F0 !important;
+  font-weight: 600 !important;
+}
+td {
+  border-color: #F1F5F9 !important;
+  color: #1E293B;
+}
+tr:hover td {
+  background-color: #F8FAFC !important;
 }

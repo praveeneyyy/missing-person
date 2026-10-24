@@ -176,6 +176,37 @@ def init_db():
         );
         """)
 
+        # CCTV surveillance cameras (Module 7 & 8)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cctv_cameras (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            camera_code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            location_name TEXT NOT NULL,
+            latitude REAL,
+            longitude REAL,
+            stream_url TEXT,
+            fps REAL DEFAULT 15.0,
+            status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active', 'offline', 'maintenance')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
+        # Real-time surveillance match alerts
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS surveillance_alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            camera_id INTEGER NOT NULL REFERENCES cctv_cameras(id) ON DELETE CASCADE,
+            case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
+            similarity_score REAL NOT NULL,
+            confidence_tier TEXT NOT NULL CHECK(confidence_tier IN ('high', 'moderate')),
+            snapshot_path TEXT NOT NULL,
+            bbox_json TEXT,
+            status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new', 'acknowledged', 'dispatched', 'dismissed')),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        """)
+
         # Create indexes for fast lookups
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_cases_ref ON cases(reference_no);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);")
@@ -184,3 +215,7 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_candidates_sighting ON candidate_matches(sighting_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_candidates_case ON candidate_matches(case_id);")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_cctv_code ON cctv_cameras(camera_code);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_surv_alerts_status ON surveillance_alerts(status);")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_surv_alerts_camera ON surveillance_alerts(camera_id);")
+

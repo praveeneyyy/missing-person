@@ -2,7 +2,7 @@ import json
 import uuid
 from pathlib import Path
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, status, Query
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, status, Query, Response
 from backend.database import get_db
 from backend.models import CaseCreate, CaseUpdate, CaseStatusUpdate
 from backend.auth import require_role
@@ -592,4 +592,26 @@ def delete_reference_photo(
         ))
 
         return {"message": "Reference photo deleted successfully.", "ref_id": ref_id}
+
+@router.get("/{case_id}/export-poster")
+def export_case_emergency_poster(case_id: int):
+    """
+    Generates and downloads a high-contrast official MISSING PERSON / AMBER ALERT
+    emergency poster for public distribution, field units, and press releases.
+    """
+    from backend.dossier_generator import generate_missing_person_poster
+    try:
+        poster_bytes = generate_missing_person_poster(case_id)
+        return Response(
+            content=poster_bytes,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"attachment; filename=missing_person_poster_case_{case_id}.png"
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate emergency poster: {str(e)}")
+
 

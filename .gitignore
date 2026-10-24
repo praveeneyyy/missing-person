@@ -13,3 +13,5 @@ storage/references/ref_*_*
 storage/sightings/sight_*_*
 !storage/sightings/sight_1_tambaram.jpg
 !storage/sightings/sight_2_koyambedu.jpg
+storage/sightings/cctv_*
+

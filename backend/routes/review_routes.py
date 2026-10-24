@@ -2,7 +2,7 @@ import json
 import math
 from datetime import datetime
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Depends, Query, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status, Response
 from backend.database import get_db
 from backend.models import ReviewCreate, BatchReviewCreate
 from backend.auth import require_role
@@ -460,3 +460,28 @@ def submit_batch_candidate_review(
         "disposition": payload.disposition,
         "message": f"Batch adjudication completed. {len(processed_ids)} leads set to '{payload.disposition}'."
     }
+
+@router.get("/{candidate_id}/export-dossier")
+def export_candidate_forensic_dossier(
+    candidate_id: int,
+    user: dict = Depends(require_role(["investigator", "admin"]))
+):
+    """
+    Generates and downloads a court-admissible Biometric Forensic Examination
+    Certificate for the specified candidate match.
+    """
+    from backend.dossier_generator import generate_forensic_certificate
+    try:
+        cert_bytes = generate_forensic_certificate(candidate_id)
+        return Response(
+            content=cert_bytes,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"attachment; filename=forensic_examination_certificate_cand_{candidate_id}.png"
+            }
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate forensic dossier: {str(e)}")
+

@@ -430,5 +430,62 @@ const API = {
       method: 'POST',
       body: formData
     });
+  },
+
+  // Module 7 & 8 Extension: Live Surveillance & CCTV Alerting
+  async listCameras() {
+    return this.request('/surveillance/cameras');
+  },
+
+  async registerCamera(cameraData) {
+    return this.request('/surveillance/cameras', {
+      method: 'POST',
+      body: JSON.stringify(cameraData)
+    });
+  },
+
+  async deleteCamera(cameraId) {
+    return this.request(`/surveillance/cameras/${cameraId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async scanCameraFrame(cameraId, file) {
+    const formData = new FormData();
+    formData.append('frame', file);
+    return this.request(`/surveillance/cameras/${cameraId}/scan-frame`, {
+      method: 'POST',
+      body: formData
+    });
+  },
+
+  async simulateSurveillanceStream() {
+    return this.request('/surveillance/simulate-stream', {
+      method: 'POST'
+    });
+  },
+
+  async listSurveillanceAlerts(status = null, cameraId = null) {
+    const params = new URLSearchParams();
+    if (status) params.append('status', status);
+    if (cameraId) params.append('camera_id', cameraId);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    return this.request(`/surveillance/alerts${qs}`);
+  },
+
+  async updateAlertStatus(alertId, newStatus, notes = null) {
+    return this.request(`/surveillance/alerts/${alertId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus, notes })
+    });
+  },
+
+  getForensicDossierUrl(candidateId) {
+    return `${this.baseUrl}/candidates/${candidateId}/export-dossier`;
+  },
+
+  getEmergencyPosterUrl(caseId) {
+    return `${this.baseUrl}/cases/${caseId}/export-poster`;
   }
 };
+

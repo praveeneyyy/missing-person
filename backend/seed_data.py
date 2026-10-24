@@ -260,7 +260,33 @@ def seed_database(reset: bool = False):
                 VALUES (2, 'High Similarity Lead: Sighting STG-2026-0002', 'High confidence match (0.91) detected for Case MP-2026-002 at Koyambedu. Review required.', 'match_alert', '/review/2')
             """)
 
-            print("[Seed] Database seeding completed successfully!")
+            print("[Seed] Initial user and case seeding complete.")
+
+        # 6. Seed CCTV Surveillance Feeds (Module 7 & 8)
+        cursor.execute("SELECT COUNT(*) AS cnt FROM cctv_cameras;")
+        if cursor.fetchone()["cnt"] == 0:
+            print("[Seed] Seeding CCTV surveillance cameras and demonstration alert...")
+            cameras = [
+                ("CAM-METRO-01", "Central Metro Station - Platform 2 North", "Central Railway / Metro Concourse", 13.0827, 80.2707, "rtsp://surveillance.metro.internal/live/cam-01", 25.0, "active"),
+                ("CAM-TRANSIT-04", "Koyambedu Inter-State Terminal - Concourse B", "Koyambedu Bus Terminal, Gate 3", 13.0694, 80.1948, "rtsp://surveillance.transit.internal/live/cam-04", 20.0, "active"),
+                ("CAM-AIRPORT-02", "International Airport - Terminal 2 Arrival Gate", "Meenambakkam Airport Complex", 12.9856, 80.1693, "rtsp://surveillance.airport.internal/live/cam-02", 30.0, "active"),
+                ("CAM-PROMENADE-07", "Marina Promenade & Lighthouse Surveillance Node", "Marina Beach Northern Pier", 13.0475, 80.2824, "rtsp://surveillance.city.internal/live/cam-07", 15.0, "active")
+            ]
+            for cam in cameras:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO cctv_cameras (camera_code, name, location_name, latitude, longitude, stream_url, fps, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, cam)
+
+            # 7. Seed Demonstration Surveillance Alert
+            cursor.execute("""
+                INSERT INTO surveillance_alerts (camera_id, case_id, similarity_score, confidence_tier, snapshot_path, bbox_json, status)
+                VALUES (1, 1, 0.942, 'high', '/storage/sightings/sight_1_primary.jpg', '[112, 45, 96, 120]', 'new')
+            """)
+
+        print("[Seed] Database seeding completed successfully!")
 
 if __name__ == "__main__":
     seed_database()
+
+

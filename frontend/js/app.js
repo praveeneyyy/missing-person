@@ -139,10 +139,12 @@ const App = {
       if (userBadge) {
         userBadge.innerHTML = `
           <div class="flex items-center gap-2">
-            <span class="pulse-indicator pulse-emerald"></span>
-            <span class="font-semibold text-slate-200 text-xs">${user.full_name}</span>
-            <span class="font-mono text-[10px] bg-blue-900/80 text-blue-300 font-bold px-1.5 py-0.5 rounded border border-blue-700">${user.badge_number || user.role.toUpperCase()}</span>
-            <button onclick="App.handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-400 text-xs px-1.5 py-0.5 rounded transition">🚪</button>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span class="font-semibold text-slate-800 text-xs">${user.full_name}</span>
+            <span class="font-mono text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.5 rounded border border-slate-200">${user.badge_number || user.role.toUpperCase()}</span>
+            <button onclick="App.handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-600 text-xs p-1 rounded transition flex items-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
           </div>
         `;
       }
@@ -165,8 +167,8 @@ const App = {
       if (bell) bell.classList.add('hidden');
       if (userBadge) {
         userBadge.innerHTML = `
-          <button onclick="App.openModal('login-modal')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold font-mono px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
-            <span>🔒</span>
+          <button onclick="App.openModal('login-modal')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold font-mono px-3 py-1.5 rounded-lg shadow-xs transition flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <span>OFFICER SIGN IN</span>
           </button>
         `;
@@ -189,11 +191,11 @@ const App = {
     // Update tab button active states
     document.querySelectorAll('[data-tab]').forEach(btn => {
       if (btn.getAttribute('data-tab') === tabName) {
-        btn.classList.add('bg-blue-600', 'text-white', 'shadow-sm');
-        btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+        btn.classList.add('bg-slate-900', 'text-white', 'shadow-xs');
+        btn.classList.remove('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
       } else {
-        btn.classList.remove('bg-blue-600', 'text-white', 'shadow-sm');
-        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+        btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xs');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
       }
     });
 
@@ -236,10 +238,14 @@ const App = {
       case 'benchmark':
         await this.loadBenchmark();
         break;
+      case 'surveillance':
+        await this.loadSurveillanceData();
+        break;
       case 'public-submit':
         setTimeout(() => MapManager.initLocationPicker('sighting-picker-map', 'sighting-lat', 'sighting-lng', 'sighting-location'), 100);
         break;
     }
+
 
     if (window.lucide) {
       window.lucide.createIcons();
@@ -315,27 +321,29 @@ const App = {
 
       if (cases.length === 0) {
         container.innerHTML = `
-          <div class="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div class="text-3xl mb-2">🔍</div>
-            <h3 class="text-base font-bold text-slate-800">No Missing-Person Cases Found</h3>
-            <p class="text-xs text-slate-500 mt-1">Try adjusting your search criteria or register a new case.</p>
+          <div class="col-span-full p-12 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
+            <div class="w-12 h-12 mx-auto rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <h3 class="text-base font-bold text-slate-900">No Missing-Person Cases Found</h3>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">Try adjusting your search criteria or register a new case file.</p>
           </div>
         `;
         return;
       }
 
       container.innerHTML = cases.map(c => `
-        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden dossier-card shadow-sm flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden dossier-card shadow-sm flex flex-col justify-between hover:border-slate-300 transition">
           <div>
             <!-- Dossier Header & Image -->
-            <div class="h-48 bg-slate-900 relative overflow-hidden">
+            <div class="h-48 bg-slate-100 relative overflow-hidden border-b border-slate-100">
               ${c.primary_photo_path
-                ? `<img src="/${c.primary_photo_path}" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition" alt="${c.full_name}"/>`
-                : `<div class="w-full h-full flex flex-col items-center justify-center text-slate-500"><span class="text-2xl mb-1">👤</span><span class="text-xs">No Biometric Photo</span></div>`}
-              <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
+                ? `<img src="/${c.primary_photo_path}" class="w-full h-full object-cover" alt="${c.full_name}"/>`
+                : `<div class="w-full h-full flex flex-col items-center justify-center text-slate-400"><svg class="w-10 h-10 mb-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><span class="text-xs font-mono">No Biometric Photo</span></div>`}
+              <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
               
               <div class="absolute top-3 left-3">
-                <span class="bg-slate-900/90 backdrop-blur font-mono font-bold text-xs text-blue-300 px-2.5 py-1 rounded-md border border-slate-700 shadow-sm">
+                <span class="bg-white/95 backdrop-blur font-mono font-bold text-xs text-slate-900 px-2.5 py-1 rounded-md border border-slate-200 shadow-xs">
                   ${c.reference_no}
                 </span>
               </div>
@@ -345,7 +353,7 @@ const App = {
 
               <div class="absolute bottom-3 left-3 right-3 text-white">
                 <h3 class="text-lg font-bold tracking-tight">${c.full_name}</h3>
-                <p class="text-xs text-slate-300">${c.age || 'Unknown'} yrs • ${c.gender || 'Not specified'}</p>
+                <p class="text-xs text-slate-200 font-mono">${c.age || 'Unknown'} yrs • ${c.gender || 'Not specified'}</p>
               </div>
             </div>
 
@@ -377,7 +385,7 @@ const App = {
           <!-- Footer Actions -->
           <div class="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
             <span class="text-[11px] font-mono text-slate-500">${c.reference_photo_count} Reference Vectors</span>
-            <button onclick="App.viewCaseDetails(${c.id})" class="text-xs bg-slate-900 hover:bg-blue-600 text-white font-bold px-3.5 py-1.5 rounded-lg transition shadow-sm">
+            <button onclick="App.viewCaseDetails(${c.id})" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-1.5 rounded-lg transition shadow-xs font-mono">
               Open Dossier →
             </button>
           </div>
@@ -414,25 +422,25 @@ const App = {
           photoContainer.innerHTML = `<p class="text-slate-400 text-xs">No reference photos enrolled.</p>`;
         } else {
           photoContainer.innerHTML = c.reference_photos.map((p, idx) => `
-            <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-sm">
-              <div class="h-56 relative forensic-viewport">
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+              <div class="h-56 relative forensic-viewport bg-slate-900">
                 <canvas id="ref-canvas-${p.id}" class="forensic-canvas"></canvas>
                 <div class="hud-corner hud-corner-tl"></div>
                 <div class="hud-corner hud-corner-tr"></div>
                 <div class="hud-corner hud-corner-bl"></div>
                 <div class="hud-corner hud-corner-br"></div>
               </div>
-              <div class="p-3 bg-slate-950 border-t border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+              <div class="p-3 bg-white border-t border-slate-200 text-xs text-slate-700 flex items-center justify-between">
                 <div>
-                  <div class="font-mono font-bold text-cyan-400">128-D VECTOR #${p.id} ${idx === 0 ? '<span class="text-[10px] text-blue-400 font-normal">(Primary)</span>' : ''}</div>
+                  <div class="font-mono font-bold text-slate-900">128-D VECTOR #${p.id} ${idx === 0 ? '<span class="text-[10px] text-blue-600 font-normal">(Primary)</span>' : ''}</div>
                   <div class="text-[10px] text-slate-500 font-mono">${p.model_name} • ${p.model_version}</div>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <button onclick="App.toggleCanvasMode('ref-canvas-${p.id}', '/${p.file_path}', ${p.bbox_json || 'null'}, null)" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2.5 py-1 rounded border border-slate-700 font-mono text-cyan-300">
+                  <button onclick="App.toggleCanvasMode('ref-canvas-${p.id}', '/${p.file_path}', ${p.bbox_json || 'null'}, null)" class="text-[10px] bg-white hover:bg-slate-50 px-2.5 py-1 rounded border border-slate-200 font-mono text-slate-700 shadow-xs">
                     Toggle HUD
                   </button>
                   ${c.reference_photos.length > 1 ? `
-                    <button onclick="App.deleteReferencePhoto(${p.id})" title="Remove reference portrait" class="text-[10px] bg-red-950/60 hover:bg-red-900 px-2 py-1 rounded border border-red-800 font-mono text-red-300">
+                    <button onclick="App.deleteReferencePhoto(${p.id})" title="Remove reference portrait" class="text-[10px] bg-red-50 hover:bg-red-100 px-2 py-1 rounded border border-red-200 font-mono text-red-700">
                       Delete
                     </button>
                   ` : ''}
@@ -496,48 +504,48 @@ const App = {
     try {
       const res = await API.getCaseTimeline(caseId);
       if (!res.events || res.events.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-slate-500 font-mono text-xs bg-slate-950 rounded-xl border border-slate-800">No events recorded in case timeline yet.</div>`;
+        container.innerHTML = `<div class="p-6 text-center text-slate-500 font-mono text-xs bg-slate-50 rounded-xl border border-slate-200">No events recorded in case timeline yet.</div>`;
         return;
       }
 
       container.innerHTML = res.events.map(ev => {
         const badgeColor = ev.badge_color || 'blue';
         const colorClasses = {
-          blue: 'border-blue-500/40 bg-blue-950/40 text-blue-300',
-          cyan: 'border-cyan-500/40 bg-cyan-950/40 text-cyan-300',
-          emerald: 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300',
-          amber: 'border-amber-500/40 bg-amber-950/40 text-amber-300',
-          orange: 'border-orange-500/40 bg-orange-950/40 text-orange-300',
-          rose: 'border-rose-500/40 bg-rose-950/40 text-rose-300',
-          purple: 'border-purple-500/40 bg-purple-950/40 text-purple-300',
-          slate: 'border-slate-700 bg-slate-900 text-slate-300'
-        }[badgeColor] || 'border-slate-700 bg-slate-900 text-slate-300';
+          blue: 'border-blue-200 bg-blue-50/50 text-slate-800',
+          cyan: 'border-cyan-200 bg-cyan-50/50 text-slate-800',
+          emerald: 'border-emerald-200 bg-emerald-50/50 text-slate-800',
+          amber: 'border-amber-200 bg-amber-50/50 text-slate-800',
+          orange: 'border-orange-200 bg-orange-50/50 text-slate-800',
+          rose: 'border-rose-200 bg-rose-50/50 text-slate-800',
+          purple: 'border-purple-200 bg-purple-50/50 text-slate-800',
+          slate: 'border-slate-200 bg-slate-50/50 text-slate-800'
+        }[badgeColor] || 'border-slate-200 bg-white text-slate-800';
 
         return `
-          <div class="relative pl-6 pb-6 border-l border-slate-800 last:border-l-0 last:pb-0">
+          <div class="relative pl-6 pb-6 border-l border-slate-200 last:border-l-0 last:pb-0">
             <!-- Timeline Marker Icon -->
-            <div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-slate-950 border-2 border-slate-700 flex items-center justify-center text-[10px]">
+            <div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-[10px] text-slate-700 font-bold">
               ${ev.icon || '•'}
             </div>
 
             <!-- Event Card -->
-            <div class="p-4 rounded-xl border ${colorClasses} space-y-2">
+            <div class="p-4 rounded-xl border ${colorClasses} space-y-2 bg-white shadow-xs">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <span class="font-bold text-white text-xs">${ev.title}</span>
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300">${ev.event_type}</span>
+                  <span class="font-bold text-slate-900 text-xs">${ev.title}</span>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700 font-medium">${ev.event_type}</span>
                 </div>
-                <span class="text-[11px] font-mono text-slate-400">${ev.timestamp}</span>
+                <span class="text-[11px] font-mono text-slate-500">${ev.timestamp}</span>
               </div>
 
-              <p class="text-xs text-slate-300 font-sans leading-relaxed">${ev.description}</p>
+              <p class="text-xs text-slate-700 font-sans leading-relaxed">${ev.description}</p>
 
-              <div class="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-slate-400">
+              <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-slate-500">
                 <div>
-                  <span>OFFICER / ACTOR:</span> <strong class="text-slate-200">${ev.actor_name}</strong> (${ev.badge_number})
+                  <span>OFFICER / ACTOR:</span> <strong class="text-slate-800">${ev.actor_name}</strong> (${ev.badge_number})
                 </div>
                 ${ev.metadata && ev.metadata.similarity_score ? `
-                  <div class="text-amber-400 font-bold">
+                  <div class="text-emerald-700 font-bold">
                     AI Match: ${(ev.metadata.similarity_score * 100).toFixed(1)}% Cosine
                   </div>
                 ` : ''}
@@ -601,12 +609,12 @@ const App = {
 
       if (candidates.length === 0) {
         container.innerHTML = `
-          <div class="p-16 text-center bg-slate-900 rounded-2xl border border-slate-800 shadow-sm space-y-3">
-            <div class="w-16 h-16 mx-auto rounded-full bg-emerald-950/80 text-emerald-400 flex items-center justify-center font-bold text-2xl border border-emerald-700/50">
-              ✓
+          <div class="p-16 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div class="w-14 h-14 mx-auto rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-2xl border border-emerald-200">
+              <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             </div>
-            <h3 class="text-lg font-extrabold text-white">No Leads Matching Active Filter</h3>
-            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed font-mono">
+            <h3 class="text-lg font-extrabold text-slate-900">No Leads Matching Active Filter</h3>
+            <p class="text-xs text-slate-500 max-w-md mx-auto leading-relaxed font-mono">
               All candidate leads for filter [Status: ${statusVal.toUpperCase()}, Tier: ${tierVal.toUpperCase()}] have been cleared or none are queued. Adjust filters above to inspect historical or low-similarity items.
             </p>
           </div>
@@ -618,7 +626,7 @@ const App = {
         const scorePercent = (c.similarity_score * 100).toFixed(1);
         const isHigh = c.similarity_score >= 0.70;
         const tierLabel = isHigh ? 'HIGH CONFIDENCE (≥ 0.70)' : (c.similarity_score >= 0.50 ? 'MODERATE (0.50 - 0.69)' : 'LOW SIMILARITY (< 0.50)');
-        const tierBadgeClass = isHigh ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : (c.similarity_score >= 0.50 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-700/40 text-slate-300 border-slate-600');
+        const tierBadgeClass = isHigh ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (c.similarity_score >= 0.50 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-100 text-slate-600 border-slate-200');
 
         // Calculate geographical distance in km between Case last-seen and Sighting
         const distKm = c.spatial_separation_km !== undefined ? c.spatial_separation_km : MapManager.calculateDistanceKm(c.case_lat, c.case_lng, c.sighting_lat, c.sighting_lng);
@@ -653,24 +661,27 @@ const App = {
         const refLandmarks = c.ref_landmarks_json ? JSON.parse(c.ref_landmarks_json) : null;
 
         return `
-          <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden mb-8">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
             <!-- Command Console Header -->
-            <div class="bg-slate-950 text-white p-5 border-b border-slate-800 flex flex-wrap items-center justify-between gap-4">
+            <div class="bg-white text-slate-900 p-5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
               <div class="flex items-center gap-3">
-                <span class="pulse-indicator ${isHigh ? 'pulse-emerald' : 'pulse-amber'}"></span>
+                <span class="w-2.5 h-2.5 rounded-full ${isHigh ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
                 <div>
                   <div class="flex items-center gap-2">
-                    <span class="font-mono font-extrabold text-cyan-400 text-sm tracking-wide">LEAD ADJUDICATION #${c.candidate_id}</span>
-                    <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono border border-slate-700">Rank #${c.rank}</span>
+                    <span class="font-mono font-extrabold text-slate-900 text-sm tracking-wide">LEAD ADJUDICATION #${c.candidate_id}</span>
+                    <span class="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-mono border border-slate-200 font-semibold">Rank #${c.rank}</span>
                     ${isVideo ? `
-                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1">🎥 CCTV VIDEO STREAM</span>
+                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5 text-purple-600 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        <span>CCTV VIDEO STREAM</span>
+                      </span>
                     ` : ''}
                     ${c.match_status !== 'requires_human_review' ? `
-                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-800">${c.match_status.toUpperCase()}</span>
+                      <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">${c.match_status.toUpperCase()}</span>
                     ` : ''}
                   </div>
-                  <div class="text-xs text-slate-400 mt-0.5">
-                    Sighting <strong class="text-slate-200 font-mono">${c.receipt_no}</strong> correlated against Case <strong class="text-slate-200 font-mono">${c.reference_no}</strong> (${c.person_name})
+                  <div class="text-xs text-slate-500 mt-0.5">
+                    Sighting <strong class="text-slate-800 font-mono">${c.receipt_no}</strong> correlated against Case <strong class="text-slate-800 font-mono">${c.reference_no}</strong> (${c.person_name})
                   </div>
                 </div>
               </div>
@@ -678,13 +689,13 @@ const App = {
               <!-- Biometric Match Score Badge -->
               <div class="flex items-center gap-4">
                 <div class="text-right">
-                  <div class="font-mono text-2xl font-black ${isHigh ? 'text-emerald-400' : (c.similarity_score >= 0.50 ? 'text-amber-400' : 'text-slate-400')}">
+                  <div class="font-mono text-2xl font-black ${isHigh ? 'text-emerald-600' : (c.similarity_score >= 0.50 ? 'text-amber-600' : 'text-slate-400')}">
                     ${scorePercent}%
                   </div>
-                  <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400">${tierLabel}</div>
+                  <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">${tierLabel}</div>
                 </div>
 
-                <div class="h-10 w-px bg-slate-800"></div>
+                <div class="h-10 w-px bg-slate-200"></div>
 
                 <span class="badge-tactical badge-${c.match_status}">
                   ${c.match_status === 'requires_human_review' ? 'Pending Human Review' : c.match_status}
@@ -693,157 +704,160 @@ const App = {
             </div>
 
             <!-- Mandatory Ethical & Legal Caution Banner -->
-            <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-b border-amber-500/20 px-6 py-2.5 text-xs text-amber-200 flex items-center gap-2.5">
-              <span class="text-base">⚖️</span>
+            <div class="bg-amber-50/70 border-b border-amber-200/60 px-6 py-2.5 text-xs text-amber-900 flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
               <div>
-                <span class="font-bold text-amber-300">MANDATORY INVESTIGATION GOVERNANCE:</span>
-                <span class="text-slate-300">Biometric similarity scores are mathematical ranking signals only. Autonomous identification is prohibited. Review officers must record affirmative written findings.</span>
+                <span class="font-bold text-amber-900">MANDATORY INVESTIGATION GOVERNANCE:</span>
+                <span class="text-amber-800">Biometric similarity scores are mathematical ranking signals only. Autonomous identification is prohibited. Review officers must record affirmative written findings.</span>
               </div>
             </div>
 
             <!-- Dual Forensic Viewport Comparison -->
-            <div class="p-6 bg-slate-900 grid grid-cols-1 lg:grid-cols-2 gap-6 hud-grid">
+            <div class="p-6 bg-slate-50/50 grid grid-cols-1 lg:grid-cols-2 gap-6">
               <!-- Left Viewport: Submitted Sighting Image / Video Stream -->
               <div class="space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-300">
+                <div class="flex items-center justify-between text-xs text-slate-700">
                   <div class="flex items-center gap-2 font-bold">
-                    <span class="text-cyan-400 font-mono">PANEL A</span>
+                    <span class="text-slate-900 font-mono">PANEL A</span>
                     <span>${isVideo ? 'Surveillance Video Exemplar' : 'Submitted Sighting Evidence'}</span>
                   </div>
                   <div class="flex items-center gap-2">
                     ${isVideo ? `
-                      <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="text-[10px] bg-purple-950/80 hover:bg-purple-900 px-2 py-1 rounded text-purple-300 font-mono border border-purple-800 flex items-center gap-1 transition shadow-sm">
-                        🎥 Inspect Video Stream
+                      <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="text-[10px] bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded text-purple-700 font-mono border border-purple-200 flex items-center gap-1.5 transition shadow-xs">
+                        <svg class="w-3.5 h-3.5 text-purple-600 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                        <span>Inspect Video Stream</span>
                       </button>
                     ` : ''}
-                    <button onclick="App.toggleCanvasMode('canvas-sight-${c.candidate_id}', '${sightImgSrc}', ${JSON.stringify(sightBbox)}, ${JSON.stringify(sightLandmarks)})" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-cyan-300 font-mono border border-slate-700">
+                    <button onclick="App.toggleCanvasMode('canvas-sight-${c.candidate_id}', '${sightImgSrc}', ${JSON.stringify(sightBbox)}, ${JSON.stringify(sightLandmarks)})" class="text-[10px] bg-white hover:bg-slate-50 px-2.5 py-1 rounded text-slate-700 font-mono border border-slate-200 shadow-xs">
                       Toggle Overlays
                     </button>
                   </div>
                 </div>
 
-                <div class="forensic-viewport h-80 relative">
+                <div class="forensic-viewport h-80 relative bg-slate-900 rounded-xl overflow-hidden border border-slate-200 shadow-xs">
                   <canvas id="canvas-sight-${c.candidate_id}" class="forensic-canvas"></canvas>
                   <div class="hud-corner hud-corner-tl"></div>
                   <div class="hud-corner hud-corner-tr"></div>
                   <div class="hud-corner hud-corner-bl"></div>
                   <div class="hud-corner hud-corner-br"></div>
-                  <div class="absolute bottom-3 left-3 bg-black/80 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono ${isVideo ? 'text-purple-300 border-purple-500/30' : 'text-cyan-300 border-cyan-500/30'} border">
+                  <div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono text-slate-900 border border-slate-200 shadow-xs">
                     ${isVideo ? `CCTV TRACKLET #${(videoTracklet ? videoTracklet.tracklet_id : c.sighting_face_index) + 1} (${videoTracklet ? videoTracklet.detection_count : 1} detections)` : `SIGHTING FACE #${c.sighting_face_index + 1}`}
                   </div>
                 </div>
 
                 <!-- Sighting Metadata Card -->
-                <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1.5 font-mono">
+                <div class="p-3.5 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1.5 font-mono shadow-xs">
                   <div class="flex justify-between">
-                    <span class="text-slate-500">LOCATION:</span>
-                    <span class="text-slate-200 truncate max-w-[240px]">${c.location_name}</span>
+                    <span class="text-slate-500 font-semibold">LOCATION:</span>
+                    <span class="text-slate-900 font-medium truncate max-w-[240px]">${c.location_name}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-slate-500">SIGHTED DATE:</span>
-                    <span class="text-slate-200">${c.sighting_date} ${c.sighting_time || ''}</span>
+                    <span class="text-slate-500 font-semibold">SIGHTED DATE:</span>
+                    <span class="text-slate-900 font-medium">${c.sighting_date} ${c.sighting_time || ''}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-slate-500">REPORTER NOTES:</span>
-                    <span class="text-slate-300 italic truncate max-w-[240px]">"${c.sighting_notes || 'None'}"</span>
+                    <span class="text-slate-500 font-semibold">REPORTER NOTES:</span>
+                    <span class="text-slate-700 italic truncate max-w-[240px]">"${c.sighting_notes || 'None'}"</span>
                   </div>
                 </div>
               </div>
 
               <!-- Right Viewport: Registered Reference Portrait -->
               <div class="space-y-3">
-                <div class="flex items-center justify-between text-xs text-slate-300">
+                <div class="flex items-center justify-between text-xs text-slate-700">
                   <div class="flex items-center gap-2 font-bold">
-                    <span class="text-blue-400 font-mono">PANEL B</span>
+                    <span class="text-slate-900 font-mono">PANEL B</span>
                     <span>Enrolled Reference Record</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <button onclick="App.toggleCanvasMode('canvas-ref-${c.candidate_id}', '/${c.reference_photo_path}', ${JSON.stringify(refBbox)}, ${JSON.stringify(refLandmarks)})" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-blue-300 font-mono border border-slate-700">
+                    <button onclick="App.toggleCanvasMode('canvas-ref-${c.candidate_id}', '/${c.reference_photo_path}', ${JSON.stringify(refBbox)}, ${JSON.stringify(refLandmarks)})" class="text-[10px] bg-white hover:bg-slate-50 px-2.5 py-1 rounded text-slate-700 font-mono border border-slate-200 shadow-xs">
                       Toggle Overlays
                     </button>
                   </div>
                 </div>
 
-                <div class="forensic-viewport h-80 relative">
+                <div class="forensic-viewport h-80 relative bg-slate-900 rounded-xl overflow-hidden border border-slate-200 shadow-xs">
                   <canvas id="canvas-ref-${c.candidate_id}" class="forensic-canvas"></canvas>
                   <div class="hud-corner hud-corner-tl"></div>
                   <div class="hud-corner hud-corner-tr"></div>
                   <div class="hud-corner hud-corner-bl"></div>
                   <div class="hud-corner hud-corner-br"></div>
-                  <div class="absolute bottom-3 left-3 bg-blue-950/90 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono text-blue-300 border border-blue-500/30">
+                  <div class="absolute bottom-3 left-3 bg-white/95 backdrop-blur px-2.5 py-1 rounded text-[11px] font-mono text-slate-900 border border-slate-200 shadow-xs">
                     AUTHORIZED REFERENCE
                   </div>
                 </div>
 
                 <!-- Case Reference Metadata Card -->
-                <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-1.5 font-mono">
+                <div class="p-3.5 bg-white rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1.5 font-mono shadow-xs">
                   <div class="flex justify-between">
-                    <span class="text-slate-500">IDENTITY:</span>
-                    <span class="text-blue-300 font-bold">${c.person_name} (${c.reference_no})</span>
+                    <span class="text-slate-500 font-semibold">IDENTITY:</span>
+                    <span class="text-slate-900 font-bold">${c.person_name} (${c.reference_no})</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-slate-500">AGE / GENDER:</span>
-                    <span class="text-slate-200">${c.age || 'N/A'} yrs • ${c.gender || 'N/A'}</span>
+                    <span class="text-slate-500 font-semibold">AGE / GENDER:</span>
+                    <span class="text-slate-900 font-medium">${c.age || 'N/A'} yrs • ${c.gender || 'N/A'}</span>
                   </div>
                   <div class="flex justify-between">
-                    <span class="text-slate-500">LAST SEEN:</span>
-                    <span class="text-slate-200 truncate max-w-[240px]">${c.last_seen_location} (${c.last_seen_date})</span>
+                    <span class="text-slate-500 font-semibold">LAST SEEN:</span>
+                    <span class="text-slate-900 font-medium truncate max-w-[240px]">${c.last_seen_location} (${c.last_seen_date})</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Forensic Correlation & Spatial Metrics Bar -->
-            <div class="bg-slate-950/80 border-t border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-300">
+            <div class="bg-white border-t border-b border-slate-200 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-slate-700">
               <div class="flex flex-wrap items-center gap-6">
                 <div>
-                  <span class="text-slate-500 text-[10px] block">SPATIAL SEPARATION</span>
-                  <span class="font-bold text-cyan-400">${distKm !== null ? `${distKm} km from origin` : 'Coordinates pending'}</span>
+                  <span class="text-slate-500 text-[10px] block font-semibold">SPATIAL SEPARATION</span>
+                  <span class="font-bold text-slate-900">${distKm !== null ? `${distKm} km from origin` : 'Coordinates pending'}</span>
                 </div>
                 <div>
-                  <span class="text-slate-500 text-[10px] block">TEMPORAL DELTA</span>
-                  <span class="font-bold text-amber-300">${daysDelta !== null ? `${daysDelta} days elapsed` : 'Simultaneous'}</span>
+                  <span class="text-slate-500 text-[10px] block font-semibold">TEMPORAL DELTA</span>
+                  <span class="font-bold text-slate-900">${daysDelta !== null ? `${daysDelta} days elapsed` : 'Simultaneous'}</span>
                 </div>
                 <div>
-                  <span class="text-slate-500 text-[10px] block">FEATURE VECTOR</span>
-                  <span class="font-bold text-slate-200">${c.model_version} (128-D)</span>
+                  <span class="text-slate-500 text-[10px] block font-semibold">FEATURE VECTOR</span>
+                  <span class="font-bold text-slate-900">${c.model_version} (128-D)</span>
                 </div>
                 <div>
-                  <span class="text-slate-500 text-[10px] block">COSINE SIMILARITY</span>
-                  <span class="font-bold text-slate-200">${c.similarity_score.toFixed(4)}</span>
+                  <span class="text-slate-500 text-[10px] block font-semibold">COSINE SIMILARITY</span>
+                  <span class="font-bold text-slate-900">${c.similarity_score.toFixed(4)}</span>
                 </div>
               </div>
 
               <!-- Quick GIS Map Inspection & Video Telemetry -->
               <div class="flex items-center gap-2">
                 ${isVideo ? `
-                  <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800 transition flex items-center gap-1.5 shadow-sm">
-                    <span>🎥</span> <span>Inspect Video Stream</span>
+                  <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition flex items-center gap-1.5 shadow-xs">
+                    <svg class="w-3.5 h-3.5 text-purple-600 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                    <span>Inspect Video Stream</span>
                   </button>
                 ` : ''}
-                <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-cyan-950/60 hover:bg-cyan-900 text-cyan-300 border border-cyan-800 transition flex items-center gap-1.5 shadow-sm">
-                  <span>🗺️</span> <span>Inspect on GIS Map</span>
+                <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-xs">
+                  <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                  <span>Inspect on GIS Map</span>
                 </button>
               </div>
             </div>
 
             <!-- Adjudication Action Command Bar -->
-            <div class="p-5 bg-slate-900 flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/80">
+            <div class="p-5 bg-white flex flex-wrap items-center justify-between gap-4 border-t border-slate-100">
               <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400 font-semibold font-mono">Quick Adjudication:</span>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                <span class="text-xs text-slate-500 font-semibold font-mono">Quick Adjudication:</span>
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition shadow-xs">
                   Reject Lead
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-amber-950/50 hover:bg-amber-900 text-amber-300 border border-amber-800 transition">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition shadow-xs">
                   Request Witness Info
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-xl bg-orange-950/50 hover:bg-orange-900 text-orange-300 border border-orange-800 transition">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition shadow-xs">
                   Escalate to Field Team
                 </button>
               </div>
 
-              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-extrabold font-mono rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition flex items-center gap-1.5">
-                <span>✓</span>
+              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-bold font-mono rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 <span>Confirm Verified Match</span>
               </button>
             </div>
@@ -1033,7 +1047,7 @@ const App = {
       ctx.fillStyle = '#c084fc';
       ctx.font = 'bold 15px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText('🎥 CCTV SURVEILLANCE VIDEO STREAM', canvas.width / 2, canvas.height / 2 - 10);
+      ctx.fillText('CCTV SURVEILLANCE VIDEO STREAM', canvas.width / 2, canvas.height / 2 - 10);
       ctx.fillStyle = '#94a3b8';
       ctx.font = '12px monospace';
       ctx.fillText('Click "Inspect Video Stream" to view multi-frame tracklets', canvas.width / 2, canvas.height / 2 + 15);
@@ -1053,8 +1067,13 @@ const App = {
     const modal = document.getElementById('review-modal');
     const dispSelect = document.getElementById('review-disposition');
     if (dispSelect) dispSelect.value = disposition;
+    const dossierBtn = document.getElementById('download-dossier-btn');
+    if (dossierBtn) {
+      dossierBtn.href = API.getForensicDossierUrl(candidateId);
+    }
     if (modal) modal.classList.remove('hidden');
   },
+
 
   closeReviewModal() {
     const modal = document.getElementById('review-modal');
@@ -1128,17 +1147,18 @@ const App = {
         } else {
           list.innerHTML = res.notifications.map(n => {
             const isUnread = !n.is_read;
-            const icon = n.category === 'match_alert' ? '⚡' : (n.category === 'review_update' ? '⚖️' : '🔔');
             return `
-              <div onclick="App.handleNotificationClick(${n.id}, '${n.link_url || ''}')" class="p-3 ${isUnread ? 'bg-slate-800/80 hover:bg-slate-750' : 'bg-slate-900/40 hover:bg-slate-800/60'} transition cursor-pointer flex items-start gap-3">
-                <span class="text-base mt-0.5">${icon}</span>
+              <div onclick="App.handleNotificationClick(${n.id}, '${n.link_url || ''}')" class="p-3 ${isUnread ? 'bg-slate-50 hover:bg-slate-100/80' : 'bg-white hover:bg-slate-50/60'} transition cursor-pointer flex items-start gap-3 border-b border-slate-100 last:border-b-0">
+                <div class="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 shrink-0 mt-0.5">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                </div>
                 <div class="flex-grow min-w-0">
                   <div class="flex items-center justify-between gap-1">
-                    <span class="font-bold text-slate-200 text-xs truncate ${isUnread ? 'text-cyan-300' : ''}">${n.title}</span>
-                    ${isUnread ? '<span class="w-2 h-2 rounded-full bg-cyan-400 flex-shrink-0"></span>' : ''}
+                    <span class="font-bold text-xs truncate ${isUnread ? 'text-blue-600 font-extrabold' : 'text-slate-800'}">${n.title}</span>
+                    ${isUnread ? '<span class="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0"></span>' : ''}
                   </div>
-                  <p class="text-slate-400 text-[11px] leading-relaxed mt-0.5">${n.message}</p>
-                  <span class="text-[10px] font-mono text-slate-500 mt-1 block">${n.created_at}</span>
+                  <p class="text-slate-600 text-[11px] leading-relaxed mt-0.5">${n.message}</p>
+                  <span class="text-[10px] font-mono text-slate-400 mt-1 block">${n.created_at}</span>
                 </div>
               </div>
             `;
@@ -1219,7 +1239,7 @@ const App = {
         const btn = document.getElementById('copy-receipt-btn');
         if (btn) {
           const oldHtml = btn.innerHTML;
-          btn.innerHTML = '<span>✓</span> <span>Copied!</span>';
+          btn.innerHTML = '<svg class="w-3.5 h-3.5 text-emerald-600 inline mr-1" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>Copied!</span>';
           setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
         }
       } catch (err) {
@@ -1353,9 +1373,9 @@ const App = {
     const container = document.getElementById('lookup-result-box');
     container.classList.remove('hidden');
     container.innerHTML = `
-      <div class="p-6 bg-slate-950 border border-slate-800 rounded-2xl text-center space-y-2">
-        <div class="inline-block animate-spin text-2xl">⏳</div>
-        <p class="text-xs font-mono text-cyan-400">Querying cryptographic intake registry for ${receiptNo}...</p>
+      <div class="p-6 bg-slate-50 border border-slate-200 rounded-2xl text-center space-y-2">
+        <div class="w-8 h-8 mx-auto rounded-full border-2 border-slate-300 border-t-slate-900 animate-spin"></div>
+        <p class="text-xs font-mono text-slate-600">Querying cryptographic intake registry for ${receiptNo}...</p>
       </div>
     `;
 
@@ -1390,29 +1410,29 @@ const App = {
       ];
 
       container.innerHTML = `
-        <div class="p-6 bg-slate-950 border border-slate-800 rounded-2xl shadow-xl space-y-6">
+        <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-6 text-slate-900">
           <!-- Receipt Header -->
-          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <span class="text-[10px] font-mono uppercase text-slate-500 block">AUTHENTICATED RECEIPT</span>
-              <span class="font-mono font-black text-cyan-400 text-xl">${res.receipt_no}</span>
+              <span class="text-[10px] font-mono uppercase text-slate-500 block font-semibold">AUTHENTICATED RECEIPT</span>
+              <span class="font-mono font-black text-slate-900 text-xl">${res.receipt_no}</span>
             </div>
             <span class="badge-tactical ${statusBadgeColor}">${res.status_label || res.status}</span>
           </div>
 
           <!-- 4-Stage Progress Stepper -->
           <div class="space-y-2">
-            <span class="text-[10px] font-mono uppercase text-slate-500 block tracking-wider">LIFECYCLE VERIFICATION PROGRESS</span>
+            <span class="text-[10px] font-mono uppercase text-slate-500 block tracking-wider font-semibold">LIFECYCLE VERIFICATION PROGRESS</span>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               ${steps.map(s => {
-                const border = s.done ? 'border-emerald-600 bg-emerald-950/40 text-emerald-300' : (s.active ? 'border-amber-500 bg-amber-950/40 text-amber-300 animate-pulse' : 'border-slate-800 bg-slate-900/50 text-slate-500');
+                const border = s.done ? 'border-emerald-200 bg-emerald-50/60 text-emerald-800' : (s.active ? 'border-blue-200 bg-blue-50/60 text-blue-800 font-bold' : 'border-slate-200 bg-slate-50 text-slate-500');
                 const dot = s.done ? '✓' : s.num;
                 return `
                   <div class="p-2.5 rounded-xl border ${border} text-xs font-mono space-y-1">
                     <div class="flex items-center justify-between">
                       <span class="font-bold text-[11px]">${dot} ${s.label}</span>
                     </div>
-                    <div class="text-[10px] text-slate-400 truncate">${s.desc}</div>
+                    <div class="text-[10px] text-slate-500 truncate">${s.desc}</div>
                   </div>
                 `;
               }).join('')}
@@ -1420,49 +1440,50 @@ const App = {
           </div>
 
           <!-- Metadata Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-900 rounded-xl border border-slate-800 text-xs font-mono">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs font-mono">
             <div>
-              <span class="text-slate-500 text-[10px] block">LOCATION LANDMARK</span>
-              <span class="text-white font-bold">${res.location_name}</span>
+              <span class="text-slate-500 text-[10px] block font-semibold">LOCATION LANDMARK</span>
+              <span class="text-slate-900 font-bold">${res.location_name}</span>
             </div>
             <div>
-              <span class="text-slate-500 text-[10px] block">SIGHTING TIMESTAMP</span>
-              <span class="text-white font-bold">${res.sighting_date} ${res.sighting_time || ''}</span>
+              <span class="text-slate-500 text-[10px] block font-semibold">SIGHTING TIMESTAMP</span>
+              <span class="text-slate-900 font-bold">${res.sighting_date} ${res.sighting_time || ''}</span>
             </div>
             <div>
-              <span class="text-slate-500 text-[10px] block">BIOMETRIC FACIAL COUNT</span>
-              <span class="text-cyan-400 font-bold">${res.faces_detected_count} face(s) processed</span>
+              <span class="text-slate-500 text-[10px] block font-semibold">BIOMETRIC FACIAL COUNT</span>
+              <span class="text-slate-900 font-bold">${res.faces_detected_count} face(s) processed</span>
             </div>
             <div>
-              <span class="text-slate-500 text-[10px] block">SUBMISSION INGESTED AT</span>
-              <span class="text-slate-300">${res.submitted_at}</span>
+              <span class="text-slate-500 text-[10px] block font-semibold">SUBMISSION INGESTED AT</span>
+              <span class="text-slate-700">${res.submitted_at}</span>
             </div>
           </div>
 
           <!-- Official Status Guidance Notice -->
-          <div class="p-4 bg-blue-950/40 border border-blue-900/70 rounded-xl text-xs space-y-1">
-            <div class="flex items-center gap-1.5 text-cyan-400 font-bold text-[11px] font-mono">
-              <span>ℹ️</span> <span>OFFICIAL STATUS GUIDANCE</span>
+          <div class="p-4 bg-blue-50/60 border border-blue-100 rounded-xl text-xs space-y-1 text-slate-700">
+            <div class="flex items-center gap-1.5 text-blue-700 font-bold text-[11px] font-mono">
+              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>OFFICIAL STATUS GUIDANCE</span>
             </div>
-            <p class="text-slate-300 leading-relaxed">${res.notice}</p>
+            <p class="text-slate-600 leading-relaxed">${res.notice}</p>
           </div>
 
           <!-- Privacy Shield Notice -->
-          <div class="p-3 bg-slate-900 border border-slate-800 rounded-xl text-[11px] text-slate-400 flex items-start gap-2">
-            <span class="text-sm">🛡️</span>
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-slate-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             <div>
-              <strong class="text-slate-300">Privacy Shield Enforced:</strong> ${res.privacy_statement || 'Sensitive missing-person records remain strictly restricted to sworn officers.'}
+              <strong class="text-slate-800">Privacy Shield Enforced:</strong> ${res.privacy_statement || 'Sensitive missing-person records remain strictly restricted to sworn officers.'}
             </div>
           </div>
         </div>
       `;
     } catch (err) {
       container.innerHTML = `
-        <div class="p-6 bg-red-950/40 border border-red-900 rounded-2xl text-center space-y-2">
-          <div class="text-2xl text-red-400">⚠️</div>
-          <h4 class="text-sm font-bold text-red-200">Receipt Lookup Failed</h4>
-          <p class="text-xs text-red-300">${err.message}</p>
-          <p class="text-[11px] text-slate-400 font-mono mt-1">Please check the code syntax (e.g. STG-2026-0001) or contact police helpline.</p>
+        <div class="p-6 bg-red-50 border border-red-200 rounded-2xl text-center space-y-2">
+          <svg class="w-8 h-8 text-red-600 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <h4 class="text-sm font-bold text-red-900">Receipt Lookup Failed</h4>
+          <p class="text-xs text-red-700">${err.message}</p>
+          <p class="text-[11px] text-slate-500 font-mono mt-1">Please check the code syntax (e.g. STG-2026-0001) or contact police helpline.</p>
         </div>
       `;
     }
@@ -1517,37 +1538,37 @@ const App = {
       }
 
       const getActionBadgeClass = (actionName) => {
-        if (!actionName) return 'bg-slate-800 text-slate-300 border-slate-700';
-        if (actionName.includes('LOGIN')) return 'bg-purple-950/80 text-purple-300 border-purple-800';
-        if (actionName.includes('CREATE')) return 'bg-blue-950/80 text-blue-300 border-blue-800';
-        if (actionName.includes('UPDATE') || actionName.includes('STATUS')) return 'bg-cyan-950/80 text-cyan-300 border-cyan-800';
-        if (actionName.includes('REVIEW') || actionName.includes('ADJUDICAT')) return 'bg-emerald-950/80 text-emerald-300 border-emerald-800';
-        if (actionName.includes('BATCH')) return 'bg-amber-950/80 text-amber-300 border-amber-800';
-        if (actionName.includes('DELETE')) return 'bg-rose-950/80 text-rose-300 border-rose-800';
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        if (!actionName) return 'bg-slate-100 text-slate-700 border-slate-200';
+        if (actionName.includes('LOGIN')) return 'bg-purple-50 text-purple-700 border-purple-200';
+        if (actionName.includes('CREATE')) return 'bg-blue-50 text-blue-700 border-blue-200';
+        if (actionName.includes('UPDATE') || actionName.includes('STATUS')) return 'bg-cyan-50 text-cyan-700 border-cyan-200';
+        if (actionName.includes('REVIEW') || actionName.includes('ADJUDICAT')) return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        if (actionName.includes('BATCH')) return 'bg-amber-50 text-amber-700 border-amber-200';
+        if (actionName.includes('DELETE')) return 'bg-rose-50 text-rose-700 border-rose-200';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       };
 
       tbody.innerHTML = logs.map(l => {
         let detailsHtml = '';
         if (l.details && typeof l.details === 'object' && Object.keys(l.details).length > 0) {
-          detailsHtml = `<span class="bg-slate-950 px-2 py-0.5 rounded border border-slate-800 text-slate-400 font-mono text-[10px] truncate block max-w-md" title='${JSON.stringify(l.details)}'>${JSON.stringify(l.details)}</span>`;
+          detailsHtml = `<span class="bg-slate-50 px-2 py-0.5 rounded border border-slate-200 text-slate-700 font-mono text-[10px] truncate block max-w-md" title='${JSON.stringify(l.details)}'>${JSON.stringify(l.details)}</span>`;
         } else if (l.details) {
-          detailsHtml = `<span class="text-slate-400 text-xs">${String(l.details)}</span>`;
+          detailsHtml = `<span class="text-slate-600 text-xs">${String(l.details)}</span>`;
         } else {
-          detailsHtml = `<span class="text-slate-600 text-[10px] font-mono">None</span>`;
+          detailsHtml = `<span class="text-slate-400 text-[10px] font-mono">None</span>`;
         }
 
         return `
-          <tr class="hover:bg-slate-800/40 font-mono text-xs transition border-b border-slate-800/60">
-            <td class="py-3 px-4 text-slate-400 whitespace-nowrap text-[11px]">${l.created_at}</td>
-            <td class="py-3 px-4 font-bold text-white whitespace-nowrap">${l.actor_name}</td>
+          <tr class="hover:bg-slate-50 font-mono text-xs transition border-b border-slate-100">
+            <td class="py-3 px-4 text-slate-500 whitespace-nowrap text-[11px]">${l.created_at}</td>
+            <td class="py-3 px-4 font-bold text-slate-900 whitespace-nowrap">${l.actor_name}</td>
             <td class="py-3 px-4 whitespace-nowrap">
               <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${getActionBadgeClass(l.action)}">${l.action}</span>
             </td>
-            <td class="py-3 px-4 text-slate-300 whitespace-nowrap font-mono text-[11px]">
-              <span class="text-slate-500">${l.resource_type}</span> <strong class="text-cyan-400">#${l.resource_id}</strong>
+            <td class="py-3 px-4 text-slate-700 whitespace-nowrap font-mono text-[11px]">
+              <span class="text-slate-500">${l.resource_type}</span> <strong class="text-slate-900">#${l.resource_id}</strong>
             </td>
-            <td class="py-3 px-4 text-slate-400 whitespace-nowrap font-mono text-[11px]">${l.ip_address || '127.0.0.1'}</td>
+            <td class="py-3 px-4 text-slate-500 whitespace-nowrap font-mono text-[11px]">${l.ip_address || '127.0.0.1'}</td>
             <td class="py-3 px-4">${detailsHtml}</td>
           </tr>
         `;
@@ -1706,69 +1727,69 @@ const App = {
 
       container.innerHTML = `
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Recall@1 Accuracy</div>
-            <div class="text-3xl font-black text-emerald-400 mt-2 font-mono">${b.metrics.recall_at_1_percent}%</div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Recall@1 Accuracy</div>
+            <div class="text-3xl font-black text-emerald-600 mt-2 font-mono">${b.metrics.recall_at_1_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Exact Top-1 enrolled self-match</div>
           </div>
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Recall@5 Accuracy</div>
-            <div class="text-3xl font-black text-cyan-400 mt-2 font-mono">${b.metrics.recall_at_5_percent}%</div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Recall@5 Accuracy</div>
+            <div class="text-3xl font-black text-slate-900 mt-2 font-mono">${b.metrics.recall_at_5_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Target in Top-5 candidate retrieval</div>
           </div>
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">False Match Rate (≥ 0.70)</div>
-            <div class="text-3xl font-black text-amber-400 mt-2 font-mono">${b.metrics.false_match_rate_high_threshold_percent}%</div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">False Match Rate (≥ 0.70)</div>
+            <div class="text-3xl font-black text-amber-600 mt-2 font-mono">${b.metrics.false_match_rate_high_threshold_percent}%</div>
             <div class="text-xs text-slate-500 mt-1">Disjoint pairs false-positive risk</div>
           </div>
-          <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <div class="text-xs text-slate-400 font-mono uppercase tracking-wider">Vector Search Latency</div>
-            <div class="text-3xl font-black text-blue-400 mt-2 font-mono">${b.latency_profile.all_pairs_search_time_ms} ms</div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold">Vector Search Latency</div>
+            <div class="text-3xl font-black text-blue-600 mt-2 font-mono">${b.latency_profile.all_pairs_search_time_ms} ms</div>
             <div class="text-xs text-slate-500 mt-1">All-pairs pairwise cosine search</div>
           </div>
         </div>
 
         <!-- Interactive Operating Threshold Calibration Simulator -->
-        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 mb-8 text-slate-900">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <h3 class="text-lg font-bold text-white">Interactive Cosine Threshold Calibration Simulator</h3>
-              <p class="text-xs text-slate-400 mt-0.5">Test operating point trade-offs between investigative sensitivity and false-alarm burden.</p>
+              <h3 class="text-lg font-bold text-slate-900">Interactive Cosine Threshold Calibration Simulator</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Test operating point trade-offs between investigative sensitivity and false-alarm burden.</p>
             </div>
             <div class="text-right">
-              <span class="font-mono text-xl font-black text-cyan-400" id="sim-thresh-val">${this.simulatedThreshold.toFixed(2)}</span>
-              <span class="text-[10px] text-slate-500 block font-mono">SELECTED OPERATING POINT</span>
+              <span class="font-mono text-xl font-black text-slate-900" id="sim-thresh-val">${this.simulatedThreshold.toFixed(2)}</span>
+              <span class="text-[10px] text-slate-500 block font-mono font-semibold">SELECTED OPERATING POINT</span>
             </div>
           </div>
 
           <!-- Slider -->
           <div class="space-y-2">
-            <div class="flex justify-between text-xs font-mono text-slate-400">
+            <div class="flex justify-between text-xs font-mono text-slate-500">
               <span>0.40 (High Recall / Broad Leads)</span>
               <span>0.70 (Calibrated High Confidence)</span>
               <span>0.90 (Strict / Near-Identical)</span>
             </div>
-            <input type="range" id="sim-thresh-slider" min="0.40" max="0.90" step="0.05" value="${this.simulatedThreshold}" oninput="App.updateThresholdSimulation(this.value)" class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400">
+            <input type="range" id="sim-thresh-slider" min="0.40" max="0.90" step="0.05" value="${this.simulatedThreshold}" oninput="App.updateThresholdSimulation(this.value)" class="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-slate-900">
           </div>
 
-          <div id="sim-analysis-box" class="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-300 space-y-2">
+          <div id="sim-analysis-box" class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-2">
             <!-- Updated via JS with live backend metrics -->
           </div>
         </div>
 
         <!-- Module 5: Ad-Hoc Investigative Gallery Search Workbench -->
-        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 mb-8 text-slate-900">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <div class="inline-flex items-center gap-2 bg-blue-500/10 text-cyan-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-400/20 mb-1">
+              <div class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-200 mb-1">
                 MODULE 5 • VECTOR RETRIEVAL ENGINE
               </div>
-              <h3 class="text-lg font-bold text-white">Investigative Face Search & Top-K Candidate Retrieval</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Upload a field surveillance photo to rank Top-K matches against active missing person cases via normalized Cosine Similarity.</p>
+              <h3 class="text-lg font-bold text-slate-900">Investigative Face Search & Top-K Candidate Retrieval</h3>
+              <p class="text-xs text-slate-500 font-mono mt-0.5">Upload a field surveillance photo to rank Top-K matches against active missing person cases via normalized Cosine Similarity.</p>
             </div>
-            <div class="font-mono text-xs text-cyan-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>128-D GALLERY SEARCH ACTIVE</span>
+            <div class="font-mono text-xs text-slate-700 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span class="font-bold">128-D GALLERY SEARCH ACTIVE</span>
             </div>
           </div>
 
@@ -1776,41 +1797,41 @@ const App = {
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <!-- Probe Photo Input -->
               <div class="md:col-span-2 space-y-2">
-                <label class="block text-xs font-mono font-bold text-slate-300 uppercase">Surveillance Probe Photo / Field Evidence *</label>
-                <div class="border-2 border-dashed border-slate-700 hover:border-cyan-400 rounded-xl p-6 text-center cursor-pointer transition bg-slate-950/60 relative">
+                <label class="block text-xs font-mono font-bold text-slate-700 uppercase">Surveillance Probe Photo / Field Evidence *</label>
+                <div class="border-2 border-dashed border-slate-200 hover:border-slate-900 rounded-xl p-6 text-center cursor-pointer transition bg-slate-50/50 relative">
                   <input type="file" id="gallery-search-file" accept="image/*" required class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" onchange="App.handleGalleryProbePreview(event)">
-                  <div class="space-y-1 text-slate-400">
-                    <div class="text-3xl">🔍</div>
-                    <div class="text-xs font-bold text-cyan-400">Click or drag & drop probe photo</div>
+                  <div class="space-y-1 text-slate-500">
+                    <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <div class="text-xs font-bold text-slate-800">Click or drag & drop probe photo</div>
                     <div class="text-[10px] font-mono text-slate-500">Extracts SFace 128-D vector and ranks gallery in milliseconds</div>
                   </div>
                 </div>
 
-                <div id="gallery-probe-preview-box" class="hidden p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center gap-4">
-                  <img id="gallery-probe-preview-img" class="w-16 h-16 object-cover rounded-lg border border-slate-700" alt="Probe Preview">
+                <div id="gallery-probe-preview-box" class="hidden p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-4">
+                  <img id="gallery-probe-preview-img" class="w-16 h-16 object-cover rounded-lg border border-slate-200" alt="Probe Preview">
                   <div class="text-xs">
-                    <span id="gallery-probe-filename" class="font-bold text-white block"></span>
-                    <span id="gallery-probe-meta" class="text-[11px] font-mono text-cyan-400"></span>
+                    <span id="gallery-probe-filename" class="font-bold text-slate-900 block"></span>
+                    <span id="gallery-probe-meta" class="text-[11px] font-mono text-slate-500"></span>
                   </div>
                 </div>
               </div>
 
               <!-- Retrieval Parameters -->
-              <div class="space-y-4 p-5 bg-slate-950 rounded-xl border border-slate-800">
-                <h4 class="text-xs font-bold font-mono text-slate-300 uppercase">Retrieval Controls</h4>
+              <div class="space-y-4 p-5 bg-slate-50 rounded-xl border border-slate-200">
+                <h4 class="text-xs font-bold font-mono text-slate-800 uppercase">Retrieval Controls</h4>
                 <div>
-                  <label class="block text-[11px] font-mono text-slate-400 mb-1">Top-K Candidates</label>
-                  <select id="gallery-topk" class="w-full text-xs font-mono px-3 py-2 rounded-lg border border-slate-700 bg-slate-900 text-white">
+                  <label class="block text-[11px] font-mono text-slate-600 mb-1">Top-K Candidates</label>
+                  <select id="gallery-topk" class="w-full text-xs font-mono px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:border-slate-900 outline-none">
                     <option value="3">Top 3 Candidates</option>
                     <option value="5" selected>Top 5 Candidates (Standard)</option>
                     <option value="10">Top 10 Candidates (Discovery)</option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-[11px] font-mono text-slate-400 mb-1">Min Similarity Cutoff: <span id="gallery-thresh-label" class="text-cyan-400 font-bold">0.30</span></label>
-                  <input type="range" id="gallery-min-thresh" min="0.20" max="0.75" step="0.05" value="0.30" oninput="document.getElementById('gallery-thresh-label').innerText = parseFloat(this.value).toFixed(2)" class="w-full h-1.5 bg-slate-800 rounded appearance-none cursor-pointer accent-cyan-400">
+                  <label class="block text-[11px] font-mono text-slate-600 mb-1">Min Similarity Cutoff: <span id="gallery-thresh-label" class="text-slate-900 font-bold">0.30</span></label>
+                  <input type="range" id="gallery-min-thresh" min="0.20" max="0.75" step="0.05" value="0.30" oninput="document.getElementById('gallery-thresh-label').innerText = parseFloat(this.value).toFixed(2)" class="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-slate-900">
                 </div>
-                <button type="submit" id="btn-run-gallery-search" class="w-full bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-mono font-bold text-xs py-3 rounded-lg shadow-md transition">
+                <button type="submit" id="btn-run-gallery-search" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs py-3 rounded-lg shadow-sm transition">
                   Search Gallery (Top-K) →
                 </button>
               </div>
@@ -1822,18 +1843,19 @@ const App = {
         </div>
 
         <!-- Module 3: Face Processing Diagnostic Inspector -->
-        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6 mb-8">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 mb-8 text-slate-900">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <div class="inline-flex items-center gap-2 bg-blue-500/10 text-cyan-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-400/20 mb-1">
+              <div class="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-200 mb-1">
                 MODULE 3 • COMPUTER VISION PIPELINE
               </div>
-              <h3 class="text-lg font-bold text-white">Face Processing & Alignment Inspector</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Inspect YuNet 5-landmark localization, SFace canonical 112x112 affine warp, and 128-D vector extraction.</p>
+              <h3 class="text-lg font-bold text-slate-900">Face Processing & Alignment Inspector</h3>
+              <p class="text-xs text-slate-500 font-mono mt-0.5">Inspect YuNet 5-landmark localization, SFace canonical 112x112 affine warp, and 128-D vector extraction.</p>
             </div>
             <div class="flex items-center gap-2">
-              <label for="face-inspect-upload" class="bg-blue-600 hover:bg-blue-500 text-white font-mono font-bold text-xs px-3.5 py-2 rounded-lg cursor-pointer transition shadow-sm">
-                📁 Upload Image to Inspect
+              <label for="face-inspect-upload" class="bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs px-3.5 py-2 rounded-lg cursor-pointer transition shadow-sm flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                <span>Upload Image to Inspect</span>
               </label>
               <input type="file" id="face-inspect-upload" accept="image/*" class="hidden" onchange="App.handleInspectUpload(event)">
             </div>
@@ -1841,40 +1863,40 @@ const App = {
 
           <!-- Pipeline Architecture Telemetry Grid -->
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
-            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
-              <div class="text-[10px] text-cyan-400 font-bold uppercase">STAGE 1: DETECTION</div>
-              <div class="font-bold text-white">OpenCV YuNet DNN</div>
-              <div class="text-[11px] text-slate-400">Dynamic input resolution • 5 landmark points (eyes, nose, mouth) • Calibrated threshold 0.60</div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div class="text-[10px] text-blue-700 font-bold uppercase">STAGE 1: DETECTION</div>
+              <div class="font-bold text-slate-900">OpenCV YuNet DNN</div>
+              <div class="text-[11px] text-slate-600">Dynamic input resolution • 5 landmark points (eyes, nose, mouth) • Calibrated threshold 0.60</div>
             </div>
-            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
-              <div class="text-[10px] text-blue-400 font-bold uppercase">STAGE 2: ALIGNMENT</div>
-              <div class="font-bold text-white">SFace Affine Warp</div>
-              <div class="text-[11px] text-slate-400">Canonical 112x112 pixel crop • Eye axis leveled to horizontal • Rotation & scale invariant</div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div class="text-[10px] text-blue-700 font-bold uppercase">STAGE 2: ALIGNMENT</div>
+              <div class="font-bold text-slate-900">SFace Affine Warp</div>
+              <div class="text-[11px] text-slate-600">Canonical 112x112 pixel crop • Eye axis leveled to horizontal • Rotation & scale invariant</div>
             </div>
-            <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5">
-              <div class="text-[10px] text-emerald-400 font-bold uppercase">STAGE 3: EMBEDDING</div>
-              <div class="font-bold text-white">SFace 128-D Vector</div>
-              <div class="text-[11px] text-slate-400">Dense deep features • L2 unit spherical normalization (||v||₂ = 1.0) • Cosine metric</div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div class="text-[10px] text-emerald-700 font-bold uppercase">STAGE 3: EMBEDDING</div>
+              <div class="font-bold text-slate-900">SFace 128-D Vector</div>
+              <div class="text-[11px] text-slate-600">Dense deep features • L2 unit spherical normalization (||v||₂ = 1.0) • Cosine metric</div>
             </div>
           </div>
 
           <!-- Live Analysis Display Container -->
           <div id="face-inspect-results" class="space-y-4">
-            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-500 font-mono">
+            <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-500 font-mono">
               Upload an image above to run live YuNet detection, landmark localization, affine alignment, and 128-D vector profiling.
             </div>
           </div>
         </div>
 
         <!-- Module 3: 1-to-1 Pairwise Biometric Verifier -->
-        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-xl space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6 text-slate-900">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
             <div>
-              <div class="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-400/20 mb-1">
+              <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-200 mb-1">
                 MODULE 3 • PAIRWISE BIOMETRICS
               </div>
-              <h3 class="text-lg font-bold text-white">1-to-1 Facial Verification Workbench</h3>
-              <p class="text-xs text-slate-400 font-mono mt-0.5">Direct pairwise cosine similarity and Euclidean distance calculation between two face images.</p>
+              <h3 class="text-lg font-bold text-slate-900">1-to-1 Facial Verification Workbench</h3>
+              <p class="text-xs text-slate-500 font-mono mt-0.5">Direct pairwise cosine similarity and Euclidean distance calculation between two face images.</p>
             </div>
           </div>
 
@@ -1882,26 +1904,26 @@ const App = {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <!-- Photo 1 -->
               <div class="space-y-2">
-                <label class="block text-xs font-mono font-bold text-cyan-400 uppercase">Image A (Reference / Suspect)</label>
-                <input type="file" id="compare-file-1" accept="image/*" required class="w-full text-xs text-slate-400" onchange="App.handleComparePreview(event, 'compare-preview-1')">
-                <div id="compare-preview-1" class="h-44 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden">
-                  <span class="text-xs font-mono text-slate-600">No Image A Selected</span>
+                <label class="block text-xs font-mono font-bold text-slate-700 uppercase">Image A (Reference / Suspect)</label>
+                <input type="file" id="compare-file-1" accept="image/*" required class="w-full text-xs text-slate-600" onchange="App.handleComparePreview(event, 'compare-preview-1')">
+                <div id="compare-preview-1" class="h-44 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                  <span class="text-xs font-mono text-slate-400">No Image A Selected</span>
                 </div>
               </div>
 
               <!-- Photo 2 -->
               <div class="space-y-2">
-                <label class="block text-xs font-mono font-bold text-blue-400 uppercase">Image B (Probe / Sighting)</label>
-                <input type="file" id="compare-file-2" accept="image/*" required class="w-full text-xs text-slate-400" onchange="App.handleComparePreview(event, 'compare-preview-2')">
-                <div id="compare-preview-2" class="h-44 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-center overflow-hidden">
-                  <span class="text-xs font-mono text-slate-600">No Image B Selected</span>
+                <label class="block text-xs font-mono font-bold text-slate-700 uppercase">Image B (Probe / Sighting)</label>
+                <input type="file" id="compare-file-2" accept="image/*" required class="w-full text-xs text-slate-600" onchange="App.handleComparePreview(event, 'compare-preview-2')">
+                <div id="compare-preview-2" class="h-44 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center overflow-hidden">
+                  <span class="text-xs font-mono text-slate-400">No Image B Selected</span>
                 </div>
               </div>
             </div>
 
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-mono text-slate-500">Calculates exact cosine angle & Euclidean distance between 128-D vectors.</span>
-              <button type="submit" id="btn-compare-faces" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-mono font-bold text-xs px-5 py-2.5 rounded-lg shadow-md transition">
+              <button type="submit" id="btn-compare-faces" class="bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm transition">
                 Compute Pairwise Metric Distance →
               </button>
             </div>
@@ -1953,9 +1975,9 @@ const App = {
     if (resultsBox) {
       resultsBox.classList.remove('hidden');
       resultsBox.innerHTML = `
-        <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 space-y-2">
-          <div class="inline-block animate-spin text-2xl">⚡</div>
-          <p class="text-xs font-mono text-cyan-400">Running YuNet detection, SFace 128-D embedding extraction, and Top-K cosine search...</p>
+        <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+          <div class="w-8 h-8 mx-auto rounded-full border-2 border-slate-300 border-t-slate-900 animate-spin"></div>
+          <p class="text-xs font-mono text-slate-600">Running YuNet detection, SFace 128-D embedding extraction, and Top-K cosine search...</p>
         </div>
       `;
     }
@@ -1969,10 +1991,10 @@ const App = {
       if (resultsBox) {
         if (!res.candidates || res.candidates.length === 0) {
           resultsBox.innerHTML = `
-            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 space-y-2">
-              <div class="text-2xl">🔍</div>
-              <h4 class="text-sm font-bold text-white">No Gallery Matches Above Threshold (${minThresh.toFixed(2)})</h4>
-              <p class="text-xs text-slate-400 font-mono">Searched ${res.gallery_size_searched} active case embeddings in ${res.latency_profile_ms.total_pipeline_ms} ms.</p>
+            <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <svg class="w-8 h-8 mx-auto text-slate-400" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <h4 class="text-sm font-bold text-slate-900">No Gallery Matches Above Threshold (${minThresh.toFixed(2)})</h4>
+              <p class="text-xs text-slate-500 font-mono">Searched ${res.gallery_size_searched} active case embeddings in ${res.latency_profile_ms.total_pipeline_ms} ms.</p>
             </div>
           `;
           return;
@@ -1980,33 +2002,33 @@ const App = {
 
         resultsBox.innerHTML = `
           <!-- Search Telemetry Banner -->
-          <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
             <div class="flex items-center gap-3">
-              <img src="${res.probe.aligned_crop_base64}" class="w-12 h-12 rounded-lg border border-cyan-500 object-cover" alt="Probe Aligned Face">
+              <img src="${res.probe.aligned_crop_base64}" class="w-12 h-12 rounded-lg border border-slate-300 object-cover" alt="Probe Aligned Face">
               <div>
-                <span class="text-cyan-400 font-bold block">SURVEILLANCE PROBE DETECTED</span>
-                <span class="text-slate-400 text-[11px]">Face Sharpness: ${res.probe.sharpness_score.toFixed(1)} • Conf: ${(res.probe.confidence * 100).toFixed(1)}%</span>
+                <span class="text-slate-900 font-bold block">SURVEILLANCE PROBE DETECTED</span>
+                <span class="text-slate-500 text-[11px]">Face Sharpness: ${res.probe.sharpness_score.toFixed(1)} • Conf: ${(res.probe.confidence * 100).toFixed(1)}%</span>
               </div>
             </div>
             <div class="flex items-center gap-4 text-right">
               <div>
-                <span class="text-slate-500 text-[10px] block">SEARCH LATENCY</span>
-                <span class="text-emerald-400 font-bold">${res.latency_profile_ms.total_pipeline_ms} ms</span>
+                <span class="text-slate-500 text-[10px] block font-semibold">SEARCH LATENCY</span>
+                <span class="text-emerald-700 font-bold">${res.latency_profile_ms.total_pipeline_ms} ms</span>
               </div>
               <div>
-                <span class="text-slate-500 text-[10px] block">SEARCH SPACE</span>
-                <span class="text-slate-200 font-bold">${res.gallery_size_searched} vectors</span>
+                <span class="text-slate-500 text-[10px] block font-semibold">SEARCH SPACE</span>
+                <span class="text-slate-800 font-bold">${res.gallery_size_searched} vectors</span>
               </div>
               <div>
-                <span class="text-slate-500 text-[10px] block">TOP-K RETURNED</span>
-                <span class="text-cyan-400 font-bold">${res.candidates.length} candidate(s)</span>
+                <span class="text-slate-500 text-[10px] block font-semibold">TOP-K RETURNED</span>
+                <span class="text-slate-900 font-bold">${res.candidates.length} candidate(s)</span>
               </div>
             </div>
           </div>
 
           <!-- Mandatory AI Governance Banner -->
-          <div class="p-3 bg-amber-950/40 border border-amber-900/60 rounded-xl text-xs text-amber-200 flex items-center gap-2">
-            <span>⚖️</span>
+          <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+            <svg class="w-4 h-4 text-amber-700 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
             <span><strong>AI Governance:</strong> ${res.governance_notice}</span>
           </div>
 
@@ -2014,25 +2036,25 @@ const App = {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             ${res.candidates.map(c => {
               const tierBadge = c.similarity_score >= 0.70 ? 'badge-verified' : (c.similarity_score >= 0.50 ? 'badge-under_review' : 'badge-rejected');
-              const meterColor = c.similarity_score >= 0.70 ? 'bg-emerald-500' : (c.similarity_score >= 0.50 ? 'bg-amber-500' : 'bg-slate-600');
+              const meterColor = c.similarity_score >= 0.70 ? 'bg-emerald-500' : (c.similarity_score >= 0.50 ? 'bg-amber-500' : 'bg-slate-500');
               return `
-                <div class="p-5 bg-slate-950 rounded-xl border border-slate-800 space-y-4 hover:border-slate-700 transition">
+                <div class="p-5 bg-white rounded-xl border border-slate-200 space-y-4 hover:border-slate-300 transition shadow-xs">
                   <div class="flex items-start justify-between">
                     <div class="flex items-center gap-3">
-                      <div class="w-8 h-8 rounded-lg bg-blue-950 border border-blue-800 text-cyan-400 flex items-center justify-center font-mono font-black text-xs">
+                      <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center font-mono font-black text-xs">
                         #${c.rank}
                       </div>
                       <div>
-                        <span class="text-[10px] font-mono text-cyan-400 block">${c.reference_no}</span>
-                        <h4 class="font-bold text-white text-sm">${c.full_name}</h4>
+                        <span class="text-[10px] font-mono text-slate-500 block font-semibold">${c.reference_no}</span>
+                        <h4 class="font-bold text-slate-900 text-sm">${c.full_name}</h4>
                       </div>
                     </div>
                     <span class="badge-tactical ${tierBadge}">${c.confidence_tier}</span>
                   </div>
 
                   <div class="flex gap-4 items-center">
-                    <img src="${c.reference_photo_path}" class="w-16 h-16 object-cover rounded-lg border border-slate-700" alt="${c.full_name}">
-                    <div class="space-y-1 text-xs font-mono text-slate-300 flex-1">
+                    <img src="${c.reference_photo_path}" class="w-16 h-16 object-cover rounded-lg border border-slate-200" alt="${c.full_name}">
+                    <div class="space-y-1 text-xs font-mono text-slate-700 flex-1">
                       <div><strong>Age/Gender:</strong> ${c.age || 'N/A'} • ${c.gender}</div>
                       <div class="truncate"><strong>Last Seen:</strong> ${c.last_seen_location}</div>
                       <div><strong>Euclidean Dist:</strong> ${c.euclidean_distance.toFixed(4)}</div>
@@ -2042,16 +2064,16 @@ const App = {
                   <!-- Similarity Progress Bar -->
                   <div class="space-y-1">
                     <div class="flex justify-between text-xs font-mono">
-                      <span class="text-slate-400">Cosine Similarity:</span>
-                      <span class="font-bold text-white">${(c.similarity_score * 100).toFixed(1)}% (${c.similarity_score.toFixed(4)})</span>
+                      <span class="text-slate-500 font-semibold">Cosine Similarity:</span>
+                      <span class="font-bold text-slate-900">${(c.similarity_score * 100).toFixed(1)}% (${c.similarity_score.toFixed(4)})</span>
                     </div>
-                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div class="${meterColor} h-2 rounded-full transition-all" style="width: ${Math.max(0, c.similarity_score * 100)}%"></div>
                     </div>
                   </div>
 
-                  <div class="pt-2 border-t border-slate-900 flex justify-end">
-                    <button type="button" onclick="App.viewCaseDetail(${c.case_id})" class="text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1">
+                  <div class="pt-2 border-t border-slate-100 flex justify-end">
+                    <button type="button" onclick="App.viewCaseDetails(${c.case_id})" class="text-xs font-mono font-bold text-slate-900 hover:text-blue-600 transition flex items-center gap-1">
                       <span>Inspect Dossier</span> <span>→</span>
                     </button>
                   </div>
@@ -2064,10 +2086,10 @@ const App = {
     } catch (err) {
       if (resultsBox) {
         resultsBox.innerHTML = `
-          <div class="p-6 bg-red-950/40 border border-red-900 rounded-xl text-center space-y-2">
-            <div class="text-2xl text-red-400">⚠️</div>
-            <h4 class="text-sm font-bold text-red-200">Gallery Search Error</h4>
-            <p class="text-xs text-red-300">${err.message}</p>
+          <div class="p-6 bg-red-50 border border-red-200 rounded-xl text-center space-y-2">
+            <svg class="w-8 h-8 text-red-600 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <h4 class="text-sm font-bold text-red-900">Gallery Search Error</h4>
+            <p class="text-xs text-red-700">${err.message}</p>
           </div>
         `;
       }
@@ -2090,28 +2112,28 @@ const App = {
     try {
       const res = await API.simulateThreshold(this.simulatedThreshold);
       box.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
           <div>
             <span class="text-[10px] font-mono text-slate-500 uppercase block">OPERATING BAND</span>
-            <span class="font-bold text-cyan-300 text-sm font-mono">${res.tier_label}</span>
+            <span class="font-bold text-slate-900 text-sm font-mono">${res.tier_label}</span>
           </div>
           <div class="flex items-center gap-4 text-xs font-mono">
             <div>
               <span class="text-slate-500 text-[10px] block">TRUE MATCH RETENTION</span>
-              <span class="text-emerald-400 font-bold">${res.metrics.true_match_retention_percent}%</span>
+              <span class="text-emerald-700 font-bold">${res.metrics.true_match_retention_percent}%</span>
             </div>
             <div>
               <span class="text-slate-500 text-[10px] block">FALSE MATCH RATE (FMR)</span>
-              <span class="text-amber-400 font-bold">${res.metrics.false_match_rate_percent}%</span>
+              <span class="text-amber-700 font-bold">${res.metrics.false_match_rate_percent}%</span>
             </div>
             <div>
               <span class="text-slate-500 text-[10px] block">WORKLOAD REDUCTION</span>
-              <span class="text-blue-400 font-bold">${res.metrics.workload_reduction_percent}%</span>
+              <span class="text-slate-900 font-bold">${res.metrics.workload_reduction_percent}%</span>
             </div>
           </div>
         </div>
-        <div class="pt-2 text-xs text-slate-300 leading-relaxed">
-          <strong class="text-white">Operational Guidance:</strong> ${res.operational_recommendation}
+        <div class="pt-2 text-xs text-slate-600 leading-relaxed">
+          <strong class="text-slate-900">Operational Guidance:</strong> ${res.operational_recommendation}
         </div>
         <div class="text-[10px] text-slate-500 font-mono mt-1">
           * ${res.governance_note}
@@ -2129,7 +2151,7 @@ const App = {
     const container = document.getElementById('face-inspect-results');
     if (!container) return;
     container.innerHTML = `
-      <div class="p-6 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-cyan-400 font-mono animate-pulse">
+      <div class="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 font-mono animate-pulse">
         Running OpenCV YuNet DNN detection, landmark triangulation, affine alignment, and SFace 128-D embedding extraction...
       </div>
     `;
@@ -2140,72 +2162,72 @@ const App = {
 
       container.innerHTML = `
         <!-- Latency Waterfall Strip -->
-        <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
           <div class="flex items-center gap-4">
-            <span class="text-cyan-400 font-bold">LATENCY WATERFALL:</span>
-            <span class="text-slate-300">YuNet Detection: <strong class="text-cyan-300">${lat.detection_ms} ms</strong></span>
-            <span class="text-slate-600">|</span>
-            <span class="text-slate-300">SFace Alignment: <strong class="text-blue-300">${lat.alignment_ms} ms</strong></span>
-            <span class="text-slate-600">|</span>
-            <span class="text-slate-300">128-D Extraction: <strong class="text-emerald-300">${lat.feature_extraction_ms} ms</strong></span>
+            <span class="text-slate-900 font-bold">LATENCY WATERFALL:</span>
+            <span class="text-slate-600">YuNet Detection: <strong class="text-slate-900">${lat.detection_ms} ms</strong></span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-600">SFace Alignment: <strong class="text-slate-900">${lat.alignment_ms} ms</strong></span>
+            <span class="text-slate-300">|</span>
+            <span class="text-slate-600">128-D Extraction: <strong class="text-slate-900">${lat.feature_extraction_ms} ms</strong></span>
           </div>
-          <div class="bg-blue-950/80 px-3 py-1 rounded border border-blue-700 text-blue-200 font-bold">
+          <div class="bg-white px-3 py-1 rounded border border-slate-200 text-slate-800 font-bold shadow-xs">
             TOTAL PIPELINE: ${lat.total_pipeline_ms} ms (${res.faces_detected_count} face${res.faces_detected_count === 1 ? '' : 's'})
           </div>
         </div>
 
         ${res.faces_detected_count === 0 ? `
-          <div class="p-6 bg-amber-950/40 rounded-xl border border-amber-800/60 text-xs text-amber-200 font-mono">
-            ⚠️ <strong>0 Faces Detected:</strong> YuNet score threshold was not met. Ensure face is unobstructed and well-lit.
+          <div class="p-6 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-800 font-mono">
+            <strong>0 Faces Detected:</strong> YuNet score threshold was not met. Ensure face is unobstructed and well-lit.
           </div>
         ` : `
           <div class="grid grid-cols-1 lg:grid-cols-${Math.min(res.faces_detected_count, 2)} gap-6">
             ${res.detections.map(d => `
-              <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span class="font-mono font-bold text-cyan-400 text-xs">FACE #${d.face_index + 1} • CONFIDENCE: ${(d.confidence * 100).toFixed(1)}%</span>
-                  <span class="text-[10px] font-mono bg-slate-900 px-2 py-0.5 rounded border border-slate-700 text-slate-300">BBOX: [${d.bbox.join(', ')}]</span>
+              <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+                  <span class="font-mono font-bold text-slate-900 text-xs">FACE #${d.face_index + 1} • CONFIDENCE: ${(d.confidence * 100).toFixed(1)}%</span>
+                  <span class="text-[10px] font-mono bg-slate-50 px-2 py-0.5 rounded border border-slate-200 text-slate-600">BBOX: [${d.bbox.join(', ')}]</span>
                 </div>
 
                 <div class="flex items-start gap-4">
                   <!-- Aligned 112x112 Thumbnail -->
                   <div class="space-y-1 text-center">
-                    <img src="${d.aligned_crop_base64}" class="w-24 h-24 rounded-lg border-2 border-cyan-500/50 shadow-md object-cover" alt="Aligned Face"/>
-                    <span class="text-[9px] font-mono text-cyan-400 block">112×112 Canonical</span>
+                    <img src="${d.aligned_crop_base64}" class="w-24 h-24 rounded-lg border border-slate-200 shadow-xs object-cover" alt="Aligned Face"/>
+                    <span class="text-[9px] font-mono text-slate-500 block">112×112 Canonical</span>
                   </div>
 
                   <!-- Geometric & Quality Metrics -->
                   <div class="flex-1 space-y-1.5 font-mono text-xs">
                     <div class="flex justify-between">
                       <span class="text-slate-500">EYE TILT ANGLE:</span>
-                      <span class="text-slate-200 font-bold">${d.tilt_angle_deg}°</span>
+                      <span class="text-slate-900 font-bold">${d.tilt_angle_deg}°</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-slate-500">IMAGE SHARPNESS:</span>
-                      <span class="text-slate-200 font-bold">${d.sharpness_score} (Laplacian var)</span>
+                      <span class="text-slate-900 font-bold">${d.sharpness_score} (Laplacian var)</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-slate-500">L2 SPHERICAL NORM:</span>
-                      <span class="text-emerald-400 font-bold">${d.embedding_summary.l2_norm} (Unit)</span>
+                      <span class="text-emerald-700 font-bold">${d.embedding_summary.l2_norm} (Unit)</span>
                     </div>
                     <div class="flex justify-between">
                       <span class="text-slate-500">VECTOR DIMS:</span>
-                      <span class="text-slate-200 font-bold">${d.embedding_summary.dimensions} Dense Floats</span>
+                      <span class="text-slate-900 font-bold">${d.embedding_summary.dimensions} Dense Floats</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- 128-D Vector Sparkline / Coefficient Preview -->
-                <div class="p-3 bg-slate-900 rounded-lg border border-slate-800 space-y-2">
-                  <div class="flex justify-between text-[10px] font-mono text-slate-400">
+                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                  <div class="flex justify-between text-[10px] font-mono text-slate-500">
                     <span>128-D EMBEDDING COEFFICIENTS (SAMPLE):</span>
                     <span>Range: [${d.embedding_summary.min}, ${d.embedding_summary.max}]</span>
                   </div>
-                  <div class="flex gap-1 h-6 items-end bg-slate-950 p-1 rounded border border-slate-800">
+                  <div class="flex gap-1 h-6 items-end bg-white p-1 rounded border border-slate-200">
                     ${d.embedding.slice(0, 32).map(val => {
                       const pct = Math.min(100, Math.max(5, Math.abs(val) * 350));
-                      const color = val >= 0 ? 'bg-cyan-500' : 'bg-blue-500';
-                      return `<div style="height: ${pct}%; width: 3%;" class="${color} rounded-sm" title="${val.toFixed(4)}"></div>`;
+                      const color = val >= 0 ? 'bg-slate-800' : 'bg-slate-400';
+                      return `<div style="height: ${pct}%; width: 3%;" class="${color} rounded-xs" title="${val.toFixed(4)}"></div>`;
                     }).join('')}
                   </div>
                   <div class="text-[10px] font-mono text-slate-500 truncate">
@@ -2219,7 +2241,7 @@ const App = {
       `;
     } catch (err) {
       container.innerHTML = `
-        <div class="p-6 bg-red-950/60 rounded-xl border border-red-800 text-xs text-red-200 font-mono">
+        <div class="p-6 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-mono">
           Face analysis failed: ${err.message}
         </div>
       `;
@@ -2253,7 +2275,7 @@ const App = {
     if (resultsBox) {
       resultsBox.classList.remove('hidden');
       resultsBox.innerHTML = `
-        <div class="p-6 text-center bg-slate-950 rounded-xl border border-slate-800 text-xs text-emerald-400 font-mono animate-pulse">
+        <div class="p-6 text-center bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 font-mono animate-pulse">
           Computing pairwise cosine similarity and Euclidean vector distance between SFace 128-D embeddings...
         </div>
       `;
@@ -2264,15 +2286,15 @@ const App = {
       const isVerified = res.disposition === 'verified';
       const isModerate = res.disposition === 'moderate';
       const tierBadge = isVerified
-        ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
-        : (isModerate ? 'bg-amber-950 border-amber-500 text-amber-300' : 'bg-red-950 border-red-500 text-red-300');
+        ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+        : (isModerate ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-red-50 border-red-200 text-red-800');
 
       resultsBox.innerHTML = `
-        <div class="p-6 bg-slate-950 rounded-2xl border border-slate-800 shadow-xl space-y-6">
-          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div class="p-6 bg-white rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
               <span class="text-[10px] font-mono uppercase text-slate-500 block">PAIRWISE METRIC EVALUATION</span>
-              <div class="text-2xl font-black font-mono ${isVerified ? 'text-emerald-400' : (isModerate ? 'text-amber-400' : 'text-red-400')}">
+              <div class="text-2xl font-black font-mono ${isVerified ? 'text-emerald-700' : (isModerate ? 'text-amber-700' : 'text-red-700')}">
                 ${res.similarity_percent}% Cosine Similarity
               </div>
             </div>
@@ -2286,20 +2308,20 @@ const App = {
 
           <!-- Dual Aligned Face View -->
           <div class="grid grid-cols-2 gap-6 items-center text-center">
-            <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
-              <img src="${res.image1.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border-2 border-cyan-500 object-cover shadow" alt="Face A"/>
-              <div class="text-xs font-mono font-bold text-cyan-300">Image A (Canonical 112×112)</div>
-              <div class="text-[10px] font-mono text-slate-400">Confidence: ${(res.image1.confidence * 100).toFixed(1)}% • Sharpness: ${res.image1.sharpness}</div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <img src="${res.image1.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border border-slate-300 object-cover shadow-xs" alt="Face A"/>
+              <div class="text-xs font-mono font-bold text-slate-900">Image A (Canonical 112×112)</div>
+              <div class="text-[10px] font-mono text-slate-500">Confidence: ${(res.image1.confidence * 100).toFixed(1)}% • Sharpness: ${res.image1.sharpness}</div>
             </div>
 
-            <div class="p-4 bg-slate-900 rounded-xl border border-slate-800 space-y-2">
-              <img src="${res.image2.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border-2 border-blue-500 object-cover shadow" alt="Face B"/>
-              <div class="text-xs font-mono font-bold text-blue-300">Image B (Canonical 112×112)</div>
-              <div class="text-[10px] font-mono text-slate-400">Confidence: ${(res.image2.confidence * 100).toFixed(1)}% • Sharpness: ${res.image2.sharpness}</div>
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <img src="${res.image2.aligned_crop_base64}" class="w-24 h-24 mx-auto rounded-lg border border-slate-300 object-cover shadow-xs" alt="Face B"/>
+              <div class="text-xs font-mono font-bold text-slate-900">Image B (Canonical 112×112)</div>
+              <div class="text-[10px] font-mono text-slate-500">Confidence: ${(res.image2.confidence * 100).toFixed(1)}% • Sharpness: ${res.image2.sharpness}</div>
             </div>
           </div>
 
-          <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-400 flex items-center justify-between">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] font-mono text-slate-600 flex items-center justify-between">
             <span>Formula: cos(θ) = u · v / (||u|| ||v||) • d_E = √(2 - 2cos(θ))</span>
             <span>Inference Time: ${res.combined_latency_ms} ms</span>
           </div>
@@ -2307,7 +2329,7 @@ const App = {
       `;
     } catch (err) {
       resultsBox.innerHTML = `
-        <div class="p-6 bg-red-950/60 rounded-xl border border-red-800 text-xs text-red-200 font-mono">
+        <div class="p-6 bg-red-50 rounded-xl border border-red-200 text-xs text-red-700 font-mono">
           Comparison failed: ${err.message}
         </div>
       `;
@@ -2454,19 +2476,19 @@ const App = {
           : `<span class="badge-tactical badge-escalated">DEACTIVATED</span>`;
 
         const actionBtn = isSelf
-          ? `<span class="text-[11px] text-slate-500 font-mono">(Your Account)</span>`
-          : `<button onclick="App.toggleOfficerStatus(${o.id}, ${o.is_active})" class="text-xs px-2.5 py-1 rounded font-mono font-bold transition ${o.is_active ? 'bg-red-950/60 hover:bg-red-900 text-red-300 border border-red-800' : 'bg-emerald-950/60 hover:bg-emerald-900 text-emerald-300 border border-emerald-800'}">
+          ? `<span class="text-[11px] text-slate-400 font-mono font-medium">(Your Account)</span>`
+          : `<button onclick="App.toggleOfficerStatus(${o.id}, ${o.is_active})" class="text-xs px-2.5 py-1 rounded font-mono font-bold transition shadow-xs ${o.is_active ? 'bg-red-50 hover:bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200'}">
               ${o.is_active ? 'Deactivate' : 'Activate'}
              </button>`;
 
         return `
-          <tr class="border-b border-slate-800 hover:bg-slate-950 font-mono text-xs transition">
-            <td class="py-3 px-4 font-bold text-white">${o.full_name}</td>
-            <td class="py-3 px-4 text-cyan-400 font-bold">${o.badge_number || 'N/A'}</td>
-            <td class="py-3 px-4 text-slate-300">${o.username}</td>
-            <td class="py-3 px-4 text-slate-400">${o.email}</td>
+          <tr class="border-b border-slate-100 hover:bg-slate-50 font-mono text-xs transition">
+            <td class="py-3 px-4 font-bold text-slate-900">${o.full_name}</td>
+            <td class="py-3 px-4 text-slate-800 font-bold">${o.badge_number || 'N/A'}</td>
+            <td class="py-3 px-4 text-slate-700">${o.username}</td>
+            <td class="py-3 px-4 text-slate-500">${o.email}</td>
             <td class="py-3 px-4">
-              <span class="px-2 py-0.5 rounded font-bold uppercase text-[10px] border ${o.role === 'admin' ? 'bg-purple-950/80 text-purple-300 border-purple-700' : 'bg-blue-950/80 text-blue-300 border-blue-700'}">
+              <span class="px-2 py-0.5 rounded font-bold uppercase text-[10px] border ${o.role === 'admin' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}">
                 ${o.role}
               </span>
             </td>
@@ -2675,7 +2697,7 @@ const App = {
               ${b.primary_photo_path ? `
                 <img src="/${b.primary_photo_path}" class="w-full h-full object-cover" alt="${b.subject_name}"/>
               ` : `
-                <span class="text-4xl text-slate-400">👤</span>
+                <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
               `}
             </div>
 
@@ -2714,8 +2736,14 @@ const App = {
         </div>
       `;
 
+      const posterBtn = document.getElementById('download-poster-png-btn');
+      if (posterBtn && this.currentCaseId) {
+        posterBtn.href = API.getEmergencyPosterUrl(this.currentCaseId);
+      }
+
       this.openModal('bulletin-modal');
     } catch (err) {
+
       alert('Failed to generate bulletin: ' + err.message);
     }
   },
@@ -2798,7 +2826,7 @@ const App = {
       if (trackletsContainer) {
         if (!res.tracklets || res.tracklets.length === 0) {
           trackletsContainer.innerHTML = `
-            <div class="p-8 text-center bg-slate-950 rounded-xl border border-slate-800 text-slate-500 font-mono text-xs">
+            <div class="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 font-mono text-xs">
               No human faces detected in sampled surveillance frames.
             </div>
           `;
@@ -2808,36 +2836,36 @@ const App = {
             const candidates = t.candidates || [];
 
             return `
-              <div class="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+              <div class="p-4 bg-white rounded-xl border border-slate-200 space-y-3 shadow-xs">
                 <div class="flex items-start gap-3">
                   <!-- Exemplar Face Thumbnail -->
-                  <div class="w-14 h-14 rounded-lg bg-slate-900 border border-slate-700 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <div class="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
                     ${t.exemplar_thumbnail_b64 ? `
                       <img src="${t.exemplar_thumbnail_b64}" class="w-full h-full object-cover" alt="Tracklet #${t.tracklet_id + 1}">
                     ` : `
-                      <span class="text-xs font-mono text-purple-400 font-bold">#${t.tracklet_id + 1}</span>
+                      <span class="text-xs font-mono text-slate-700 font-bold">#${t.tracklet_id + 1}</span>
                     `}
                   </div>
 
                   <div class="flex-1 min-w-0">
                     <div class="flex items-center justify-between">
-                      <span class="font-mono font-bold text-xs text-purple-300">TRACKLET #${t.tracklet_id + 1}</span>
-                      <span class="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                      <span class="font-mono font-bold text-xs text-slate-900">TRACKLET #${t.tracklet_id + 1}</span>
+                      <span class="text-[10px] font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-medium">
                         ${t.detection_count} detection(s)
                       </span>
                     </div>
-                    <div class="text-[11px] font-mono text-slate-400 mt-1">
-                      Span: <span class="text-slate-200 font-bold">${t.first_seen_timestamp || '00:00.000'}</span> → <span class="text-slate-200 font-bold">${t.last_seen_timestamp || '00:00.000'}</span>
+                    <div class="text-[11px] font-mono text-slate-500 mt-1">
+                      Span: <span class="text-slate-800 font-bold">${t.first_seen_timestamp || '00:00.000'}</span> → <span class="text-slate-800 font-bold">${t.last_seen_timestamp || '00:00.000'}</span>
                     </div>
                   </div>
                 </div>
 
                 <!-- Occurrence Timestamp Seek Chips -->
                 <div>
-                  <span class="text-[10px] font-mono text-slate-500 block mb-1">OCCURRENCE TIMESTAMPS (CLICK TO SEEK):</span>
+                  <span class="text-[10px] font-mono text-slate-500 block mb-1 font-semibold">OCCURRENCE TIMESTAMPS (CLICK TO SEEK):</span>
                   <div class="flex flex-wrap gap-1.5">
                     ${occurrences.map(occ => `
-                      <button type="button" onclick="App.seekVideoPlayer(${occ.timestamp_seconds})" class="px-2 py-1 text-[10px] font-mono font-bold bg-purple-950/70 hover:bg-purple-900 text-purple-300 border border-purple-800 rounded transition flex items-center gap-1 shadow-sm">
+                      <button type="button" onclick="App.seekVideoPlayer(${occ.timestamp_seconds})" class="px-2 py-1 text-[10px] font-mono font-bold bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded transition flex items-center gap-1 shadow-xs">
                         <span>⏱️</span>
                         <span>${occ.timestamp_formatted}</span>
                       </button>
@@ -2846,19 +2874,19 @@ const App = {
                 </div>
 
                 <!-- Correlated Candidate Matches for this Tracklet -->
-                <div class="pt-2 border-t border-slate-800/80">
-                  <span class="text-[10px] font-mono text-slate-500 block mb-1.5">GALLERY CORRELATION MATCHES:</span>
+                <div class="pt-2 border-t border-slate-100">
+                  <span class="text-[10px] font-mono text-slate-500 block mb-1.5 font-semibold">GALLERY CORRELATION MATCHES:</span>
                   ${candidates.length > 0 ? `
                     <div class="space-y-1.5">
                       ${candidates.map(c => {
                         const scorePct = (c.similarity_score * 100).toFixed(1);
                         const isHigh = c.similarity_score >= 0.70;
-                        const badgeColor = isHigh ? 'text-emerald-400 bg-emerald-950/60 border-emerald-800' : (c.similarity_score >= 0.50 ? 'text-amber-400 bg-amber-950/60 border-amber-800' : 'text-slate-400 bg-slate-900 border-slate-800');
+                        const badgeColor = isHigh ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : (c.similarity_score >= 0.50 ? 'text-amber-700 bg-amber-50 border-amber-200' : 'text-slate-600 bg-slate-100 border-slate-200');
                         return `
-                          <div class="p-2 bg-slate-900/90 rounded-lg border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                          <div class="p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between text-xs font-mono">
                             <div>
-                              <span class="font-bold text-white">${c.full_name}</span>
-                              <span class="text-slate-400 text-[11px]">(${c.reference_no})</span>
+                              <span class="font-bold text-slate-900">${c.full_name}</span>
+                              <span class="text-slate-500 text-[11px]">(${c.reference_no})</span>
                             </div>
                             <span class="px-2 py-0.5 rounded font-bold border ${badgeColor}">
                               ${scorePct}% (Rank #${c.rank})
@@ -2868,7 +2896,7 @@ const App = {
                       }).join('')}
                     </div>
                   ` : `
-                    <div class="text-[11px] font-mono text-slate-500 italic">
+                    <div class="text-[11px] font-mono text-slate-400 italic">
                       No gallery candidates exceed initial threshold (τ < 0.40).
                     </div>
                   `}
@@ -2891,8 +2919,252 @@ const App = {
       player.currentTime = Math.max(0, Number(seconds) || 0);
       player.play().catch(() => {});
     }
+  },
+
+  // ========================================================================
+  // MODULE 7/8 EXTENSION: LIVE CCTV SURVEILLANCE & WATCHLIST CONTROLLER
+  // ========================================================================
+  async loadSurveillanceData() {
+    try {
+      const [cameras, alerts, telemetry] = await Promise.all([
+        API.listCameras().catch(() => []),
+        API.listSurveillanceAlerts().catch(() => []),
+        API.getGalleryTelemetry().catch(() => ({}))
+      ]);
+
+      const activeCamEl = document.getElementById('surv-active-cameras');
+      if (activeCamEl) activeCamEl.textContent = `${cameras.filter(c => c.status === 'active').length} NODES`;
+
+      const watchlistEl = document.getElementById('surv-watchlist-cases');
+      if (watchlistEl) watchlistEl.textContent = `${telemetry.active_enrolled_cases || 0} CASES`;
+
+      const alertCountEl = document.getElementById('surv-alert-count');
+      if (alertCountEl) alertCountEl.textContent = `${alerts.length} HITS`;
+
+      const cctvBadge = document.getElementById('cctv-alert-badge');
+      if (cctvBadge) {
+        const newCount = alerts.filter(a => a.status === 'new').length;
+        cctvBadge.textContent = newCount > 0 ? `${newCount} NEW` : 'LIVE';
+      }
+
+      this.renderSurveillanceAlerts(alerts);
+      this.renderSurveillanceCameras(cameras);
+    } catch (err) {
+      console.error('Failed to load surveillance data:', err);
+    }
+  },
+
+  renderSurveillanceAlerts(alerts) {
+    const feed = document.getElementById('surveillance-alerts-feed');
+    if (!feed) return;
+
+    if (!alerts || alerts.length === 0) {
+      feed.innerHTML = `
+        <div class="p-8 text-center text-slate-400 font-mono text-xs">
+          No live surveillance alerts triggered. Enrolled watchlist active on all connected nodes.
+        </div>
+      `;
+      return;
+    }
+
+    feed.innerHTML = alerts.map(a => {
+      const score = (a.similarity_score * 100).toFixed(1);
+      const isHigh = a.similarity_score >= 0.70;
+      const tierBadge = isHigh 
+        ? 'bg-red-50 text-red-700 border-red-200' 
+        : 'bg-amber-50 text-amber-700 border-amber-200';
+      const statusClass = a.status === 'new' 
+        ? 'bg-red-50/30 border-red-200' 
+        : 'bg-white border-slate-200';
+
+      return `
+        <div class="p-4 rounded-xl border ${statusClass} flex flex-col md:flex-row items-start md:items-center justify-between gap-4 font-mono transition shadow-xs hover:border-slate-300">
+          <div class="flex items-center gap-4">
+            <div class="relative w-16 h-16 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 flex-shrink-0">
+              <img src="${a.snapshot_path}" alt="CCTV Target Snapshot" class="w-full h-full object-cover" onerror="this.src='/static/icons/camera-placeholder.png'">
+              <span class="absolute bottom-0 right-0 px-1 py-0.2 bg-slate-900/90 text-[9px] text-white font-bold">CCTV</span>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${tierBadge}">
+                  ${score}% MATCH (${a.confidence_tier.toUpperCase()})
+                </span>
+                <span class="text-xs font-bold text-slate-900">${a.case_name} (${a.case_ref})</span>
+                <span class="text-[10px] text-slate-500">• Age: ${a.case_age || 'N/A'}</span>
+              </div>
+              <div class="text-xs text-slate-600">
+                <span>Site: </span><strong class="text-slate-900">${a.camera_name}</strong> 
+                <span class="text-slate-500">(${a.camera_code})</span>
+              </div>
+              <div class="text-[11px] text-slate-500">
+                <span>Location: ${a.camera_location}</span> • 
+                <span class="text-slate-400">${a.created_at || 'Just now'}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            ${a.status === 'new' ? `
+              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'dispatched')" class="px-3 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-xs transition flex items-center gap-1.5 font-mono">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                <span>Dispatch Unit</span>
+              </button>
+              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'acknowledged')" class="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 transition shadow-xs font-mono">
+                Acknowledge
+              </button>
+              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'dismissed')" class="px-2.5 py-1.5 text-xs text-slate-400 hover:text-slate-600 transition font-mono">
+                Dismiss
+              </button>
+            ` : `
+              <span class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase font-mono">
+                ${a.status}
+              </span>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  renderSurveillanceCameras(cameras) {
+    const grid = document.getElementById('cctv-cameras-grid');
+    if (!grid) return;
+
+    if (!cameras || cameras.length === 0) {
+      grid.innerHTML = `
+        <div class="p-8 text-center text-slate-400 font-mono text-xs col-span-full">
+          No CCTV camera nodes enrolled. Click "+ Enroll CCTV Node" above to register surveillance stream feeds.
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = cameras.map(cam => {
+      const isOnline = cam.status === 'active';
+      return `
+        <div class="bg-white border border-slate-200 rounded-xl p-4 space-y-3 font-mono flex flex-col justify-between shadow-xs hover:border-slate-300 transition">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+                <span class="text-xs font-bold text-slate-900 tracking-wide">${cam.camera_code}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isOnline ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}">
+                ${cam.status.toUpperCase()}
+              </span>
+            </div>
+
+            <div class="text-xs font-bold text-slate-800 line-clamp-1">${cam.name}</div>
+            <div class="text-[11px] text-slate-500">${cam.location_name}</div>
+            
+            <div class="p-2.5 bg-slate-50 rounded-lg text-[10px] space-y-1 text-slate-600 border border-slate-100">
+              <div class="flex justify-between">
+                <span>Stream FPS:</span>
+                <span class="text-slate-900 font-bold">${cam.fps || 15.0} FPS</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Alert Hits:</span>
+                <span class="text-slate-900 font-bold">${cam.alert_count || 0} Detections</span>
+              </div>
+              <div class="truncate text-slate-400 text-[9px] pt-1 border-t border-slate-200">
+                ${cam.stream_url || 'RTSP Internal Feed'}
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <label class="cursor-pointer text-[11px] font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span>Ingest Frame</span>
+              <input type="file" accept="image/*" class="hidden" onchange="App.handleCameraFrameUpload(event, ${cam.id})">
+            </label>
+            <button onclick="App.deleteCameraNode(${cam.id})" class="text-[10px] text-slate-400 hover:text-red-600 transition">
+              Remove
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  },
+
+  async simulateSurveillanceStream() {
+    try {
+      const res = await API.simulateSurveillanceStream();
+      alert(`Surveillance Watchlist Hit Triggered!\n${res.alerts_generated} camera match alert(s) dispatched to command center.`);
+      await this.loadSurveillanceData();
+    } catch (err) {
+      alert('Simulation failed: ' + err.message);
+    }
+  },
+
+  async handleEnrollCamera(e) {
+    e.preventDefault();
+    const code = document.getElementById('cam-code-input').value.trim();
+    const name = document.getElementById('cam-name-input').value.trim();
+    const loc = document.getElementById('cam-loc-input').value.trim();
+    const lat = parseFloat(document.getElementById('cam-lat-input').value) || null;
+    const lng = parseFloat(document.getElementById('cam-lng-input').value) || null;
+    const url = document.getElementById('cam-url-input').value.trim() || null;
+
+    try {
+      await API.registerCamera({
+        camera_code: code,
+        name: name,
+        location_name: loc,
+        latitude: lat,
+        longitude: lng,
+        stream_url: url,
+        fps: 25.0,
+        status: 'active'
+      });
+      alert(`CCTV node ${code} successfully registered!`);
+      this.closeModal('enroll-camera-modal');
+      e.target.reset();
+      await this.loadSurveillanceData();
+    } catch (err) {
+      alert('Failed to register camera: ' + err.message);
+    }
+  },
+
+  async acknowledgeSurveillanceAlert(alertId, newStatus) {
+    try {
+      await API.updateAlertStatus(alertId, newStatus, `Action dispatched via Command Center.`);
+      await this.loadSurveillanceData();
+    } catch (err) {
+      alert('Failed to update alert: ' + err.message);
+    }
+  },
+
+  async handleCameraFrameUpload(e, cameraId) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const res = await API.scanCameraFrame(cameraId, file);
+      if (res.alerts_triggered && res.alerts_triggered.length > 0) {
+        alert(`WATCHLIST HIT! Camera ${res.camera_code} detected ${res.alerts_triggered.length} enrolled target(s). Match score: ${(res.alerts_triggered[0].similarity_score * 100).toFixed(1)}%`);
+      } else {
+        alert(`Frame scanned from Camera ${res.camera_code}: ${res.faces_detected} face(s) found. No enrolled watchlist match above threshold.`);
+      }
+      await this.loadSurveillanceData();
+    } catch (err) {
+      alert('Frame scan failed: ' + err.message);
+    } finally {
+      e.target.value = '';
+    }
+  },
+
+  async deleteCameraNode(cameraId) {
+    if (!confirm('Decommission this CCTV surveillance camera node?')) return;
+    try {
+      await API.deleteCamera(cameraId);
+      await this.loadSurveillanceData();
+    } catch (err) {
+      alert('Failed to remove camera: ' + err.message);
+    }
   }
 };
+
 
 window.App = App;
 document.addEventListener('DOMContentLoaded', () => App.init());

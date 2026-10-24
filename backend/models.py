@@ -108,3 +108,31 @@ class NotificationCreate(BaseModel):
     message: str
     category: str = "match_alert"
     link_url: Optional[str] = None
+
+class CameraCreate(BaseModel):
+    camera_code: str = Field(..., min_length=3, max_length=50)
+    name: str = Field(..., min_length=3)
+    location_name: str = Field(..., min_length=3)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    stream_url: Optional[str] = None
+    fps: Optional[float] = 15.0
+    status: Optional[str] = "active"
+
+class CameraResponse(BaseModel):
+    id: int
+    camera_code: str
+    name: str
+    location_name: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    stream_url: Optional[str] = None
+    fps: float
+    status: str
+    created_at: Optional[str] = None
+    alert_count: Optional[int] = 0
+
+class AlertStatusUpdate(BaseModel):
+    status: str = Field(..., description="new | acknowledged | dispatched | dismissed")
+    notes: Optional[str] = None
+

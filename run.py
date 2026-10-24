@@ -23,8 +23,9 @@ def main():
     else:
         print(f"\n[Startup] Using existing database: {DATABASE_PATH}")
 
-    print("\n[Startup] Starting FastAPI server on http://127.0.0.1:8000 ...")
-    print("  - Web Application:       http://127.0.0.1:8000")
+    print("\n[Startup] Starting FastAPI server on http://0.0.0.0:8000 ...")
+    print("  - Local Web App:         http://127.0.0.1:8000")
+    print("  - Mobile / LAN Access:   http://192.168.1.8:8000 (Use in Expo Go)")
     print("  - Interactive API Docs:  http://127.0.0.1:8000/docs")
     print("\n[Staff Credentials]")
     print("  - Lead Investigator:     investigator / investigator123 (INV-1001)")
@@ -32,7 +33,8 @@ def main():
     print("  - Detective:             detective_chen / investigator123 (INV-7809)")
     print("=" * 75 + "\n")
 
-    uvicorn.run("backend.main:app", host="127.0.0.1", port=8000, reload=False)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=False)
+
 
 if __name__ == "__main__":
     main()
