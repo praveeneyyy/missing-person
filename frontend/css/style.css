@@ -435,3 +435,89 @@ td {
 tr:hover td {
   background-color: #F8FAFC !important;
 }
+
+/* ==========================================================================
+   SMOOTH MICRO-ANIMATIONS & INTERACTIVE STEP TOOLTIP SYSTEM
+   ========================================================================== */
+
+/* Smooth Tab Pane Switching Transitions */
+.tab-pane {
+  animation: tabFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tabFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal Smooth Spring In */
+.modal-overlay:not(.hidden) > div {
+  animation: modalPopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Button Micro-Interactions */
+button:active,
+.btn:active,
+.nav-tab:active {
+  transform: scale(0.98) !important;
+}
+
+/* Segmented Nav Tabs */
+.nav-tab {
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.nav-tab.bg-slate-900 {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+/* Floating Step Tooltip */
+#global-step-tooltip {
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.3), 0 4px 10px -2px rgba(15, 23, 42, 0.15);
+  backdrop-filter: blur(8px);
+  border-left: 3px solid #2563EB;
+}
+
+#global-step-tooltip.step-1 { border-left-color: #2563EB; }
+#global-step-tooltip.step-2 { border-left-color: #059669; }
+#global-step-tooltip.step-3 { border-left-color: #4F46E5; }
+#global-step-tooltip.step-4 { border-left-color: #D97706; }
+#global-step-tooltip.step-5 { border-left-color: #E11D48; }
+#global-step-tooltip.step-6 { border-left-color: #0284C7; }
+
+/* Toast & Notification Micro-Animations */
+.toast-slide-in {
+  animation: toastSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+

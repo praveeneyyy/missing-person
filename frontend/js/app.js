@@ -23,6 +23,9 @@ const App = {
     if (window.lucide) {
       window.lucide.createIcons();
     }
+
+    // Initialize Interactive Step Hover Tooltip System
+    this.initStepTooltips();
   },
 
   bindEvents() {
@@ -2425,6 +2428,104 @@ const App = {
       const player = document.getElementById('forensic-video-player');
       if (player) player.pause();
     }
+  },
+
+  openWorkflowGuideModal() {
+    this.openModal('workflow-guide-modal');
+  },
+
+  initStepTooltips() {
+    const tooltipEl = document.getElementById('global-step-tooltip');
+    const badgeEl = document.getElementById('tooltip-step-badge');
+    const textEl = document.getElementById('tooltip-text');
+    if (!tooltipEl || !badgeEl || !textEl) return;
+
+    let hideTimer = null;
+
+    const showTooltip = (el, e) => {
+      clearTimeout(hideTimer);
+      const text = el.getAttribute('data-tooltip');
+      const step = el.getAttribute('data-step');
+      if (!text) return;
+
+      if (step) {
+        badgeEl.classList.remove('hidden');
+        const stepTitles = {
+          '0': 'SYSTEM ARCHITECTURE & OVERVIEW',
+          '1': 'STEP 1 OF 6: CASE ENROLLMENT',
+          '2': 'STEP 2 OF 6: CITIZEN SIGHTING & GPS PINNING',
+          '2b': 'VERIFY SIGHTING RECEIPT CODE',
+          '3': 'STEP 3 OF 6: BIOMETRIC MATCHING ENGINE',
+          '4': 'STEP 4 OF 6: HUMAN INVESTIGATOR REVIEW',
+          '5': 'STEP 5 OF 6: CCTV SURVEILLANCE WATCHLIST',
+          '6': 'STEP 6 OF 6: GIS CORRIDOR & FORENSIC DOSSIER',
+        };
+        badgeEl.innerText = stepTitles[step] || STEP : OPERATIONAL ACTION;
+        tooltipEl.className = tooltipEl.className.replace(/step-\d/g, '').trim();
+        tooltipEl.classList.add(step-);
+      } else {
+        badgeEl.classList.add('hidden');
+        tooltipEl.className = tooltipEl.className.replace(/step-\d/g, '').trim();
+      }
+
+      textEl.innerHTML = text;
+      tooltipEl.classList.remove('hidden');
+
+      // Calculate position
+      const rect = el.getBoundingClientRect();
+      const tipWidth = Math.min(340, window.innerWidth - 20);
+      let left = rect.left + rect.width / 2 - tipWidth / 2;
+      let top = rect.bottom + 8;
+
+      if (left < 10) left = 10;
+      if (left + tipWidth > window.innerWidth - 10) left = window.innerWidth - tipWidth - 10;
+
+      if (top + 100 > window.innerHeight && rect.top > 120) {
+        top = rect.top - 85;
+      }
+
+      tooltipEl.style.left = ${left}px;
+      tooltipEl.style.top = ${top}px;
+      tooltipEl.style.width = ${tipWidth}px;
+
+      requestAnimationFrame(() => {
+        tooltipEl.classList.remove('opacity-0', 'translate-y-1');
+        tooltipEl.classList.add('opacity-100', 'translate-y-0');
+      });
+    };
+
+    const hideTooltip = () => {
+      tooltipEl.classList.remove('opacity-100', 'translate-y-0');
+      tooltipEl.classList.add('opacity-0', 'translate-y-1');
+      hideTimer = setTimeout(() => {
+        tooltipEl.classList.add('hidden');
+      }, 150);
+    };
+
+    // Attach to all elements with data-tooltip
+    document.querySelectorAll('[data-tooltip]').forEach(el => {
+      el.addEventListener('mouseenter', (e) => showTooltip(el, e));
+      el.addEventListener('mouseleave', hideTooltip);
+      el.addEventListener('click', hideTooltip);
+    });
+
+    // ESC key closes any open modal
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay:not(.hidden)').forEach(modal => {
+          this.closeModal(modal.id);
+        });
+      }
+    });
+
+    // Clicking overlay backdrop closes modal
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeModal(overlay.id);
+        }
+      });
+    });
   },
 
   // Module 1: Authentication & Officer Management Methods
