@@ -199,6 +199,7 @@ const App = {
 
   switchTab(tabName) {
     this.activeTab = tabName;
+    try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
 
     // Update tab button active states
     document.querySelectorAll('[data-tab]').forEach(btn => {
@@ -1335,8 +1336,8 @@ const App = {
       const gdVal = document.getElementById('case-gd')?.value?.trim();
       let notes = rawNotes;
       if (psVal || gdVal) {
-        const cctnsTag = [CCTNS PS:  | GD/FIR No: ];
-        notes = notes ? ${cctnsTag}  : cctnsTag;
+        const cctnsTag = `[CCTNS PS: ${psVal || "N/A"} | GD/FIR No: ${gdVal || "N/A"}]`;
+        notes = notes ? `${cctnsTag} ${notes}` : cctnsTag;
       }
 
       const photoInput = document.getElementById('case-photo-file');
@@ -2469,9 +2470,9 @@ const App = {
           '5': 'STEP 5 OF 6: CCTV SURVEILLANCE WATCHLIST',
           '6': 'STEP 6 OF 6: GIS CORRIDOR & FORENSIC DOSSIER',
         };
-        badgeEl.innerText = stepTitles[step] || STEP : OPERATIONAL ACTION;
+        badgeEl.innerText = stepTitles[step] || ('STEP ' + step + ': OPERATIONAL ACTION');
         tooltipEl.className = tooltipEl.className.replace(/step-\d/g, '').trim();
-        tooltipEl.classList.add(step-);
+        tooltipEl.classList.add('step-' + step);
       } else {
         badgeEl.classList.add('hidden');
         tooltipEl.className = tooltipEl.className.replace(/step-\d/g, '').trim();
@@ -2493,9 +2494,9 @@ const App = {
         top = rect.top - 85;
       }
 
-      tooltipEl.style.left = ${left}px;
-      tooltipEl.style.top = ${top}px;
-      tooltipEl.style.width = ${tipWidth}px;
+      tooltipEl.style.left = `${left}px`;
+      tooltipEl.style.top = `${top}px`;
+      tooltipEl.style.width = `${tipWidth}px`;
 
       requestAnimationFrame(() => {
         tooltipEl.classList.remove('opacity-0', 'translate-y-1');
@@ -3284,4 +3285,9 @@ const App = {
 
 
 window.App = App;
-document.addEventListener('DOMContentLoaded', () => App.init());
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
+  App.init();
+}
