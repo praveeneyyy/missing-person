@@ -8,7 +8,7 @@ if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
 from backend.seed_data import seed_database
-from backend.config import DATABASE_PATH
+from backend.config import DATABASE_PATH, HOST, PORT, ENVIRONMENT
 
 def main():
     print("=" * 75)
@@ -23,17 +23,18 @@ def main():
     else:
         print(f"\n[Startup] Using existing database: {DATABASE_PATH}")
 
-    print("\n[Startup] Starting FastAPI server on http://0.0.0.0:8000 ...")
-    print("  - Local Web App:         http://127.0.0.1:8000")
-    print("  - Mobile / LAN Access:   http://192.168.1.8:8000 (Use in Expo Go)")
-    print("  - Interactive API Docs:  http://127.0.0.1:8000/docs")
-    print("\n[Staff Credentials]")
-    print("  - Lead Investigator:     investigator / investigator123 (INV-1001)")
-    print("  - Administrator:         admin / admin123 (ADM-001)")
-    print("  - Detective:             detective_chen / investigator123 (INV-7809)")
+    display_host = "127.0.0.1" if HOST == "0.0.0.0" else HOST
+    print(f"\n[Startup] Starting FastAPI server on http://{HOST}:{PORT} (Env: {ENVIRONMENT}) ...")
+    print(f"  - Local Web App:         http://{display_host}:{PORT}")
+    print(f"  - Interactive API Docs:  http://{display_host}:{PORT}/docs")
+    print(f"  - Liveness Health Probe: http://{display_host}:{PORT}/healthz")
+    print("\n[Official Law Enforcement Staff Credentials]")
+    print("  - Lead IO / Station House Officer: io.raman@police.gov.in (Username: investigator) | Pass: Police@Gov2026!")
+    print("  - CCTNS Nodal Administrator:       cctns.admin@ncrb.gov.in (Username: admin)        | Pass: Ncrb@Admin2026!")
+    print("  - Supervisory Dy. SP:              dsp.sharma@police.gov.in                         | Pass: Police@Gov2026!")
     print("=" * 75 + "\n")
 
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("backend.main:app", host=HOST, port=PORT, reload=False)
 
 
 if __name__ == "__main__":

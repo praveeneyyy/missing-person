@@ -14,6 +14,19 @@ const MapManager = {
     showVectors: true
   },
 
+  getTileLayerConfig() {
+    if (window.SYSTEM_CONFIG?.gis?.mappls_configured && window.SYSTEM_CONFIG?.gis?.mappls_sdk_key) {
+      return {
+        url: `https://apis.mappls.com/advancedmaps/v1/${window.SYSTEM_CONFIG.gis.mappls_sdk_key}/still_image/{z}/{x}/{y}.png`,
+        attribution: '&copy; Mappls MapmyIndia • National GIS Framework'
+      };
+    }
+    return {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '&copy; OpenStreetMap contributors • National Survey Map Base'
+    };
+  },
+
   initMainMap(containerId = 'investigation-map') {
     const el = document.getElementById(containerId);
     if (!el) return;
@@ -23,15 +36,15 @@ const MapManager = {
       this.mainMap = null;
     }
 
-    // Default center: Chennai, Tamil Nadu
+    // Default center: Chennai / Pan-India Central Coordinates
     this.mainMap = L.map(containerId, {
       zoomControl: true,
       attributionControl: true
     }).setView([13.05, 80.22], 11);
 
-    // Clean modern OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+    const tileConf = this.getTileLayerConfig();
+    L.tileLayer(tileConf.url, {
+      attribution: tileConf.attribution,
       maxZoom: 18
     }).addTo(this.mainMap);
 
@@ -259,8 +272,9 @@ const MapManager = {
 
     this.pickerMap = L.map(containerId).setView([defaultLat, defaultLng], 12);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap'
+    const tileConf = this.getTileLayerConfig();
+    L.tileLayer(tileConf.url, {
+      attribution: tileConf.attribution
     }).addTo(this.pickerMap);
 
     this.pickerMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(this.pickerMap);

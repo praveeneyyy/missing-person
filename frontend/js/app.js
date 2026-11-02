@@ -138,11 +138,11 @@ const App = {
     if (user) {
       if (userBadge) {
         userBadge.innerHTML = `
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 bg-white px-2.5 py-1 border border-slate-200 rounded-none">
             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
             <span class="font-semibold text-slate-800 text-xs">${user.full_name}</span>
-            <span class="font-mono text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.5 rounded border border-slate-200">${user.badge_number || user.role.toUpperCase()}</span>
-            <button onclick="App.handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-600 text-xs p-1 rounded transition flex items-center">
+            <span class="font-mono text-[10px] bg-slate-100 text-slate-700 font-bold px-1.5 py-0.2 border border-slate-200 rounded-none">${user.badge_number || user.role.toUpperCase()}</span>
+            <button onclick="App.handleLogout()" title="Sign Out" class="text-slate-400 hover:text-red-600 text-xs p-1 transition flex items-center rounded-none">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
             </button>
           </div>
@@ -167,7 +167,7 @@ const App = {
       if (bell) bell.classList.add('hidden');
       if (userBadge) {
         userBadge.innerHTML = `
-          <button onclick="App.openModal('login-modal')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold font-mono px-3 py-1.5 rounded-lg shadow-xs transition flex items-center gap-1.5">
+          <button onclick="App.openModal('login-modal')" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold font-mono px-3.5 py-1.5 rounded-none border border-slate-900 transition flex items-center gap-1.5 shadow-none">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
             <span>OFFICER SIGN IN</span>
           </button>
@@ -191,11 +191,11 @@ const App = {
     // Update tab button active states
     document.querySelectorAll('[data-tab]').forEach(btn => {
       if (btn.getAttribute('data-tab') === tabName) {
-        btn.classList.add('bg-slate-900', 'text-white', 'shadow-xs');
-        btn.classList.remove('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
+        btn.classList.add('bg-slate-900', 'text-white', 'border-slate-900');
+        btn.classList.remove('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900', 'border-transparent');
       } else {
-        btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xs');
-        btn.classList.add('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900');
+        btn.classList.remove('bg-slate-900', 'text-white', 'border-slate-900');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100', 'hover:text-slate-900', 'border-transparent');
       }
     });
 
@@ -385,7 +385,7 @@ const App = {
           <!-- Footer Actions -->
           <div class="p-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
             <span class="text-[11px] font-mono text-slate-500">${c.reference_photo_count} Reference Vectors</span>
-            <button onclick="App.viewCaseDetails(${c.id})" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-1.5 rounded-lg transition shadow-xs font-mono">
+            <button onclick="App.viewCaseDetails(${c.id})" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-3.5 py-1.5 rounded-none transition shadow-xs font-mono">
               Open Dossier →
             </button>
           </div>
@@ -829,12 +829,12 @@ const App = {
               <!-- Quick GIS Map Inspection & Video Telemetry -->
               <div class="flex items-center gap-2">
                 ${isVideo ? `
-                  <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition flex items-center gap-1.5 shadow-xs">
+                  <button onclick="App.openVideoForensicModal(${c.sighting_id})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-none bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition flex items-center gap-1.5 shadow-xs">
                     <svg class="w-3.5 h-3.5 text-purple-600 inline" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
                     <span>Inspect Video Stream</span>
                   </button>
                 ` : ''}
-                <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-xs">
+                <button onclick="MapManager.focusPair(${c.case_lat || 13.0827}, ${c.case_lng || 80.2707}, ${c.sighting_lat || 13.0827}, ${c.sighting_lng || 80.2707}, '${c.reference_no}', '${c.receipt_no}', ${c.similarity_score})" class="px-3.5 py-1.5 text-xs font-mono font-bold rounded-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition flex items-center gap-1.5 shadow-xs">
                   <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                   <span>Inspect on GIS Map</span>
                 </button>
@@ -845,18 +845,18 @@ const App = {
             <div class="p-5 bg-white flex flex-wrap items-center justify-between gap-4 border-t border-slate-100">
               <div class="flex items-center gap-2">
                 <span class="text-xs text-slate-500 font-semibold font-mono">Quick Adjudication:</span>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition shadow-xs">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'rejected')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-none bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 transition shadow-xs">
                   Reject Lead
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition shadow-xs">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'request_more_info')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-none bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 transition shadow-xs">
                   Request Witness Info
                 </button>
-                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition shadow-xs">
+                <button onclick="App.openReviewModal(${c.candidate_id}, 'escalated')" class="px-3.5 py-2 text-xs font-bold font-mono rounded-none bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 transition shadow-xs">
                   Escalate to Field Team
                 </button>
               </div>
 
-              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-bold font-mono rounded-lg bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition flex items-center gap-1.5">
+              <button onclick="App.openReviewModal(${c.candidate_id}, 'verified')" class="px-5 py-2.5 text-xs font-bold font-mono rounded-none bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition flex items-center gap-1.5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                 <span>Confirm Verified Match</span>
               </button>
@@ -1318,7 +1318,14 @@ const App = {
       const lng = parseFloat(document.getElementById('case-lng').value) || 80.2707;
       const features = document.getElementById('case-features').value;
       const clothing = document.getElementById('case-clothing').value;
-      const notes = document.getElementById('case-notes').value;
+      const rawNotes = document.getElementById('case-notes').value;
+      const psVal = document.getElementById('case-ps')?.value?.trim();
+      const gdVal = document.getElementById('case-gd')?.value?.trim();
+      let notes = rawNotes;
+      if (psVal || gdVal) {
+        const cctnsTag = [CCTNS PS:  | GD/FIR No: ];
+        notes = notes ? ${cctnsTag}  : cctnsTag;
+      }
 
       const photoInput = document.getElementById('case-photo-file');
       if (!photoInput.files || photoInput.files.length === 0) {
@@ -1831,7 +1838,7 @@ const App = {
                   <label class="block text-[11px] font-mono text-slate-600 mb-1">Min Similarity Cutoff: <span id="gallery-thresh-label" class="text-slate-900 font-bold">0.30</span></label>
                   <input type="range" id="gallery-min-thresh" min="0.20" max="0.75" step="0.05" value="0.30" oninput="document.getElementById('gallery-thresh-label').innerText = parseFloat(this.value).toFixed(2)" class="w-full h-1.5 bg-slate-200 rounded appearance-none cursor-pointer accent-slate-900">
                 </div>
-                <button type="submit" id="btn-run-gallery-search" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs py-3 rounded-lg shadow-sm transition">
+                <button type="submit" id="btn-run-gallery-search" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs py-3 rounded-none shadow-sm transition">
                   Search Gallery (Top-K) →
                 </button>
               </div>
@@ -1923,7 +1930,7 @@ const App = {
 
             <div class="flex items-center justify-between">
               <span class="text-[11px] font-mono text-slate-500">Calculates exact cosine angle & Euclidean distance between 128-D vectors.</span>
-              <button type="submit" id="btn-compare-faces" class="bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs px-5 py-2.5 rounded-lg shadow-sm transition">
+              <button type="submit" id="btn-compare-faces" class="bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs px-5 py-2.5 rounded-none shadow-sm transition">
                 Compute Pairwise Metric Distance →
               </button>
             </div>
@@ -3005,11 +3012,11 @@ const App = {
 
           <div class="flex items-center gap-2 w-full md:w-auto justify-end">
             ${a.status === 'new' ? `
-              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'dispatched')" class="px-3 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-xs transition flex items-center gap-1.5 font-mono">
+              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'dispatched')" class="px-3 py-1.5 text-xs font-bold bg-red-600 hover:bg-red-700 text-white rounded-none shadow-xs transition flex items-center gap-1.5 font-mono">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 <span>Dispatch Unit</span>
               </button>
-              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'acknowledged')" class="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 rounded-lg border border-slate-200 transition shadow-xs font-mono">
+              <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'acknowledged')" class="px-3 py-1.5 text-xs font-bold bg-white hover:bg-slate-50 text-slate-700 rounded-none border border-slate-200 transition shadow-xs font-mono">
                 Acknowledge
               </button>
               <button onclick="App.acknowledgeSurveillanceAlert(${a.id}, 'dismissed')" class="px-2.5 py-1.5 text-xs text-slate-400 hover:text-slate-600 transition font-mono">

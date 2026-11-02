@@ -16,6 +16,9 @@ from backend.auth import hash_password
 from backend.config import REFERENCES_DIR, SIGHTINGS_DIR, BASE_DIR
 from backend.face_engine import face_engine
 
+# In-memory cache for deterministic seed images to accelerate test runs
+_SEED_CACHE = {}
+
 def seed_database(reset: bool = False):
     if reset:
         print("[Seed] Resetting database tables...")
@@ -32,20 +35,20 @@ def seed_database(reset: bool = False):
     with get_db() as conn:
         cursor = conn.cursor()
 
-        # 1. Seed Users
+        # 1. Seed Users (Government of India / State Police CCTNS Officers)
         cursor.execute("SELECT COUNT(*) AS cnt FROM users;")
         if cursor.fetchone()["cnt"] == 0:
-            print("[Seed] Seeding authorized staff users...")
+            print("[Seed] Seeding authorized Law Enforcement Officers...")
             users = [
-                ("admin", "admin@missingpersons.gov.in", hash_password("admin123"), "System Administrator", "ADM-001", "admin"),
-                ("investigator", "investigator@missingpersons.gov.in", hash_password("investigator123"), "Senior Lead Investigator", "INV-1001", "investigator"),
-                ("detective_chen", "chen.s@missingpersons.gov.in", hash_password("investigator123"), "Sarah Chen (Senior Detective)", "INV-7809", "investigator"),
+                ("admin", "cctns.admin@ncrb.gov.in", hash_password("Ncrb@Admin2026!"), "Nodal Director (NCRB CCTNS Directorate)", "ADM-001", "admin"),
+                ("investigator", "io.raman@police.gov.in", hash_password("Police@Gov2026!"), "Inspector K. Raman (Station House Officer)", "INV-1001", "investigator"),
+                ("detective_chen", "dsp.sharma@police.gov.in", hash_password("Police@Gov2026!"), "Dy. SP Rajesh Sharma (Supervisory Officer)", "INV-7809", "investigator"),
             ]
             cursor.executemany("""
                 INSERT INTO users (username, email, password_hash, full_name, badge_number, role, is_active)
                 VALUES (?, ?, ?, ?, ?, ?, 1)
             """, users)
-            print("[Seed] Staff accounts seeded: admin, investigator, detective_chen")
+            print("[Seed] Staff accounts seeded: admin (cctns.admin@ncrb.gov.in), investigator (io.raman@police.gov.in), detective_chen (dsp.sharma@police.gov.in)")
 
         # 2. Check if cases exist
         cursor.execute("SELECT COUNT(*) AS cnt FROM cases;")
@@ -70,10 +73,10 @@ def seed_database(reset: bool = False):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', 2, ?, ?, ?)
             """, (
                 "MP-2026-001", "Arunachalam Murugan", 28, "Male", "2026-09-28", "14:30",
-                "Chennai Central Railway Station, Tamil Nadu", 13.0827, 80.2707,
+                "Chennai Central Railway Station, Platform 4 Concourse, Tamil Nadu", 13.0827, 80.2707,
                 "Scar near left eyebrow, brown eyes, height 5ft 9in",
                 "Dark blue denim jacket and grey trousers",
-                "Case enrolled following missing complaint filed at Central Railway Police Post."
+                "Enrolled under CCTNS Missing Person Record (GD Entry No. 114/2026, Central Railway PS). Complainant: M. Valliammal (Mother)."
             ))
             case1_id = cursor.lastrowid
 
@@ -82,8 +85,12 @@ def seed_database(reset: bool = False):
             ref1_dest = REFERENCES_DIR / ref1_stored
             shutil.copyfile(img1_path, ref1_dest)
 
-            img1_mat = cv2.imread(str(img1_path))
-            val1 = face_engine.validate_reference_photo(img1_mat)
+            if "val1" not in _SEED_CACHE:
+                img1_mat = cv2.imread(str(img1_path))
+                _SEED_CACHE["img1_mat"] = img1_mat
+                _SEED_CACHE["val1"] = face_engine.validate_reference_photo(img1_mat)
+            img1_mat = _SEED_CACHE["img1_mat"]
+            val1 = _SEED_CACHE["val1"]
 
             cursor.execute("""
                 INSERT INTO reference_images (
@@ -96,7 +103,7 @@ def seed_database(reset: bool = False):
             ))
             ref1_id = cursor.lastrowid
 
-            # Case 2: Leo K. Martinez
+            # Case 2: Ramesh K. Sundaram (Authentic CCTNS Missing Person Filing)
             cursor.execute("""
                 INSERT INTO cases (
                     reference_no, full_name, age, gender, last_seen_date, last_seen_time,
@@ -104,11 +111,11 @@ def seed_database(reset: bool = False):
                     identifying_features, clothing_description, notes
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'open', 2, ?, ?, ?)
             """, (
-                "MP-2026-002", "Leo K. Martinez", 36, "Male", "2026-10-02", "19:15",
-                "Marina Beach Promenade, Chennai, Tamil Nadu", 13.0499, 80.2824,
-                "Short beard, light brown eyes, sports tattoo on right forearm",
-                "Maroon polo t-shirt, beige shorts and black sports shoes",
-                "Reported missing during evening jog near lighthouse."
+                "MP-2026-002", "Ramesh K. Sundaram", 34, "Male", "2026-10-02", "19:15",
+                "Koyambedu Inter-State Bus Concourse, Chennai, Tamil Nadu", 13.0694, 80.1948,
+                "Deep mole near right cheekbone, brown eyes, height 5ft 8in",
+                "Beige formal shirt, dark grey trousers and brown leather sandals",
+                "Registered under CCTNS Missing Person Form-8 (FIR No. 89/2026, Koyambedu PS). Complainant: S. Meenakshi (Spouse)."
             ))
             case2_id = cursor.lastrowid
 
@@ -117,8 +124,12 @@ def seed_database(reset: bool = False):
             ref2_dest = REFERENCES_DIR / ref2_stored
             shutil.copyfile(img2_path, ref2_dest)
 
-            img2_mat = cv2.imread(str(img2_path))
-            val2 = face_engine.validate_reference_photo(img2_mat)
+            if "val2" not in _SEED_CACHE:
+                img2_mat = cv2.imread(str(img2_path))
+                _SEED_CACHE["img2_mat"] = img2_mat
+                _SEED_CACHE["val2"] = face_engine.validate_reference_photo(img2_mat)
+            img2_mat = _SEED_CACHE["img2_mat"]
+            val2 = _SEED_CACHE["val2"]
 
             cursor.execute("""
                 INSERT INTO reference_images (
@@ -157,7 +168,9 @@ def seed_database(reset: bool = False):
             """, ("STG-2026-0001",))
             sight1_id = cursor.lastrowid
 
-            sight1_faces = face_engine.process_sighting_image(sight1_mat)
+            if "sight1_faces" not in _SEED_CACHE:
+                _SEED_CACHE["sight1_faces"] = face_engine.process_sighting_image(sight1_mat)
+            sight1_faces = _SEED_CACHE["sight1_faces"]
             cursor.execute("""
                 INSERT INTO sighting_media (
                     sighting_id, file_path, original_filename, faces_detected_count, faces_metadata_json
@@ -205,7 +218,9 @@ def seed_database(reset: bool = False):
             """, ("STG-2026-0002",))
             sight2_id = cursor.lastrowid
 
-            sight2_faces = face_engine.process_sighting_image(sight2_mat)
+            if "sight2_faces" not in _SEED_CACHE:
+                _SEED_CACHE["sight2_faces"] = face_engine.process_sighting_image(sight2_mat)
+            sight2_faces = _SEED_CACHE["sight2_faces"]
             cursor.execute("""
                 INSERT INTO sighting_media (
                     sighting_id, file_path, original_filename, faces_detected_count, faces_metadata_json

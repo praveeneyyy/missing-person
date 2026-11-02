@@ -48,49 +48,49 @@
 </head>
 <body class="bg-[#F8FAFC] text-slate-900 antialiased flex flex-col min-h-screen font-sans">
 
-  <!-- Top Tactical Command Bar - Minimal White Backdrop -->
-  <header class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-50 shadow-[0_1px_3px_0_rgba(0,0,0,0.03)]">
+  <!-- Top Tactical Command Bar - Minimal White Backdrop & Sharp Geometry -->
+  <header class="bg-white text-slate-900 border-b border-slate-200 sticky top-0 z-50">
     <!-- Primary Top Bar -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
       <!-- Brand & Project Identification -->
-      <div class="flex items-center gap-3 cursor-pointer" onclick="App.switchTab('public-home')">
-        <div class="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-white shadow-sm">
+      <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="App.switchTab('public-home')">
+        <div class="w-8 h-8 rounded-none bg-slate-900 flex items-center justify-center text-white shrink-0">
           <!-- Shield Web SVG -->
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <h1 class="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 leading-tight">
-              AI MISSING PERSON INVESTIGATION PLATFORM
-            </h1>
-            <span class="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-              PROTOTYPE v1.0
+            <span class="text-xs sm:text-sm font-extrabold tracking-tight text-slate-900 font-sans uppercase">
+              CCTNS • National Missing Persons Repository
+            </span>
+            <span class="hidden sm:inline-block text-[9px] font-mono font-bold px-1.5 py-0.2 border border-slate-200 text-slate-500 rounded-none uppercase">
+              NCRB • GOI
             </span>
           </div>
-          <p class="text-[11px] text-slate-500 font-mono">
-            Biometric Surveillance & Facial Recognition Intelligence Suite
+          <p class="text-[10px] text-slate-500 font-mono hidden md:block">
+            Ministry of Home Affairs • Biometric Surveillance & Computer Vision System
           </p>
         </div>
       </div>
 
-      <!-- Command Telemetry & Role Switcher -->
-      <div class="flex items-center gap-3">
-        <!-- Telemetry Status HUD (Desktop) -->
-        <div class="hidden lg:flex items-center gap-2.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px]">
-          <div class="flex items-center gap-1.5">
-            <span class="pulse-indicator pulse-emerald"></span>
-            <span class="text-slate-700 font-semibold">AI PIPELINE: ONLINE</span>
-          </div>
+      <!-- Command Telemetry & Controls -->
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <!-- Compact Telemetry Status (Desktop) -->
+        <div class="hidden xl:flex items-center gap-3 bg-slate-50 px-3 py-1.5 border border-slate-200 font-mono text-[11px] text-slate-600 rounded-none">
+          <span class="flex items-center gap-1.5 font-bold text-slate-800">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+            AI ONLINE
+          </span>
           <span class="text-slate-300">|</span>
-          <span class="text-slate-500">LATENCY: <strong class="text-slate-900">12ms</strong></span>
+          <span>LATENCY: <strong class="text-slate-900">12ms</strong></span>
           <span class="text-slate-300">|</span>
-          <span class="text-slate-500">ENGINE: <strong class="text-slate-800">YuNet + SFace (128-D)</strong></span>
+          <span>ENGINE: <strong class="text-slate-800">YuNet + SFace (128-D)</strong></span>
         </div>
 
         <!-- Role Switcher -->
-        <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-200">
+        <div class="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 border border-slate-200 rounded-none">
           <label for="quick-role-select" class="text-[10px] font-mono font-bold text-slate-500 uppercase">ROLE:</label>
           <select id="quick-role-select" class="bg-transparent text-xs font-mono font-bold text-slate-800 focus:outline-none cursor-pointer">
             <option value="investigator" class="bg-white text-slate-900">Investigator</option>
@@ -99,21 +99,18 @@
           </select>
         </div>
 
-        <!-- User Profile Session Badge -->
-        <div id="user-profile-badge"></div>
-
         <!-- Operational Notification Bell (Module 6) -->
         <div class="relative" id="notification-bell-container">
-          <button id="notif-bell-btn" onclick="App.toggleNotificationDropdown()" class="relative p-2 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition flex items-center justify-center">
+          <button id="notif-bell-btn" onclick="App.toggleNotificationDropdown()" class="relative p-2 rounded-none bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition flex items-center justify-center">
             <!-- Bell Web SVG -->
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
-            <span id="notif-badge" class="hidden absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-mono font-black px-1.5 py-0.2 rounded-full border border-white shadow-sm">0</span>
+            <span id="notif-badge" class="hidden absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-mono font-bold px-1 py-0.2 rounded-none">0</span>
           </button>
           <!-- Notification Dropdown Menu -->
-          <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div id="notif-dropdown" class="hidden absolute right-0 mt-1 w-80 sm:w-96 bg-white border border-slate-200 rounded-none shadow-xl z-50 overflow-hidden">
             <div class="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <span class="text-xs font-mono font-bold text-slate-800">INVESTIGATOR ALERTS</span>
               <button onclick="App.markAllNotificationsRead()" class="text-[10px] font-mono text-blue-600 hover:text-blue-700 font-semibold">Mark all read</button>
@@ -123,71 +120,74 @@
             </div>
           </div>
         </div>
+
+        <!-- User Profile Session Badge -->
+        <div id="user-profile-badge"></div>
       </div>
     </div>
 
     <!-- Secondary Command Navigation Bar -->
-    <nav class="bg-white/95 border-b border-slate-200 backdrop-blur text-xs font-medium text-slate-600">
+    <nav class="bg-white border-t border-slate-200 text-xs font-medium text-slate-600">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between overflow-x-auto">
-        <div class="flex space-x-1 py-2">
+        <div class="flex items-center space-x-1 py-1.5">
           <!-- Public Views -->
-          <button data-tab="public-home" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+          <button data-tab="public-home" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span>Overview</span>
           </button>
-          <button data-tab="public-submit" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+          <button data-tab="public-submit" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             <span>Submit Sighting</span>
           </button>
-          <button data-tab="public-track" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+          <button data-tab="public-track" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M14 8H8"/><path d="M16 12H8"/><path d="M13 16H8"/></svg>
             <span>Track Receipt</span>
           </button>
 
           <!-- Staff Command Navigation (Investigator / Admin) -->
-          <span class="border-l border-slate-200 mx-2 my-1"></span>
-          <div id="staff-navigation" class="flex space-x-1">
-            <button data-tab="dashboard" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+          <span class="border-l border-slate-200 h-4 mx-2"></span>
+          <div id="staff-navigation" class="flex items-center space-x-1">
+            <button data-tab="dashboard" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
               <span>Command Center</span>
             </button>
-            <button data-tab="cases" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="cases" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               <span>Cases Dossier</span>
             </button>
-            <button data-tab="review-queue" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="review-queue" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
               <span>Review Queue</span>
-              <span class="px-1.5 py-0.2 rounded-full bg-amber-50 text-amber-700 text-[10px] font-mono font-bold border border-amber-200">2 LEADS</span>
+              <span class="px-1 py-0.2 rounded-none bg-amber-50 text-amber-700 text-[9px] font-mono font-bold border border-amber-200">2 LEADS</span>
             </button>
-            <button data-tab="surveillance" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="surveillance" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/></svg>
               <span>CCTV Surveillance</span>
-              <span class="px-1.5 py-0.2 rounded-full bg-rose-50 text-rose-600 text-[10px] font-mono font-bold border border-rose-200">LIVE</span>
+              <span class="px-1 py-0.2 rounded-none bg-rose-50 text-rose-600 text-[9px] font-mono font-bold border border-rose-200">LIVE</span>
             </button>
-            <button data-tab="map" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="map" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               <span>GIS Map</span>
             </button>
-            <button data-tab="audit" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="audit" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
               <span>Audit Trail</span>
             </button>
-            <button data-tab="benchmark" class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 font-medium">
+            <button data-tab="benchmark" class="px-3 py-1.5 rounded-none transition flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
               <span>AI Benchmark</span>
             </button>
-            <button id="admin-nav-item" data-tab="officers" class="px-3 py-1.5 rounded-lg transition hidden flex items-center gap-1.5 font-medium">
+            <button id="admin-nav-item" data-tab="officers" class="px-3 py-1.5 rounded-none transition hidden flex items-center gap-1.5 font-medium border border-transparent hover:border-slate-200">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               <span>Staff Roster</span>
-              <span class="px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[10px] font-mono font-bold border border-slate-200">ADMIN</span>
+              <span class="px-1 py-0.2 rounded-none bg-slate-100 text-slate-700 text-[9px] font-mono font-bold border border-slate-200">ADMIN</span>
             </button>
           </div>
         </div>
 
         <!-- Action Button -->
-        <div class="py-2 hidden md:block">
-          <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+        <div class="py-1.5 hidden md:block shrink-0">
+          <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-mono font-semibold text-xs px-3.5 py-1.5 rounded-none border border-slate-900 transition flex items-center gap-1.5 shadow-none">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Enroll New Case</span>
           </button>
@@ -218,11 +218,11 @@
           </p>
 
           <div class="pt-2 flex flex-wrap gap-3">
-            <button onclick="App.switchTab('public-submit')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl shadow-sm transition flex items-center gap-2">
+            <button onclick="App.switchTab('public-submit')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs sm:text-sm px-6 py-3 rounded-none shadow-sm transition flex items-center gap-2">
               <span>Report Potential Sighting</span>
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
-            <button onclick="App.switchTab('dashboard')" class="bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs sm:text-sm px-6 py-3 rounded-xl border border-slate-200 shadow-sm transition flex items-center gap-2">
+            <button onclick="App.switchTab('dashboard')" class="bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs sm:text-sm px-6 py-3 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-2">
               <span>Launch Investigator Console</span>
               <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
             </button>
@@ -433,7 +433,7 @@
           </div>
 
           <!-- Submit Action -->
-          <button type="submit" id="sighting-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2">
+          <button type="submit" id="sighting-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-sm py-3.5 rounded-none shadow-sm transition flex items-center justify-center gap-2">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             <span>Submit Sighting to Law Enforcement</span>
           </button>
@@ -465,7 +465,7 @@
               <button type="button" onclick="App.fillReceiptLookup('STG-2026-0002')" class="text-blue-600 hover:underline">STG-2026-0002</button>
             </div>
           </div>
-          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-3 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5">
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs py-3 rounded-none transition shadow-sm flex items-center justify-center gap-1.5">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
             <span>Check Progress</span>
           </button>
@@ -486,11 +486,11 @@
           <p class="text-xs text-slate-500 font-mono mt-0.5">Real-time surveillance leads, biometric candidate tracking, and case management.</p>
         </div>
         <div class="flex items-center gap-2.5">
-          <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2.5 rounded-none shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>Enroll New Case</span>
           </button>
-          <button onclick="App.switchTab('review-queue')" class="bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs px-4 py-2.5 rounded-lg border border-slate-200 shadow-sm transition">
+          <button onclick="App.switchTab('review-queue')" class="bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs px-4 py-2.5 rounded-none border border-slate-200 shadow-sm transition">
             Review Leads Queue
           </button>
         </div>
@@ -582,7 +582,7 @@
           <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Missing-Person Cases Dossier</h2>
           <p class="text-xs text-slate-500 font-mono mt-0.5">Enrolled investigation files with verified facial vectors and last-seen coordinates.</p>
         </div>
-        <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+        <button onclick="App.openModal('create-case-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs px-4 py-2.5 rounded-none shadow-sm transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>Enroll New Case</span>
         </button>
@@ -614,25 +614,25 @@
          ==================================================================== -->
     <div id="tab-case-detail" class="tab-pane hidden space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-4">
-        <button onclick="App.switchTab('cases')" class="text-xs text-slate-700 hover:text-slate-900 font-mono font-semibold flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">
+        <button onclick="App.switchTab('cases')" class="text-xs text-slate-700 hover:text-slate-900 font-mono font-semibold flex items-center gap-1.5 bg-white border border-slate-200 px-3 py-1.5 rounded-none shadow-sm">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
           <span>Return to Cases Dossier</span>
         </button>
         <div class="flex flex-wrap items-center gap-2">
           <span id="case-detail-status" class="badge-tactical"></span>
-          <button onclick="App.openUpdateStatusModal()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-semibold px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.openUpdateStatusModal()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-semibold px-3 py-1.5 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
             <span>Update Status</span>
           </button>
-          <button onclick="App.openEditCaseModal()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-semibold px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.openEditCaseModal()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-semibold px-3 py-1.5 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
             <span>Edit Dossier</span>
           </button>
-          <button onclick="App.printCaseBulletin()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.printCaseBulletin()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-semibold px-3 py-1.5 rounded-none shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
             <span>Official Bulletin</span>
           </button>
-          <button onclick="App.archiveActiveCase()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-mono font-semibold px-3 py-1.5 rounded-lg border border-rose-200 shadow-sm transition">
+          <button onclick="App.archiveActiveCase()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-mono font-semibold px-3 py-1.5 rounded-none border border-rose-200 shadow-sm transition">
             Archive Case
           </button>
         </div>
@@ -675,7 +675,7 @@
               <h3 class="text-base font-bold text-slate-900">Authorized Reference Portraits & Biometric Overlays</h3>
               <p class="text-xs text-slate-500 font-mono">YuNet-verified single-face reference vectors (128-D) used for candidate matching.</p>
             </div>
-            <button onclick="App.openAddReferenceModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs font-mono px-3.5 py-1.5 rounded-lg shadow-sm transition flex items-center gap-1.5">
+            <button onclick="App.openAddReferenceModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs font-mono px-3.5 py-1.5 rounded-none shadow-sm transition flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               <span>Add Reference Photo</span>
             </button>
@@ -719,7 +719,7 @@
           <div class="text-xs font-mono bg-white border border-slate-200 px-3 py-1.5 rounded-lg text-slate-700 shadow-sm">
             OPERATING POINT: <strong class="text-emerald-700">COSINE ≥ 0.70</strong>
           </div>
-          <button onclick="App.loadReviewQueue()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.loadReviewQueue()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3 py-1.5 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
             <span>Refresh Queue</span>
           </button>
@@ -787,7 +787,7 @@
 
         <!-- Quick Batch Actions -->
         <div class="flex items-center gap-2">
-          <button onclick="App.openBatchRejectModal()" class="px-3.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-xs font-bold border border-rose-200 transition flex items-center gap-1.5">
+          <button onclick="App.openBatchRejectModal()" class="px-3.5 py-1.5 rounded-none bg-rose-50 hover:bg-rose-100 text-rose-700 font-mono text-xs font-bold border border-rose-200 transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             <span>Batch Reject Noise</span>
           </button>
@@ -810,16 +810,16 @@
 
         <!-- Map Layer & Filter Buttons -->
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="MapManager.loadMapPoints({ minSimilarity: null, statusFilter: null })" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold border border-slate-200 shadow-sm transition">
+          <button onclick="MapManager.loadMapPoints({ minSimilarity: null, statusFilter: null })" class="px-3 py-1.5 rounded-none bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold border border-slate-200 shadow-sm transition">
             All Points
           </button>
-          <button onclick="MapManager.loadMapPoints({ minSimilarity: 0.70 })" class="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-mono font-bold border border-amber-200 transition">
+          <button onclick="MapManager.loadMapPoints({ minSimilarity: 0.70 })" class="px-3 py-1.5 rounded-none bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-mono font-bold border border-amber-200 transition">
             High Sim (≥0.70)
           </button>
-          <button onclick="MapManager.loadMapPoints({ statusFilter: 'verified_match' })" class="px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-mono font-bold border border-emerald-200 transition">
+          <button onclick="MapManager.loadMapPoints({ statusFilter: 'verified_match' })" class="px-3 py-1.5 rounded-none bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-mono font-bold border border-emerald-200 transition">
             Verified Matches
           </button>
-          <button onclick="MapManager.currentFilters.showVectors = !MapManager.currentFilters.showVectors; MapManager.loadMapPoints()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold border border-slate-200 transition">
+          <button onclick="MapManager.currentFilters.showVectors = !MapManager.currentFilters.showVectors; MapManager.loadMapPoints()" class="px-3 py-1.5 rounded-none bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-mono font-bold border border-slate-200 transition">
             Toggle Vectors
           </button>
         </div>
@@ -864,15 +864,15 @@
           <p class="text-xs text-slate-500 font-mono mt-0.5">Immutable cryptographic ledger, ISO/IEC 27037 forensic chain of custody, algorithmic bias monitoring, and security telemetry.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <button onclick="App.downloadAuditCsv()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3.5 py-2 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.downloadAuditCsv()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3.5 py-2 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Export RFC-4180 CSV</span>
           </button>
-          <button onclick="App.downloadAuditJson()" class="bg-white hover:bg-slate-50 text-blue-700 text-xs font-mono font-bold px-3.5 py-2 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.downloadAuditJson()" class="bg-white hover:bg-slate-50 text-blue-700 text-xs font-mono font-bold px-3.5 py-2 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <span>Export Forensic JSON</span>
           </button>
-          <button onclick="App.loadAuditLogs()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3 py-2 rounded-lg border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.loadAuditLogs()" class="bg-white hover:bg-slate-50 text-slate-800 text-xs font-mono font-bold px-3 py-2 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 21h5v-5"/></svg>
             <span>Refresh</span>
           </button>
@@ -1027,10 +1027,10 @@
           </div>
 
           <div class="pt-4 flex items-center gap-2">
-            <button onclick="App.applyAuditFilters()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+            <button onclick="App.applyAuditFilters()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-1.5 rounded-none transition shadow-sm">
               Filter
             </button>
-            <button onclick="App.resetAuditFilters()" class="bg-white hover:bg-slate-50 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg transition border border-slate-200">
+            <button onclick="App.resetAuditFilters()" class="bg-white hover:bg-slate-50 text-slate-700 font-bold px-2.5 py-1.5 rounded-none transition border border-slate-200">
               Reset
             </button>
           </div>
@@ -1079,11 +1079,11 @@
           </p>
         </div>
         <div class="flex items-center gap-3">
-          <button onclick="App.simulateSurveillanceStream()" class="bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
+          <button onclick="App.simulateSurveillanceStream()" class="bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-xs px-4 py-2.5 rounded-none shadow-sm transition flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
             <span>Simulate Live CCTV Match Hit</span>
           </button>
-          <button onclick="App.openModal('enroll-camera-modal')" class="bg-white hover:bg-slate-50 text-slate-700 font-mono font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm transition flex items-center gap-1.5">
+          <button onclick="App.openModal('enroll-camera-modal')" class="bg-white hover:bg-slate-50 text-slate-700 font-mono font-bold text-xs px-4 py-2.5 rounded-none border border-slate-200 shadow-sm transition flex items-center gap-1.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             <span>Enroll CCTV Node</span>
           </button>
@@ -1160,7 +1160,7 @@
           <h2 class="text-2xl font-black text-slate-900 tracking-tight">Staff Roster & Role Authorization</h2>
           <p class="text-xs text-slate-500 font-mono mt-0.5">Admin-controlled officer provisioning, credential security, and active session status.</p>
         </div>
-        <button onclick="App.openModal('provision-officer-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center gap-1.5 font-mono">
+        <button onclick="App.openModal('provision-officer-modal')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-4 py-2.5 rounded-none shadow-sm transition flex items-center gap-1.5 font-mono">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
           <span>Provision New Officer</span>
         </button>
@@ -1234,9 +1234,20 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-600 uppercase mb-1">Police Station Jurisdiction *</label>
+            <input type="text" id="case-ps" required placeholder="e.g. Central Railway PS, Chennai" class="w-full text-xs px-3.5 py-2.5 rounded-none border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-mono font-bold text-slate-600 uppercase mb-1">CCTNS GD / FIR / MPR Number *</label>
+            <input type="text" id="case-gd" required placeholder="e.g. FIR-142/2026 or GD-89" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-none border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none">
+          </div>
+        </div>
+
         <div>
           <label class="block text-xs font-mono font-bold text-slate-600 uppercase mb-1">Last Seen Location Landmark *</label>
-          <input type="text" id="case-location" required placeholder="e.g. Marina Beach Promenade, Chennai" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none">
+          <input type="text" id="case-location" required placeholder="e.g. Marina Beach Promenade / Platform 4 Central" class="w-full text-xs px-3.5 py-2.5 rounded-none border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -1277,8 +1288,8 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('create-case-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" id="case-submit-btn" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Enroll Case & Biometrics</button>
+          <button type="button" onclick="App.closeModal('create-case-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" id="case-submit-btn" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Enroll Case & Biometrics</button>
         </div>
       </form>
     </div>
@@ -1348,8 +1359,8 @@
             <span>Forensic Certificate</span>
           </a>
           <div class="flex items-center gap-3">
-            <button type="button" onclick="App.closeReviewModal()" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-            <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Sign & Save Adjudication</button>
+            <button type="button" onclick="App.closeReviewModal()" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+            <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Sign & Save Adjudication</button>
           </div>
         </div>
       </form>
@@ -1402,11 +1413,11 @@
       </div>
 
       <div class="grid grid-cols-2 gap-3 pt-2">
-        <button onclick="App.trackReceiptFromModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm">
+        <button onclick="App.trackReceiptFromModal()" class="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-none transition flex items-center justify-center gap-1.5 shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <span>Track Status Now</span>
         </button>
-        <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs py-2.5 rounded-xl border border-slate-200 transition shadow-sm">
+        <button onclick="App.closeModal('receipt-modal'); App.switchTab('public-home');" class="bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs py-2.5 rounded-none border border-slate-200 transition shadow-sm">
           Return to Overview
         </button>
       </div>
@@ -1463,8 +1474,8 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('provision-officer-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" id="provision-submit-btn" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Provision Officer</button>
+          <button type="button" onclick="App.closeModal('provision-officer-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" id="provision-submit-btn" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Provision Officer</button>
         </div>
       </form>
     </div>
@@ -1501,23 +1512,25 @@
           <input type="password" id="login-password" required placeholder="••••••••••••" class="w-full text-xs font-mono px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none">
         </div>
 
-        <button type="submit" id="login-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl transition font-mono shadow-sm">
+        <button type="submit" id="login-submit-btn" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-none transition font-mono shadow-sm">
           Authenticate & Obtain Session Token
         </button>
       </form>
 
-      <!-- Quick Demo Accounts -->
+      <!-- Official Law Enforcement Authentication Notice -->
       <div class="pt-4 border-t border-slate-100 space-y-2">
-        <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider text-center font-semibold">Demonstration One-Click Credentials:</div>
-        <div class="grid grid-cols-2 gap-2">
-          <button type="button" onclick="App.quickFillLogin('investigator', 'investigator123')" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-900 text-left transition shadow-xs">
-            <div class="text-xs font-bold text-slate-900">Investigator</div>
-            <div class="text-[10px] font-mono text-slate-500 truncate">Senior Lead Investigator</div>
-          </button>
-          <button type="button" onclick="App.quickFillLogin('admin', 'admin123')" class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-slate-900 text-left transition shadow-xs">
-            <div class="text-xs font-bold text-slate-900">System Admin</div>
-            <div class="text-[10px] font-mono text-slate-500 truncate">System Administrator</div>
-          </button>
+        <div class="p-3 bg-slate-50 border border-slate-200 text-left">
+          <div class="text-[11px] font-mono font-bold text-slate-800 uppercase flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block"></span>
+            National CCTNS Gateway Access
+          </div>
+          <p class="text-[11px] text-slate-600 font-sans mt-1 leading-relaxed">
+            Authorized for registered Law Enforcement Personnel (State Police / NCRB / CBI). Authenticate with your Service Email or designated Officer Username.
+          </p>
+          <div class="mt-2 text-[10px] font-mono text-slate-500 border-t border-slate-200 pt-1.5 flex items-center justify-between">
+            <span>Jurisdiction: Ministry of Home Affairs</span>
+            <span class="text-slate-700 font-bold">DPDP Act Compliant</span>
+          </div>
         </div>
       </div>
     </div>
@@ -1554,8 +1567,8 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('update-case-status-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" id="btn-save-case-status" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Commit Status Change</button>
+          <button type="button" onclick="App.closeModal('update-case-status-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" id="btn-save-case-status" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Commit Status Change</button>
         </div>
       </form>
     </div>
@@ -1586,8 +1599,8 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('add-reference-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" id="btn-save-additional-ref" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Validate & Enroll Vector</button>
+          <button type="button" onclick="App.closeModal('add-reference-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" id="btn-save-additional-ref" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Validate & Enroll Vector</button>
         </div>
       </form>
     </div>
@@ -1671,8 +1684,8 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('edit-case-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" id="btn-save-edit-case" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Save Changes</button>
+          <button type="button" onclick="App.closeModal('edit-case-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" id="btn-save-edit-case" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Save Changes</button>
         </div>
       </form>
     </div>
@@ -1698,7 +1711,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span>Download PNG</span>
           </a>
-          <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5">
+          <button onclick="window.print()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono font-bold px-3 py-1.5 rounded-none transition shadow-sm flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
             <span>Print</span>
           </button>
@@ -1808,7 +1821,7 @@
         <div class="text-xs text-slate-500 font-mono">
           Investigative Triage Only • Autonomous facial identification strictly prohibited under standard operating procedures.
         </div>
-        <button onclick="App.closeModal('video-forensic-modal')" class="px-4 py-2 text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg transition shadow-sm">
+        <button onclick="App.closeModal('video-forensic-modal')" class="px-4 py-2 text-xs font-mono font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none transition shadow-sm">
           Close Inspection
         </button>
       </div>
@@ -1856,8 +1869,8 @@
           <input type="text" id="cam-url-input" placeholder="rtsp://surveillance.internal/feed/cam-05" class="w-full text-xs px-3.5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-slate-900 outline-none font-mono">
         </div>
         <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
-          <button type="button" onclick="App.closeModal('enroll-camera-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg">Cancel</button>
-          <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-lg shadow-sm transition font-mono">Register Node</button>
+          <button type="button" onclick="App.closeModal('enroll-camera-modal')" class="px-4 py-2 text-xs font-mono font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-none">Cancel</button>
+          <button type="submit" class="px-5 py-2.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white rounded-none shadow-sm transition font-mono">Register Node</button>
         </div>
       </form>
     </div>

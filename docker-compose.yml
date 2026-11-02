@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: missing-person-ai-platform:latest
+    container_name: missing_persons_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - DATABASE_PATH=/app/data/missing_persons.db
+      - STORAGE_DIR=/app/storage
+    volumes:
+      - app_storage:/app/storage
+      - app_data:/app/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - platform_network
+
+  proxy:
+    image: nginx:alpine
+    container_name: missing_persons_proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - platform_network
+
+volumes:
+  app_storage:
+    name: missing_persons_storage
+  app_data:
+    name: missing_persons_data
+
+networks:
+  platform_network:
+    name: missing_persons_network
+    driver: bridge

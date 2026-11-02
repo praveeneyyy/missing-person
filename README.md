@@ -56,11 +56,19 @@ python run.py
 ### Step 3: Access Web Application
 - **Web Portal:** Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser.
 - **Interactive Swagger API Docs:** Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+- **Liveness Health Check:** [http://127.0.0.1:8000/healthz](http://127.0.0.1:8000/healthz).
 - **Mobile Field App (Optional):**
   ```bash
   cd mobile_app
   flutter run
   ```
+
+### Step 4: Production Deployment (Docker Compose)
+For 1-command production-grade container deployment with Nginx reverse proxy:
+```bash
+docker compose up -d --build
+```
+See [DEPLOYMENT.md](file:///c:/Professional%20Training%201/Prototype/DEPLOYMENT.md) for full production hardening, HTTPS/SSL, and backup instructions.
 
 ---
 

@@ -54,7 +54,30 @@ class FaceEngine:
             raise ValueError("Unsupported or corrupted image file format.")
         return img
 
-    def detect_faces(self, img: np.ndarray) -> List[Dict[str, Any]]:
+    def apply_clahe(self, img: np.ndarray, clip_limit: float = 2.5, tile_grid_size: Tuple[int, int] = (8, 8)) -> np.ndarray:
+        """
+        Applies Contrast Limited Adaptive Histogram Equalization (CLAHE) on the luminance (L)
+        channel in LAB color space to enhance low-contrast, back-lit, or night CCTV surveillance frames.
+        """
+        if img is None or img.size == 0:
+            return img
+        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+        cl = clahe.apply(l)
+        enhanced_lab = cv2.merge((cl, a, b))
+        return cv2.cvtColor(enhanced_lab, cv2.COLOR_LAB2BGR)
+
+    def is_low_contrast_or_dark(self, img: np.ndarray, brightness_thresh: float = 70.0, contrast_thresh: float = 35.0) -> bool:
+        """Determines if an image suffers from severe under-exposure or low contrast."""
+        if img is None or img.size == 0:
+            return False
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        mean_val = float(np.mean(gray))
+        std_val = float(np.std(gray))
+        return mean_val < brightness_thresh or std_val < contrast_thresh
+
+    def detect_faces(self, img: np.ndarray, enable_clahe_fallback: bool = True) -> List[Dict[str, Any]]:
         """
         Detects all faces in the provided BGR image.
         Returns a list of detected face dictionaries containing:
@@ -62,10 +85,19 @@ class FaceEngine:
         - landmarks: [[x, y], ...] (5 facial points: right eye, left eye, nose, right mouth, left mouth)
         - confidence: float detection score
         - raw_face: raw detection array required by alignCrop
+        - clahe_enhanced: bool indicating if adaptive low-light enhancement was applied
         """
         h, w = img.shape[:2]
         detector = self._get_detector(w, h)
         _, raw_faces = detector.detect(img)
+
+        clahe_applied = False
+        if (raw_faces is None or len(raw_faces) == 0) and enable_clahe_fallback:
+            enhanced = self.apply_clahe(img)
+            _, raw_faces_clahe = detector.detect(enhanced)
+            if raw_faces_clahe is not None and len(raw_faces_clahe) > 0:
+                raw_faces = raw_faces_clahe
+                clahe_applied = True
 
         results = []
         if raw_faces is not None:
@@ -88,7 +120,8 @@ class FaceEngine:
                     "bbox": bbox,
                     "landmarks": landmarks,
                     "confidence": round(confidence, 4),
-                    "raw_face": face
+                    "raw_face": face,
+                    "clahe_enhanced": clahe_applied
                 })
 
         return results
@@ -113,8 +146,9 @@ class FaceEngine:
         - Must contain exactly 1 unambiguous face.
         - Rejects zero faces with helpful guidance.
         - Rejects multiple faces to prevent identity ambiguity.
+        - Reference enrollment evaluates un-altered image without low-light artificial boosting.
         """
-        faces = self.detect_faces(img)
+        faces = self.detect_faces(img, enable_clahe_fallback=False)
         if len(faces) == 0:
             raise ValueError(
                 "No human face was detected in this reference photo. "

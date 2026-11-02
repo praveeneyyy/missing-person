@@ -82,27 +82,27 @@ body {
 
 /* Clean Minimal Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: #F8FAFC;
 }
 ::-webkit-scrollbar-thumb {
   background: #CBD5E1;
-  border-radius: 4px;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
 
-/* Tactical Status Badges - Clean White Minimalist Variant */
+/* Tactical Status Badges - Clean White Minimalist & Sharp Variant */
 .badge-tactical {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.2rem 0.6rem;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -308,7 +308,7 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.3rem 0.7rem;
-  border-radius: 6px;
+  border-radius: 0;
   background-color: #F8FAFC;
   color: #334155;
   border: 1px solid #E2E8F0;
@@ -322,6 +322,20 @@ body {
   border-color: #CBD5E1;
 }
 
+/* ==========================================================================
+   SHARP BUTTONS & CONTROLS DIRECTIVE
+   All buttons across navigation, forms, modals, and tables have crisp sharp edges
+   ========================================================================== */
+button,
+.btn,
+.tab-btn,
+.rationale-chip,
+input[type="button"],
+input[type="submit"],
+input[type="reset"] {
+  border-radius: 0px !important;
+}
+
 /* Modal styling - Clean Minimal Backdrop */
 .modal-overlay {
   background-color: rgba(15, 23, 42, 0.45);
@@ -333,7 +347,7 @@ body {
 .dossier-card {
   background-color: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
+  border-radius: 4px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 .dossier-card:hover {
@@ -350,6 +364,7 @@ button, a, input, select, textarea {
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid #0F172A;
   outline-offset: 1px;
+  border-radius: 0px !important;
 }
 
 /* Clean Input & Form Focus States */
