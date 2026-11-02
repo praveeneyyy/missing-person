@@ -139,6 +139,13 @@ const App = {
     const adminNav = document.getElementById('admin-nav-item');
 
     if (user) {
+      const bell = document.getElementById('notification-bell-container');
+      if (bell) bell.classList.remove('hidden');
+      const rosterBtn = document.getElementById('dashboard-roster-btn');
+      if (rosterBtn) {
+        if (user.role === 'admin') rosterBtn.classList.remove('hidden');
+        else rosterBtn.classList.add('hidden');
+      }
       if (userBadge) {
         userBadge.innerHTML = `
           <div class="flex items-center gap-2 bg-white px-2.5 py-1 border border-slate-200 rounded-none">
@@ -167,6 +174,8 @@ const App = {
       this.loadNotifications();
     } else {
       const bell = document.getElementById('notification-bell-container');
+      const rosterBtn = document.getElementById('dashboard-roster-btn');
+      if (rosterBtn) rosterBtn.classList.add('hidden');
       if (bell) bell.classList.add('hidden');
       if (userBadge) {
         userBadge.innerHTML = `
